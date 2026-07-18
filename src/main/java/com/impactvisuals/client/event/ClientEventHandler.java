@@ -6,10 +6,13 @@ import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.HitParticleRenderer;
+import com.impactvisuals.client.visual.HitmarkerRenderer;
 import com.impactvisuals.client.visual.InfoHud;
 import com.impactvisuals.client.visual.ScreenTint;
+import com.impactvisuals.client.visual.StatsHud;
 import com.impactvisuals.client.visual.TargetHud;
 import com.impactvisuals.client.visual.TrajectoryRenderer;
+import com.impactvisuals.client.visual.VignetteRenderer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -29,6 +32,7 @@ public final class ClientEventHandler {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             DamageNumberRenderer.tick();
             TrajectoryRenderer.tick();
+            HitmarkerRenderer.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -43,8 +47,11 @@ public final class ClientEventHandler {
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
             ScreenTint.render(drawContext);
+            VignetteRenderer.render(drawContext);
             TargetHud.render(drawContext);
             InfoHud.render(drawContext);
+            StatsHud.render(drawContext);
+            HitmarkerRenderer.render(drawContext);
         });
     }
 
@@ -58,6 +65,7 @@ public final class ClientEventHandler {
         float estimatedDamage = estimateDamage(player, critical);
 
         HitParticleRenderer.spawn(origin.x, origin.y, origin.z, critical);
+        HitmarkerRenderer.spawn();
 
         if (cfg.damageNumbersEnabled) {
             DamageNumberRenderer.spawn(origin.x, origin.y, origin.z, estimatedDamage, critical);
