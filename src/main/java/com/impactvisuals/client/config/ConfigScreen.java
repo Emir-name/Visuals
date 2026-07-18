@@ -1,5 +1,6 @@
 package com.impactvisuals.client.config;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -31,6 +32,7 @@ public class ConfigScreen extends Screen {
     private int resetX, resetY, resetW, resetH;
 
     private boolean draggingSlider = false;
+    private int previousBlurriness = 0;
 
     public ConfigScreen(Screen parent) {
         super(Text.literal("Impact Visuals"));
@@ -40,6 +42,10 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        previousBlurriness = client.options.getMenuBackgroundBlurriness().getValue();
+        client.options.getMenuBackgroundBlurriness().setValue(0);
+
         panelW = 260;
         panelH = 300;
         panelX = (this.width - panelW) / 2;
@@ -182,6 +188,12 @@ public class ConfigScreen extends Screen {
         if (this.client != null) {
             this.client.setScreen(parent);
         }
+    }
+
+    @Override
+    public void removed() {
+        MinecraftClient.getInstance().options.getMenuBackgroundBlurriness().setValue(previousBlurriness);
+        super.removed();
     }
 
     @Override
