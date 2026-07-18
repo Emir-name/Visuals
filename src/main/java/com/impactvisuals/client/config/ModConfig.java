@@ -31,6 +31,9 @@ public class ModConfig {
     public boolean sessionTimerEnabled = false;
     public boolean lowHealthVignetteEnabled = true;
     public boolean durabilityHudEnabled = false;
+    public boolean killDeathCounterEnabled = false;
+    public boolean hitSoundEnabled = true;
+    public boolean cooldownIndicatorEnabled = true;
 
     // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
