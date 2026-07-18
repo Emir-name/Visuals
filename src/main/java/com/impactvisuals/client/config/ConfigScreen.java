@@ -47,7 +47,7 @@ public class ConfigScreen extends Screen {
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
         panelW = 260;
-        panelH = 300;
+        panelH = 360;
         panelX = (this.width - panelW) / 2;
         panelY = (this.height - panelH) / 2;
 
@@ -64,6 +64,10 @@ public class ConfigScreen extends Screen {
         toggles.add(new ToggleRow("Critical Flash", rowY, () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v));
         rowY += rowH;
         toggles.add(new ToggleRow("Trajectory Prediction", rowY, () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v));
+        rowY += rowH;
+        toggles.add(new ToggleRow("Purple Sky", rowY, () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v));
+        rowY += rowH;
+        toggles.add(new ToggleRow("Info HUD (Name/FPS/Ping)", rowY, () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v));
         rowY += rowH + 10;
 
         slider = new SliderRow("Target HUD Range", rowY, 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v);
@@ -178,6 +182,8 @@ public class ConfigScreen extends Screen {
         cfg.damageNumbersEnabled = true;
         cfg.criticalFlashEnabled = true;
         cfg.trajectoryPredictionEnabled = true;
+        cfg.purpleSkyEnabled = false;
+        cfg.infoHudEnabled = true;
         cfg.targetHudRangeBlocks = 6;
         this.init();
     }
