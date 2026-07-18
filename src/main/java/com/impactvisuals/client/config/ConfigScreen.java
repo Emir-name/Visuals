@@ -14,19 +14,27 @@ public class ConfigScreen extends Screen {
 
     private static final int ACCENT = 0xFFFF8C00;
     private static final int ACCENT_DIM = 0xFF7A4300;
-    private static final int PANEL_BG = 0xE6161616;
+    private static final int PANEL_BG = 0xE6141414;
+    private static final int SIDEBAR_BG = 0xF01A1A1A;
     private static final int PANEL_BORDER = 0xFFFF8C00;
     private static final int TRACK_OFF = 0xFF3A3A3A;
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA"};
+
     private final Screen parent;
     private final ModConfig cfg;
 
     private int panelX, panelY, panelW, panelH;
+    private int sidebarW;
+    private int sidebarItemY, sidebarItemH;
+
+    private int currentCategory = 0;
 
     private final List<ToggleRow> toggles = new ArrayList<>();
     private SliderRow slider;
+    private boolean showSlider = false;
 
     private int doneX, doneY, doneW, doneH;
     private int resetX, resetY, resetW, resetH;
@@ -46,36 +54,19 @@ public class ConfigScreen extends Screen {
         previousBlurriness = client.options.getMenuBackgroundBlurriness().getValue();
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
-        panelW = 260;
-        panelH = 360;
+        panelW = 460;
+        panelH = 300;
         panelX = (this.width - panelW) / 2;
         panelY = (this.height - panelH) / 2;
 
-        toggles.clear();
-        int rowY = panelY + 46;
-        int rowH = 30;
-
-        toggles.add(new ToggleRow("Hit Particles", rowY, () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Target HUD", rowY, () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Damage Numbers", rowY, () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Critical Flash", rowY, () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Trajectory Prediction", rowY, () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Purple Sky", rowY, () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v));
-        rowY += rowH;
-        toggles.add(new ToggleRow("Info HUD (Name/FPS/Ping)", rowY, () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v));
-        rowY += rowH + 10;
-
-        slider = new SliderRow("Target HUD Range", rowY, 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v);
+        sidebarW = 100;
+        sidebarItemY = panelY + 46;
+        sidebarItemH = 26;
 
         int buttonW = 100;
         int buttonH = 22;
-        int buttonY = panelY + panelH - 36;
-        resetX = panelX + 20;
+        int buttonY = panelY + panelH - 34;
+        resetX = panelX + panelW - 20 - buttonW * 2 - 10;
         resetY = buttonY;
         resetW = buttonW;
         resetH = buttonH;
@@ -84,6 +75,49 @@ public class ConfigScreen extends Screen {
         doneY = buttonY;
         doneW = buttonW;
         doneH = buttonH;
+
+        buildCategoryContent();
+    }
+
+    private void buildCategoryContent() {
+        toggles.clear();
+        showSlider = false;
+        slider = null;
+
+        int contentX = panelX + sidebarW + 30;
+        int gridStartY = panelY + 50;
+        int rowH = 28;
+        int colGap = 160;
+
+        if (currentCategory == 0) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
+        } else if (currentCategory == 1) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Info HUD", () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Coordinates", () -> cfg.coordinatesHudEnabled, v -> cfg.coordinatesHudEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Compass", () -> cfg.compassHudEnabled, v -> cfg.compassHudEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
+
+            showSlider = true;
+            slider = new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v);
+        } else {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
+        }
+    }
+
+    private void addToggle(int index, int contentX, int colGap, int gridStartY, int rowH,
+                            String label, BooleanSupplier getter, Consumer<Boolean> setter) {
+        int col = index % 2;
+        int row = index / 2;
+        int x = contentX + col * colGap;
+        int y = gridStartY + row * rowH;
+        toggles.add(new ToggleRow(label, x, y, getter, setter));
     }
 
     @Override
@@ -93,16 +127,34 @@ public class ConfigScreen extends Screen {
         context.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_BG);
         drawBorder(context, panelX, panelY, panelW, panelH, PANEL_BORDER);
 
-        String title = "IMPACT VISUALS";
-        int titleWidth = this.textRenderer.getWidth(title);
-        context.drawText(this.textRenderer, title, panelX + (panelW - titleWidth) / 2, panelY + 14, ACCENT, false);
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
+        context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, PANEL_BORDER);
 
-        for (ToggleRow row : toggles) {
-            row.render(context, this, panelX, panelW, mouseX, mouseY);
+        String title = "IMPACT";
+        context.drawText(this.textRenderer, title, panelX + 12, panelY + 10, ACCENT, false);
+
+        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
+            int itemY = sidebarItemY + i * sidebarItemH;
+            boolean active = i == currentCategory;
+            boolean hovered = inside(panelX, itemY, sidebarW, sidebarItemH, mouseX, mouseY);
+
+            if (active) {
+                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, ACCENT_DIM);
+                context.fill(panelX, itemY, panelX + 2, itemY + sidebarItemH, ACCENT);
+            } else if (hovered) {
+                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, 0x30FFFFFF);
+            }
+
+            int color = active ? ACCENT : TEXT_DIM;
+            context.drawText(this.textRenderer, CATEGORY_NAMES[i], panelX + 14, itemY + 9, color, false);
         }
 
-        if (slider != null) {
-            slider.render(context, this, panelX, panelW, mouseX, mouseY);
+        for (ToggleRow row : toggles) {
+            row.render(context, this, mouseX, mouseY);
+        }
+
+        if (showSlider && slider != null) {
+            slider.render(context, this, mouseX, mouseY);
         }
 
         drawButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
@@ -119,7 +171,7 @@ public class ConfigScreen extends Screen {
     }
 
     private void drawButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
-        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        boolean hovered = inside(x, y, w, h, mouseX, mouseY);
         int bg = hovered ? ACCENT_DIM : TRACK_OFF;
         context.fill(x, y, x + w, y + h, bg);
         drawBorder(context, x, y, w, h, ACCENT);
@@ -131,16 +183,25 @@ public class ConfigScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
 
+        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
+            int itemY = sidebarItemY + i * sidebarItemH;
+            if (inside(panelX, itemY, sidebarW, sidebarItemH, mouseX, mouseY) && currentCategory != i) {
+                currentCategory = i;
+                buildCategoryContent();
+                return true;
+            }
+        }
+
         for (ToggleRow row : toggles) {
-            if (row.isInside(panelX, panelW, mouseX, mouseY)) {
+            if (row.isInside(mouseX, mouseY)) {
                 row.toggle();
                 return true;
             }
         }
 
-        if (slider != null && slider.isInsideTrack(panelX, panelW, mouseX, mouseY)) {
+        if (showSlider && slider != null && slider.isInsideTrack(mouseX, mouseY)) {
             draggingSlider = true;
-            slider.updateFromMouse(panelX, panelW, mouseX);
+            slider.updateFromMouse(mouseX);
             return true;
         }
 
@@ -160,7 +221,7 @@ public class ConfigScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (draggingSlider && slider != null) {
-            slider.updateFromMouse(panelX, panelW, mouseX);
+            slider.updateFromMouse(mouseX);
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -184,8 +245,14 @@ public class ConfigScreen extends Screen {
         cfg.trajectoryPredictionEnabled = true;
         cfg.purpleSkyEnabled = false;
         cfg.infoHudEnabled = true;
+        cfg.hitmarkerEnabled = true;
+        cfg.coordinatesHudEnabled = false;
+        cfg.compassHudEnabled = false;
+        cfg.sessionTimerEnabled = false;
+        cfg.lowHealthVignetteEnabled = true;
+        cfg.durabilityHudEnabled = false;
         cfg.targetHudRangeBlocks = 6;
-        this.init();
+        buildCategoryContent();
     }
 
     @Override
@@ -207,14 +274,16 @@ public class ConfigScreen extends Screen {
         return false;
     }
 
+    /** Small square "bullet" toggle, similar in spirit to the circular indicators in Meteor/Retro-style clients. */
     private class ToggleRow {
         final String label;
-        final int y;
+        final int x, y;
         final BooleanSupplier getter;
         final Consumer<Boolean> setter;
 
-        ToggleRow(String label, int y, BooleanSupplier getter, Consumer<Boolean> setter) {
+        ToggleRow(String label, int x, int y, BooleanSupplier getter, Consumer<Boolean> setter) {
             this.label = label;
+            this.x = x;
             this.y = y;
             this.getter = getter;
             this.setter = setter;
@@ -224,85 +293,78 @@ public class ConfigScreen extends Screen {
             setter.accept(!getter.getAsBoolean());
         }
 
-        boolean isInside(int panelX, int panelW, double mouseX, double mouseY) {
-            int trackW = 36;
-            int trackH = 16;
-            int trackX = panelX + panelW - 20 - trackW;
-            int trackY = y;
-            return mouseX >= trackX && mouseX < trackX + trackW && mouseY >= trackY && mouseY < trackY + trackH;
+        private int bulletX() {
+            return x + 130;
         }
 
-        void render(DrawContext context, ConfigScreen screen, int panelX, int panelW, int mouseX, int mouseY) {
-            context.drawText(screen.textRenderer, label, panelX + 20, y + 4, TEXT_MAIN, false);
+        boolean isInside(double mouseX, double mouseY) {
+            int size = 10;
+            int bx = bulletX();
+            return mouseX >= bx && mouseX < bx + size && mouseY >= y && mouseY < y + size;
+        }
 
-            int trackW = 36;
-            int trackH = 16;
-            int trackX = panelX + panelW - 20 - trackW;
-            int trackY = y;
+        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
+            context.drawText(screen.textRenderer, label, x, y + 1, TEXT_MAIN, false);
+
+            int size = 10;
+            int bx = bulletX();
             boolean on = getter.getAsBoolean();
 
-            int trackColor = on ? ACCENT : TRACK_OFF;
-            context.fill(trackX, trackY, trackX + trackW, trackY + trackH, trackColor);
-            screen.drawBorder(context, trackX, trackY, trackW, trackH, on ? ACCENT : TEXT_DIM);
-
-            int knobSize = 12;
-            int knobX = on ? (trackX + trackW - knobSize - 2) : (trackX + 2);
-            int knobY = trackY + (trackH - knobSize) / 2;
-            context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
+            if (on) {
+                context.fill(bx, y, bx + size, y + size, ACCENT);
+            } else {
+                screen.drawBorder(context, bx, y, size, size, TEXT_DIM);
+            }
         }
     }
 
     private class SliderRow {
         final String label;
-        final int y;
+        final int x, y, width;
         final int min;
         final int max;
         int value;
         final Consumer<Integer> setter;
 
-        SliderRow(String label, int y, int min, int max, int initial, Consumer<Integer> setter) {
+        SliderRow(String label, int x, int y, int width, int min, int max, int initial, Consumer<Integer> setter) {
             this.label = label;
+            this.x = x;
             this.y = y;
+            this.width = width;
             this.min = min;
             this.max = max;
             this.value = initial;
             this.setter = setter;
         }
 
-        boolean isInsideTrack(int panelX, int panelW, double mouseX, double mouseY) {
-            int trackX = panelX + 20;
-            int trackW = panelW - 40;
+        boolean isInsideTrack(double mouseX, double mouseY) {
             int trackY = y + 14;
             int trackH = 8;
-            return mouseX >= trackX && mouseX < trackX + trackW && mouseY >= trackY - 6 && mouseY < trackY + trackH + 6;
+            return mouseX >= x && mouseX < x + width && mouseY >= trackY - 6 && mouseY < trackY + trackH + 6;
         }
 
-        void updateFromMouse(int panelX, int panelW, double mouseX) {
-            int trackX = panelX + 20;
-            int trackW = panelW - 40;
-            double pct = (mouseX - trackX) / (double) trackW;
+        void updateFromMouse(double mouseX) {
+            double pct = (mouseX - x) / (double) width;
             pct = Math.max(0, Math.min(1, pct));
             value = (int) Math.round(min + pct * (max - min));
             setter.accept(value);
         }
 
-        void render(DrawContext context, ConfigScreen screen, int panelX, int panelW, int mouseX, int mouseY) {
+        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
             String text = label + ": " + value;
-            context.drawText(screen.textRenderer, text, panelX + 20, y - 2, TEXT_MAIN, false);
+            context.drawText(screen.textRenderer, text, x, y - 10, TEXT_MAIN, false);
 
-            int trackX = panelX + 20;
-            int trackW = panelW - 40;
-            int trackY = y + 14;
+            int trackY = y + 4;
             int trackH = 8;
 
-            context.fill(trackX, trackY, trackX + trackW, trackY + trackH, TRACK_OFF);
+            context.fill(x, trackY, x + width, trackY + trackH, TRACK_OFF);
             double pct = (value - min) / (double) (max - min);
-            int filledW = (int) (trackW * pct);
-            context.fill(trackX, trackY, trackX + filledW, trackY + trackH, ACCENT);
-            screen.drawBorder(context, trackX, trackY, trackW, trackH, ACCENT);
+            int filledW = (int) (width * pct);
+            context.fill(x, trackY, x + filledW, trackY + trackH, ACCENT);
+            screen.drawBorder(context, x, trackY, width, trackH, ACCENT);
 
             int knobSize = 12;
-            int knobX = trackX + filledW - knobSize / 2;
+            int knobX = x + filledW - knobSize / 2;
             int knobY = trackY + trackH / 2 - knobSize / 2;
             context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
         }
