@@ -25,6 +25,12 @@ public class ModConfig {
     public boolean trajectoryPredictionEnabled = true;
     public boolean purpleSkyEnabled = false;
     public boolean infoHudEnabled = true;
+    public boolean hitmarkerEnabled = true;
+    public boolean coordinatesHudEnabled = false;
+    public boolean compassHudEnabled = false;
+    public boolean sessionTimerEnabled = false;
+    public boolean lowHealthVignetteEnabled = true;
+    public boolean durabilityHudEnabled = false;
 
     // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
