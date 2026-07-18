@@ -4,10 +4,13 @@ import com.impactvisuals.client.config.ConfigScreen;
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
+import com.impactvisuals.client.visual.CooldownIndicator;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.HitParticleRenderer;
+import com.impactvisuals.client.visual.HitSoundPlayer;
 import com.impactvisuals.client.visual.HitmarkerRenderer;
 import com.impactvisuals.client.visual.InfoHud;
+import com.impactvisuals.client.visual.KillDeathTracker;
 import com.impactvisuals.client.visual.ScreenTint;
 import com.impactvisuals.client.visual.StatsHud;
 import com.impactvisuals.client.visual.TargetHud;
@@ -33,6 +36,7 @@ public final class ClientEventHandler {
             DamageNumberRenderer.tick();
             TrajectoryRenderer.tick();
             HitmarkerRenderer.tick();
+            KillDeathTracker.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -51,7 +55,9 @@ public final class ClientEventHandler {
             TargetHud.render(drawContext);
             InfoHud.render(drawContext);
             StatsHud.render(drawContext);
+            KillDeathTracker.render(drawContext);
             HitmarkerRenderer.render(drawContext);
+            CooldownIndicator.render(drawContext);
         });
     }
 
@@ -66,6 +72,8 @@ public final class ClientEventHandler {
 
         HitParticleRenderer.spawn(origin.x, origin.y, origin.z, critical);
         HitmarkerRenderer.spawn();
+        HitSoundPlayer.play();
+        KillDeathTracker.onHit(target);
 
         if (cfg.damageNumbersEnabled) {
             DamageNumberRenderer.spawn(origin.x, origin.y, origin.z, estimatedDamage, critical);
