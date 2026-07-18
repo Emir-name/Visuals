@@ -6,6 +6,8 @@ import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.HitParticleRenderer;
+import com.impactvisuals.client.visual.InfoHud;
+import com.impactvisuals.client.visual.ScreenTint;
 import com.impactvisuals.client.visual.TargetHud;
 import com.impactvisuals.client.visual.TrajectoryRenderer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -39,7 +41,11 @@ public final class ClientEventHandler {
             DamageNumberRenderer.render(context);
         });
 
-        HudRenderCallback.EVENT.register((drawContext, tickCounter) -> TargetHud.render(drawContext));
+        HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
+            ScreenTint.render(drawContext);
+            TargetHud.render(drawContext);
+            InfoHud.render(drawContext);
+        });
     }
 
     private static ActionResult onAttack(PlayerEntity player, net.minecraft.world.World world,
