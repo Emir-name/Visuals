@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "impactvisuals",
+  "version": "${version}",
+  "name": "Impact Visuals",
+  "description": "Client-side PvP visual effects: hit particles, target HUD, damage numbers, critical hit flashes and projectile trajectory prediction. Purely cosmetic — no gameplay-altering behavior.",
+  "authors": ["You"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/impactvisuals/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.impactvisuals.ImpactVisualsClient"
+    ],
+    "modmenu": [
+      "com.impactvisuals.client.config.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
