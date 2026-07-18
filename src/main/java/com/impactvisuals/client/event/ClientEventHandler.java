@@ -1,6 +1,8 @@
 package com.impactvisuals.client.event;
 
+import com.impactvisuals.client.config.ConfigScreen;
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.HitParticleRenderer;
@@ -25,6 +27,12 @@ public final class ClientEventHandler {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             DamageNumberRenderer.tick();
             TrajectoryRenderer.tick();
+
+            while (ModKeybinds.openSettings.wasPressed()) {
+                if (client.currentScreen == null) {
+                    client.setScreen(new ConfigScreen(null));
+                }
+            }
         });
 
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
