@@ -23,7 +23,10 @@ public class ModConfig {
     public boolean damageNumbersEnabled = true;
     public boolean criticalFlashEnabled = true;
     public boolean trajectoryPredictionEnabled = true;
+    public boolean purpleSkyEnabled = false;
+    public boolean infoHudEnabled = true;
 
+    // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
     public int targetHudRangeBlocks = 6;
