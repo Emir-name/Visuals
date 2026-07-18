@@ -23,14 +23,12 @@ public final class ClientEventHandler {
         AttackEntityCallback.EVENT.register(ClientEventHandler::onAttack);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            HitParticleRenderer.tick();
             DamageNumberRenderer.tick();
+            TrajectoryRenderer.tick();
         });
 
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
-            HitParticleRenderer.render(context);
             DamageNumberRenderer.render(context);
-            TrajectoryRenderer.render(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> TargetHud.render(drawContext));
@@ -45,13 +43,7 @@ public final class ClientEventHandler {
         boolean critical = isCriticalHit(player);
         float estimatedDamage = estimateDamage(player, critical);
 
-        if (cfg.hitParticlesEnabled) {
-            if (critical && cfg.criticalFlashEnabled) {
-                HitParticleRenderer.spawn(origin.x, origin.y, origin.z, 1.0f, 0.9f, 0.2f);
-            } else {
-                HitParticleRenderer.spawn(origin.x, origin.y, origin.z, 1.0f, 0.3f, 0.3f);
-            }
-        }
+        HitParticleRenderer.spawn(origin.x, origin.y, origin.z, critical);
 
         if (cfg.damageNumbersEnabled) {
             DamageNumberRenderer.spawn(origin.x, origin.y, origin.z, estimatedDamage, critical);
