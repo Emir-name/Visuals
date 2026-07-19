@@ -12,19 +12,28 @@ import java.util.function.Consumer;
 
 public class ConfigScreen extends Screen {
 
-    private static final int ACCENT = 0xFFFF8C00;
-    private static final int ACCENT_DIM = 0xFF7A4300;
+    private static final int[] PALETTE = {
+            0xFFFF8C00, // Orange
+            0xFFB266FF, // Purple
+            0xFF3399FF, // Blue
+            0xFF55DD55, // Green
+            0xFFFF5555, // Red
+            0xFF33DDDD  // Cyan
+    };
+
     private static final int PANEL_BG = 0xE6141414;
     private static final int SIDEBAR_BG = 0xF01A1A1A;
-    private static final int PANEL_BORDER = 0xFFFF8C00;
     private static final int TRACK_OFF = 0xFF3A3A3A;
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE"};
 
     private final Screen parent;
     private final ModConfig cfg;
+
+    private int accentColor;
+    private int accentDimColor;
 
     private int panelX, panelY, panelW, panelH;
     private int sidebarW;
@@ -34,13 +43,13 @@ public class ConfigScreen extends Screen {
     private int currentCategory = 0;
 
     private final List<ToggleRow> toggles = new ArrayList<>();
-    private SliderRow slider;
-    private boolean showSlider = false;
+    private final List<SliderRow> sliders = new ArrayList<>();
+    private final List<SwatchButton> swatches = new ArrayList<>();
 
     private int doneX, doneY, doneW, doneH;
     private int resetX, resetY, resetW, resetH;
 
-    private boolean draggingSlider = false;
+    private SliderRow draggingSlider = null;
     private int previousBlurriness = 0;
 
     public ConfigScreen(Screen parent) {
@@ -61,8 +70,8 @@ public class ConfigScreen extends Screen {
         panelY = (this.height - panelH) / 2;
 
         sidebarW = 100;
-        sidebarItemY = panelY + 46;
-        sidebarItemH = 26;
+        sidebarItemY = panelY + 40;
+        sidebarItemH = 24;
 
         skinPanelW = 90;
         skinPanelX = panelX + panelW - skinPanelW - 10;
@@ -86,8 +95,8 @@ public class ConfigScreen extends Screen {
 
     private void buildCategoryContent() {
         toggles.clear();
-        showSlider = false;
-        slider = null;
+        sliders.clear();
+        swatches.clear();
 
         int contentX = panelX + sidebarW + 30;
         int gridStartY = panelY + 50;
@@ -109,8 +118,8 @@ public class ConfigScreen extends Screen {
             addToggle(4, contentX, colGap, gridStartY, rowH, "Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "K/D Counter", () -> cfg.killDeathCounterEnabled, v -> cfg.killDeathCounterEnabled = v);
 
-            showSlider = true;
-            slider = new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v);
+            sliders.add(new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15,
+                    cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
         } else if (currentCategory == 2) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
@@ -132,6 +141,34 @@ public class ConfigScreen extends Screen {
             addToggle(3, contentX, colGap, gridStartY, rowH, "Total Playtime", () -> cfg.totalPlaytimeEnabled, v -> cfg.totalPlaytimeEnabled = v);
             addToggle(4, contentX, colGap, gridStartY, rowH, "Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
+        } else if (currentCategory == 5) {
+            int swatchSize = 40;
+            int swatchGap = 14;
+            int cols = 3;
+            for (int i = 0; i < PALETTE.length; i++) {
+                int col = i % cols;
+                int row = i / cols;
+                int x = contentX + col * (swatchSize + swatchGap);
+                int y = gridStartY + row * (swatchSize + swatchGap);
+                swatches.add(new SwatchButton(i, x, y, swatchSize));
+            }
+        } else if (currentCategory == 6) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
+
+            if (cfg.customHandleEnabled) {
+                int sliderY = gridStartY + 2 * rowH + 18;
+                int sliderW = panelW - sidebarW - 60;
+                sliders.add(new SliderRow("Scale %", contentX, sliderY, sliderW, 20, 300,
+                        cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
+                sliders.add(new SliderRow("Rotate X", contentX, sliderY + 34, sliderW, 0, 360,
+                        cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
+                sliders.add(new SliderRow("Rotate Y", contentX, sliderY + 68, sliderW, 0, 360,
+                        cfg.customHandleRotY, v -> cfg.customHandleRotY = v));
+                sliders.add(new SliderRow("Rotate Z", contentX, sliderY + 102, sliderW, 0, 360,
+                        cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
+            }
         }
     }
 
@@ -144,18 +181,28 @@ public class ConfigScreen extends Screen {
         toggles.add(new ToggleRow(label, x, y, getter, setter));
     }
 
+    private void updateThemeColors() {
+        accentColor = PALETTE[Math.max(0, Math.min(PALETTE.length - 1, cfg.accentColorIndex))];
+        int r = (int) ((accentColor >> 16 & 0xFF) * 0.45);
+        int g = (int) ((accentColor >> 8 & 0xFF) * 0.45);
+        int b = (int) ((accentColor & 0xFF) * 0.45);
+        accentDimColor = 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        updateThemeColors();
+
         context.fill(0, 0, this.width, this.height, 0x99000000);
 
         context.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_BG);
-        drawBorder(context, panelX, panelY, panelW, panelH, PANEL_BORDER);
+        drawBorder(context, panelX, panelY, panelW, panelH, accentColor);
 
         context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
-        context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, PANEL_BORDER);
+        context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, accentColor);
 
         String title = "IMPACT";
-        context.drawText(this.textRenderer, title, panelX + 12, panelY + 10, ACCENT, false);
+        context.drawText(this.textRenderer, title, panelX + 12, panelY + 10, accentColor, false);
 
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = sidebarItemY + i * sidebarItemH;
@@ -163,22 +210,26 @@ public class ConfigScreen extends Screen {
             boolean hovered = inside(panelX, itemY, sidebarW, sidebarItemH, mouseX, mouseY);
 
             if (active) {
-                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, ACCENT_DIM);
-                context.fill(panelX, itemY, panelX + 2, itemY + sidebarItemH, ACCENT);
+                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, accentDimColor);
+                context.fill(panelX, itemY, panelX + 2, itemY + sidebarItemH, accentColor);
             } else if (hovered) {
                 context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, 0x30FFFFFF);
             }
 
-            int color = active ? ACCENT : TEXT_DIM;
-            context.drawText(this.textRenderer, CATEGORY_NAMES[i], panelX + 14, itemY + 9, color, false);
+            int color = active ? accentColor : TEXT_DIM;
+            context.drawText(this.textRenderer, CATEGORY_NAMES[i], panelX + 14, itemY + 8, color, false);
         }
 
         for (ToggleRow row : toggles) {
             row.render(context, this, mouseX, mouseY);
         }
 
-        if (showSlider && slider != null) {
-            slider.render(context, this, mouseX, mouseY);
+        for (SliderRow row : sliders) {
+            row.render(context, this, mouseX, mouseY);
+        }
+
+        for (SwatchButton swatch : swatches) {
+            swatch.render(context, this, mouseX, mouseY);
         }
 
         drawButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
@@ -192,7 +243,7 @@ public class ConfigScreen extends Screen {
     private void renderSkinPanel(DrawContext context) {
         int skinPanelH = 90;
         context.fill(skinPanelX, skinPanelY, skinPanelX + skinPanelW, skinPanelY + skinPanelH, 0xFF1E1E1E);
-        drawBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, ACCENT);
+        drawBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, accentColor);
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
@@ -218,9 +269,9 @@ public class ConfigScreen extends Screen {
 
     private void drawButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
         boolean hovered = inside(x, y, w, h, mouseX, mouseY);
-        int bg = hovered ? ACCENT_DIM : TRACK_OFF;
+        int bg = hovered ? accentDimColor : TRACK_OFF;
         context.fill(x, y, x + w, y + h, bg);
-        drawBorder(context, x, y, w, h, ACCENT);
+        drawBorder(context, x, y, w, h, accentColor);
         int textWidth = this.textRenderer.getWidth(label);
         context.drawText(this.textRenderer, label, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
     }
@@ -245,10 +296,19 @@ public class ConfigScreen extends Screen {
             }
         }
 
-        if (showSlider && slider != null && slider.isInsideTrack(mouseX, mouseY)) {
-            draggingSlider = true;
-            slider.updateFromMouse(mouseX);
-            return true;
+        for (SwatchButton swatch : swatches) {
+            if (swatch.isInside(mouseX, mouseY)) {
+                cfg.accentColorIndex = swatch.paletteIndex;
+                return true;
+            }
+        }
+
+        for (SliderRow row : sliders) {
+            if (row.isInsideTrack(mouseX, mouseY)) {
+                draggingSlider = row;
+                row.updateFromMouse(mouseX);
+                return true;
+            }
         }
 
         if (inside(resetX, resetY, resetW, resetH, mouseX, mouseY)) {
@@ -266,8 +326,8 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (draggingSlider && slider != null) {
-            slider.updateFromMouse(mouseX);
+        if (draggingSlider != null) {
+            draggingSlider.updateFromMouse(mouseX);
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -275,7 +335,7 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        draggingSlider = false;
+        draggingSlider = null;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -314,6 +374,14 @@ public class ConfigScreen extends Screen {
         cfg.totalPlaytimeEnabled = false;
         cfg.zoomEnabled = true;
         cfg.realClockEnabled = false;
+        cfg.accentColorIndex = 0;
+        cfg.critSoundEnabled = true;
+        cfg.smallFireEnabled = false;
+        cfg.customHandleEnabled = false;
+        cfg.customHandleScalePercent = 100;
+        cfg.customHandleRotX = 0;
+        cfg.customHandleRotY = 0;
+        cfg.customHandleRotZ = 0;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -337,7 +405,6 @@ public class ConfigScreen extends Screen {
         return false;
     }
 
-    /** Small square "bullet" toggle, similar in spirit to the circular indicators in Meteor/Retro-style clients. */
     private class ToggleRow {
         final String label;
         final int x, y;
@@ -374,7 +441,7 @@ public class ConfigScreen extends Screen {
             boolean on = getter.getAsBoolean();
 
             if (on) {
-                context.fill(bx, y, bx + size, y + size, ACCENT);
+                context.fill(bx, y, bx + size, y + size, screen.accentColor);
             } else {
                 screen.drawBorder(context, bx, y, size, size, TEXT_DIM);
             }
@@ -423,8 +490,8 @@ public class ConfigScreen extends Screen {
             context.fill(x, trackY, x + width, trackY + trackH, TRACK_OFF);
             double pct = (value - min) / (double) (max - min);
             int filledW = (int) (width * pct);
-            context.fill(x, trackY, x + filledW, trackY + trackH, ACCENT);
-            screen.drawBorder(context, x, trackY, width, trackH, ACCENT);
+            context.fill(x, trackY, x + filledW, trackY + trackH, screen.accentColor);
+            screen.drawBorder(context, x, trackY, width, trackH, screen.accentColor);
 
             int knobSize = 12;
             int knobX = x + filledW - knobSize / 2;
@@ -432,4 +499,27 @@ public class ConfigScreen extends Screen {
             context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
         }
     }
+
+    private class SwatchButton {
+        final int paletteIndex;
+        final int x, y, size;
+
+        SwatchButton(int paletteIndex, int x, int y, int size) {
+            this.paletteIndex = paletteIndex;
+            this.x = x;
+            this.y = y;
+            this.size = size;
         }
+
+        boolean isInside(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + size && mouseY >= y && mouseY < y + size;
+        }
+
+        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
+            int color = PALETTE[paletteIndex];
+            context.fill(x, y, x + size, y + size, color);
+            boolean selected = screen.cfg.accentColorIndex == paletteIndex;
+            screen.drawBorder(context, x, y, size, size, selected ? 0xFFFFFFFF : 0xFF000000);
+        }
+    }
+    }
