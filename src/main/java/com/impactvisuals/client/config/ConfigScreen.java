@@ -27,7 +27,7 @@ public class ConfigScreen extends Screen {
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -45,6 +45,7 @@ public class ConfigScreen extends Screen {
     private final List<ToggleRow> toggles = new ArrayList<>();
     private final List<SliderRow> sliders = new ArrayList<>();
     private final List<SwatchButton> swatches = new ArrayList<>();
+    private final List<CycleRow> cycles = new ArrayList<>();
 
     private int doneX, doneY, doneW, doneH;
     private int resetX, resetY, resetW, resetH;
@@ -97,6 +98,7 @@ public class ConfigScreen extends Screen {
         toggles.clear();
         sliders.clear();
         swatches.clear();
+        cycles.clear();
 
         int contentX = panelX + sidebarW + 30;
         int gridStartY = panelY + 50;
@@ -156,11 +158,14 @@ public class ConfigScreen extends Screen {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
             addToggle(2, contentX, colGap, gridStartY, rowH, "Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
 
             if (cfg.customHandleEnabled) {
                 int sliderY = gridStartY + 2 * rowH + 18;
                 int sliderW = panelW - sidebarW - 60;
-                sliders.add(new SliderRow("Scale %", contentX, sliderY, sliderW, 20, 300,
+                sliders.add(new SliderRow("Scale %", contentX, sliderY, sliderW, 30, 200,
                         cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
                 sliders.add(new SliderRow("Rotate X", contentX, sliderY + 34, sliderW, 0, 360,
                         cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
@@ -169,6 +174,20 @@ public class ConfigScreen extends Screen {
                 sliders.add(new SliderRow("Rotate Z", contentX, sliderY + 102, sliderW, 0, 360,
                         cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
             }
+        } else if (currentCategory == 7) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
+        } else if (currentCategory == 8) {
+            String[] crosshairNames = {"Off", "Dot", "Cross", "Ring"};
+            String[] colorNames = {"Vanilla", "Orange", "Purple", "Blue", "Green", "Red", "Cyan"};
+            cycles.add(new CycleRow("Crosshair Style", contentX, gridStartY, crosshairNames,
+                    () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
+            cycles.add(new CycleRow("Hit Particle Color", contentX, gridStartY + rowH + 10, colorNames,
+                    () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
         }
     }
 
@@ -182,7 +201,12 @@ public class ConfigScreen extends Screen {
     }
 
     private void updateThemeColors() {
-        accentColor = PALETTE[Math.max(0, Math.min(PALETTE.length - 1, cfg.accentColorIndex))];
+        if (cfg.rainbowThemeEnabled) {
+            float hue = (System.currentTimeMillis() % 6000) / 6000f;
+            accentColor = 0xFF000000 | (java.awt.Color.HSBtoRGB(hue, 0.65f, 1.0f) & 0xFFFFFF);
+        } else {
+            accentColor = PALETTE[Math.max(0, Math.min(PALETTE.length - 1, cfg.accentColorIndex))];
+        }
         int r = (int) ((accentColor >> 16 & 0xFF) * 0.45);
         int g = (int) ((accentColor >> 8 & 0xFF) * 0.45);
         int b = (int) ((accentColor & 0xFF) * 0.45);
@@ -230,6 +254,10 @@ public class ConfigScreen extends Screen {
 
         for (SwatchButton swatch : swatches) {
             swatch.render(context, this, mouseX, mouseY);
+        }
+
+        for (CycleRow row : cycles) {
+            row.render(context, this, mouseX, mouseY);
         }
 
         drawButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
@@ -299,6 +327,13 @@ public class ConfigScreen extends Screen {
         for (SwatchButton swatch : swatches) {
             if (swatch.isInside(mouseX, mouseY)) {
                 cfg.accentColorIndex = swatch.paletteIndex;
+                return true;
+            }
+        }
+
+        for (CycleRow row : cycles) {
+            if (row.isInside(mouseX, mouseY)) {
+                row.advance();
                 return true;
             }
         }
@@ -382,6 +417,18 @@ public class ConfigScreen extends Screen {
         cfg.customHandleRotX = 0;
         cfg.customHandleRotY = 0;
         cfg.customHandleRotZ = 0;
+        cfg.damageFlashEnabled = true;
+        cfg.hitImpactPunchEnabled = true;
+        cfg.killStreakEnabled = true;
+        cfg.bigKillBurstEnabled = true;
+        cfg.pulsingVignetteEnabled = false;
+        cfg.sweepTrailEnabled = false;
+        cfg.rainbowThemeEnabled = false;
+        cfg.sprintTrailEnabled = false;
+        cfg.footstepDustEnabled = false;
+        cfg.crosshairStyleIndex = 0;
+        cfg.hitmarkerStyleIndex = 0;
+        cfg.hitParticleColorIndex = 0;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -522,4 +569,36 @@ public class ConfigScreen extends Screen {
             screen.drawBorder(context, x, y, size, size, selected ? 0xFFFFFFFF : 0xFF000000);
         }
     }
+
+    private class CycleRow {
+        final String label;
+        final int x, y;
+        final String[] options;
+        final java.util.function.IntSupplier getter;
+        final java.util.function.IntConsumer setter;
+
+        CycleRow(String label, int x, int y, String[] options, java.util.function.IntSupplier getter, java.util.function.IntConsumer setter) {
+            this.label = label;
+            this.x = x;
+            this.y = y;
+            this.options = options;
+            this.getter = getter;
+            this.setter = setter;
+        }
+
+        void advance() {
+            int next = (getter.getAsInt() + 1) % options.length;
+            setter.accept(next);
+        }
+
+        boolean isInside(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + 260 && mouseY >= y && mouseY < y + 18;
+        }
+
+        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
+            int current = Math.max(0, Math.min(options.length - 1, getter.getAsInt()));
+            String text = label + ": " + options[current] + "  (tap to change)";
+            context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
+        }
     }
+                }
