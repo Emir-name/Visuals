@@ -59,6 +59,22 @@ public class ModConfig {
     public int customHandleRotY = 0;
     public int customHandleRotZ = 0;
 
+    // Combat FX
+    public boolean damageFlashEnabled = true;
+    public boolean hitImpactPunchEnabled = true;
+    public boolean killStreakEnabled = true;
+    public boolean bigKillBurstEnabled = true;
+    public boolean pulsingVignetteEnabled = false;
+    public boolean sweepTrailEnabled = false;
+
+    // Cosmetics
+    public boolean rainbowThemeEnabled = false;
+    public boolean sprintTrailEnabled = false;
+    public boolean footstepDustEnabled = false;
+    public int crosshairStyleIndex = 0; // 0=off, 1=dot, 2=cross, 3=ring
+    public int hitmarkerStyleIndex = 0; // 0=vanilla X, 1=dot, 2=ring
+    public int hitParticleColorIndex = 0; // 0=vanilla, 1-6=palette color
+
     // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
