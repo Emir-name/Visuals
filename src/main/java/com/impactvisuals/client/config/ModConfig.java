@@ -50,6 +50,15 @@ public class ModConfig {
     public boolean realClockEnabled = false;
     public long totalPlaytimeMillis = 0L;
 
+    public int accentColorIndex = 0;
+    public boolean critSoundEnabled = true;
+    public boolean smallFireEnabled = false;
+    public boolean customHandleEnabled = false;
+    public int customHandleScalePercent = 100;
+    public int customHandleRotX = 0;
+    public int customHandleRotY = 0;
+    public int customHandleRotZ = 0;
+
     // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
