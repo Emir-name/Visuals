@@ -18,12 +18,14 @@ public class SmallFireEffect {
         if (player == null || client.world == null) return;
 
         tickCounter++;
-        if (tickCounter < 4) return;
+        if (tickCounter < 14) return;
         tickCounter = 0;
 
-        double x = player.getX() + (player.getRandom().nextDouble() - 0.5) * 0.6;
+        if (player.getRandom().nextFloat() > 0.5f) return;
+
+        double x = player.getX() + (player.getRandom().nextDouble() - 0.5) * 0.4;
         double y = player.getY() + 0.05;
-        double z = player.getZ() + (player.getRandom().nextDouble() - 0.5) * 0.6;
+        double z = player.getZ() + (player.getRandom().nextDouble() - 0.5) * 0.4;
 
         client.world.addParticle(ParticleTypes.SMALL_FLAME, x, y, z, 0.0, 0.02, 0.0);
     }
