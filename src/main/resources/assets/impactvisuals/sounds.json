@@ -1,0 +1,8 @@
+{
+  "crit_hit": {
+    "subtitle": "Critical hit",
+    "sounds": [
+      "impactvisuals:crit_hit"
+    ]
+  }
+}
