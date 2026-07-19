@@ -5,6 +5,7 @@ import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.visual.CooldownIndicator;
+import com.impactvisuals.client.visual.CritSoundPlayer;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.ExtraHud;
 import com.impactvisuals.client.visual.HitParticleRenderer;
@@ -14,6 +15,7 @@ import com.impactvisuals.client.visual.InfoHud;
 import com.impactvisuals.client.visual.KillDeathTracker;
 import com.impactvisuals.client.visual.PlaytimeTracker;
 import com.impactvisuals.client.visual.ScreenTint;
+import com.impactvisuals.client.visual.SmallFireEffect;
 import com.impactvisuals.client.visual.StatsHud;
 import com.impactvisuals.client.visual.TargetHud;
 import com.impactvisuals.client.visual.TrajectoryRenderer;
@@ -42,6 +44,7 @@ public final class ClientEventHandler {
             KillDeathTracker.tick();
             ZoomHandler.tick();
             PlaytimeTracker.tick();
+            SmallFireEffect.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -82,6 +85,10 @@ public final class ClientEventHandler {
         HitSoundPlayer.play();
         KillDeathTracker.onHit(target);
 
+        if (critical) {
+            CritSoundPlayer.play();
+        }
+
         if (cfg.damageNumbersEnabled) {
             DamageNumberRenderer.spawn(origin.x, origin.y, origin.z, estimatedDamage, critical);
         }
@@ -106,4 +113,4 @@ public final class ClientEventHandler {
         }
         return value;
     }
-}
+                                         }
