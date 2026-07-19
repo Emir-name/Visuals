@@ -4,13 +4,17 @@ import com.impactvisuals.client.config.ConfigScreen;
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
+import com.impactvisuals.client.visual.ColoredHitParticles;
 import com.impactvisuals.client.visual.CooldownIndicator;
+import com.impactvisuals.client.visual.CosmeticTrails;
 import com.impactvisuals.client.visual.CritSoundPlayer;
+import com.impactvisuals.client.visual.DamageFlash;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.ExtraHud;
 import com.impactvisuals.client.visual.HitParticleRenderer;
 import com.impactvisuals.client.visual.HitSoundPlayer;
 import com.impactvisuals.client.visual.HitmarkerRenderer;
+import com.impactvisuals.client.visual.ImpactPunch;
 import com.impactvisuals.client.visual.InfoHud;
 import com.impactvisuals.client.visual.KillDeathTracker;
 import com.impactvisuals.client.visual.PlaytimeTracker;
@@ -27,6 +31,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.Vec3d;
 
@@ -45,6 +50,8 @@ public final class ClientEventHandler {
             ZoomHandler.tick();
             PlaytimeTracker.tick();
             SmallFireEffect.tick();
+            DamageFlash.tick();
+            CosmeticTrails.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -68,6 +75,8 @@ public final class ClientEventHandler {
             HitmarkerRenderer.render(drawContext);
             CooldownIndicator.render(drawContext);
             ExtraHud.render(drawContext);
+            DamageFlash.render(drawContext);
+            ImpactPunch.render(drawContext);
         });
     }
 
@@ -84,6 +93,12 @@ public final class ClientEventHandler {
         HitmarkerRenderer.spawn();
         HitSoundPlayer.play();
         KillDeathTracker.onHit(target);
+        ColoredHitParticles.spawn(origin.x, origin.y, origin.z);
+        ImpactPunch.trigger();
+
+        if (cfg.sweepTrailEnabled) {
+            world.addParticle(ParticleTypes.SWEEP_ATTACK, origin.x, origin.y, origin.z, 0.0, 0.0, 0.0);
+        }
 
         if (critical) {
             CritSoundPlayer.play();
@@ -113,4 +128,4 @@ public final class ClientEventHandler {
         }
         return value;
     }
-                                         }
+}
