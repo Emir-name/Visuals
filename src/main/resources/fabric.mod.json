@@ -9,6 +9,9 @@
   "license": "MIT",
   "icon": "assets/impactvisuals/icon.png",
   "environment": "client",
+  "mixins": [
+    "impactvisuals.mixins.json"
+  ],
   "entrypoints": {
     "client": [
       "com.impactvisuals.ImpactVisualsClient"
