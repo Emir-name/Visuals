@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 public final class ModKeybinds {
 
     public static KeyBinding openSettings;
+    public static KeyBinding zoomKey;
 
     private ModKeybinds() {}
 
@@ -16,6 +17,13 @@ public final class ModKeybinds {
                 "key.impactvisuals.opensettings",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_N,
+                "category.impactvisuals"
+        ));
+
+        zoomKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.impactvisuals.zoom",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_C,
                 "category.impactvisuals"
         ));
     }
