@@ -21,7 +21,7 @@ public class ConfigScreen extends Screen {
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -56,7 +56,7 @@ public class ConfigScreen extends Screen {
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
         panelW = 560;
-        panelH = 300;
+        panelH = 320;
         panelX = (this.width - panelW) / 2;
         panelY = (this.height - panelH) / 2;
 
@@ -111,11 +111,27 @@ public class ConfigScreen extends Screen {
 
             showSlider = true;
             slider = new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v);
-        } else {
+        } else if (currentCategory == 2) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
             addToggle(2, contentX, colGap, gridStartY, rowH, "Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
             addToggle(3, contentX, colGap, gridStartY, rowH, "Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Crosshair Dot", () -> cfg.crosshairDotEnabled, v -> cfg.crosshairDotEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
+        } else if (currentCategory == 3) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Hunger %", () -> cfg.hungerPercentEnabled, v -> cfg.hungerPercentEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "XP %", () -> cfg.xpPercentEnabled, v -> cfg.xpPercentEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
+        } else if (currentCategory == 4) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Offhand Item Name", () -> cfg.offhandItemNameEnabled, v -> cfg.offhandItemNameEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Total Playtime", () -> cfg.totalPlaytimeEnabled, v -> cfg.totalPlaytimeEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
         }
     }
 
@@ -181,16 +197,11 @@ public class ConfigScreen extends Screen {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
 
-        var texture = client.player.getSkinTextures().texture();
         int faceSize = 48;
         int faceX = skinPanelX + (skinPanelW - faceSize) / 2;
         int faceY = skinPanelY + 8;
 
-        // Base face layer (UV 8,8 in a 64x64 skin) then the hat/overlay layer (UV 40,8) on top.
-        context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, texture,
-                faceX, faceY, faceSize, faceSize, 8, 8, 8, 8, 64, 64);
-        context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, texture,
-                faceX, faceY, faceSize, faceSize, 40, 8, 8, 8, 64, 64);
+        net.minecraft.client.gui.PlayerSkinDrawer.draw(context, client.player.getSkinTextures(), faceX, faceY, faceSize);
 
         String name = client.getSession().getUsername();
         int nameWidth = this.textRenderer.getWidth(name);
@@ -289,6 +300,20 @@ public class ConfigScreen extends Screen {
         cfg.killDeathCounterEnabled = false;
         cfg.hitSoundEnabled = true;
         cfg.cooldownIndicatorEnabled = true;
+        cfg.sprintIndicatorEnabled = false;
+        cfg.healthPercentEnabled = false;
+        cfg.hungerPercentEnabled = false;
+        cfg.xpPercentEnabled = false;
+        cfg.armorHudEnabled = false;
+        cfg.biomeHudEnabled = false;
+        cfg.crosshairDotEnabled = false;
+        cfg.killFeedEnabled = true;
+        cfg.lightLevelHudEnabled = false;
+        cfg.heldItemNameEnabled = false;
+        cfg.offhandItemNameEnabled = false;
+        cfg.totalPlaytimeEnabled = false;
+        cfg.zoomEnabled = true;
+        cfg.realClockEnabled = false;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -407,4 +432,4 @@ public class ConfigScreen extends Screen {
             context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
         }
     }
-}
+        }
