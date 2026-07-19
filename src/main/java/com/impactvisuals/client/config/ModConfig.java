@@ -34,6 +34,21 @@ public class ModConfig {
     public boolean killDeathCounterEnabled = false;
     public boolean hitSoundEnabled = true;
     public boolean cooldownIndicatorEnabled = true;
+    public boolean sprintIndicatorEnabled = false;
+    public boolean healthPercentEnabled = false;
+    public boolean hungerPercentEnabled = false;
+    public boolean xpPercentEnabled = false;
+    public boolean armorHudEnabled = false;
+    public boolean biomeHudEnabled = false;
+    public boolean crosshairDotEnabled = false;
+    public boolean killFeedEnabled = true;
+    public boolean lightLevelHudEnabled = false;
+    public boolean heldItemNameEnabled = false;
+    public boolean offhandItemNameEnabled = false;
+    public boolean totalPlaytimeEnabled = false;
+    public boolean zoomEnabled = true;
+    public boolean realClockEnabled = false;
+    public long totalPlaytimeMillis = 0L;
 
     // Tunables
     public float hitParticleLifetimeSeconds = 0.5f;
