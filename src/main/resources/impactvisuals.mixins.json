@@ -4,7 +4,8 @@
   "package": "com.impactvisuals.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "HeldItemRendererMixin"
+    "HeldItemRendererMixin",
+    "SkyColorMixin"
   ],
   "injectors": {
     "defaultRequire": 1
