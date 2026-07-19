@@ -16,10 +16,6 @@ public class ScreenTint {
         int height = context.getScaledWindowHeight();
         int bandHeight = height / 3;
 
-        int topColor = 0x66660099;
-        int bottomColor = 0x00660099;
-        context.fillGradient(0, 0, width, bandHeight, topColor, bottomColor);
-
         long now = System.currentTimeMillis();
         for (int i = 0; i < STAR_COUNT; i++) {
             long seed = i * 928371L;
