@@ -6,16 +6,19 @@ import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.visual.CooldownIndicator;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
+import com.impactvisuals.client.visual.ExtraHud;
 import com.impactvisuals.client.visual.HitParticleRenderer;
 import com.impactvisuals.client.visual.HitSoundPlayer;
 import com.impactvisuals.client.visual.HitmarkerRenderer;
 import com.impactvisuals.client.visual.InfoHud;
 import com.impactvisuals.client.visual.KillDeathTracker;
+import com.impactvisuals.client.visual.PlaytimeTracker;
 import com.impactvisuals.client.visual.ScreenTint;
 import com.impactvisuals.client.visual.StatsHud;
 import com.impactvisuals.client.visual.TargetHud;
 import com.impactvisuals.client.visual.TrajectoryRenderer;
 import com.impactvisuals.client.visual.VignetteRenderer;
+import com.impactvisuals.client.visual.ZoomHandler;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -37,6 +40,8 @@ public final class ClientEventHandler {
             TrajectoryRenderer.tick();
             HitmarkerRenderer.tick();
             KillDeathTracker.tick();
+            ZoomHandler.tick();
+            PlaytimeTracker.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -56,8 +61,10 @@ public final class ClientEventHandler {
             InfoHud.render(drawContext);
             StatsHud.render(drawContext);
             KillDeathTracker.render(drawContext);
+            PlaytimeTracker.render(drawContext);
             HitmarkerRenderer.render(drawContext);
             CooldownIndicator.render(drawContext);
+            ExtraHud.render(drawContext);
         });
     }
 
