@@ -91,10 +91,10 @@ public class ExtraHud {
             yr -= line;
         }
 
-        if (cfg.crosshairDotEnabled) {
+        if (cfg.crosshairStyleIndex > 0) {
             int cx = screenW / 2;
             int cy = screenH / 2;
-            context.fill(cx - 1, cy - 1, cx + 1, cy + 1, 0xFFFFFFFF);
+            renderCrosshairStyle(context, cx, cy, cfg.crosshairStyleIndex);
         }
 
         if (cfg.killFeedEnabled && killFeedText != null) {
@@ -104,6 +104,25 @@ public class ExtraHud {
             } else {
                 killFeedText = null;
             }
+        }
+    }
+
+    private static void renderCrosshairStyle(DrawContext context, int cx, int cy, int style) {
+        int color = 0xFFFFFFFF;
+        switch (style) {
+            case 1 -> context.fill(cx - 1, cy - 1, cx + 1, cy + 1, color);
+            case 2 -> {
+                context.fill(cx - 4, cy, cx + 4, cy + 1, color);
+                context.fill(cx, cy - 4, cx + 1, cy + 4, color);
+            }
+            case 3 -> {
+                int r = 4;
+                context.fill(cx - r, cy - 1, cx - r + 2, cy + 1, color);
+                context.fill(cx + r - 2, cy - 1, cx + r, cy + 1, color);
+                context.fill(cx - 1, cy - r, cx + 1, cy - r + 2, color);
+                context.fill(cx - 1, cy + r - 2, cx + 1, cy + r, color);
+            }
+            default -> {}
         }
     }
 
