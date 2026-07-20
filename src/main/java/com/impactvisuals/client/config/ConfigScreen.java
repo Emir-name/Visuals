@@ -41,7 +41,7 @@ public class ConfigScreen extends Screen {
     private int panelX, panelY, panelW, panelH;
     private int sidebarW;
     private int sidebarItemY, sidebarItemH;
-    private int skinPanelW, skinPanelX, skinPanelY;
+    private int skinPanelW, skinPanelH, skinPanelX, skinPanelY;
 
     private int currentCategory = 0;
 
@@ -54,6 +54,9 @@ public class ConfigScreen extends Screen {
     private int resetX, resetY, resetW, resetH;
 
     private SliderRow draggingSlider = null;
+    private boolean draggingSkin = false;
+    private float skinMouseX;
+    private float skinMouseY;
     private int previousBlurriness = 0;
 
     public ConfigScreen(Screen parent) {
@@ -77,9 +80,13 @@ public class ConfigScreen extends Screen {
         sidebarItemY = panelY + 38;
         sidebarItemH = 22;
 
-        skinPanelW = 90;
+        skinPanelW = 100;
+        skinPanelH = 160;
         skinPanelX = panelX + panelW - skinPanelW - 10;
-        skinPanelY = panelY + 36;
+        skinPanelY = panelY + 34;
+
+        skinMouseX = skinPanelX + skinPanelW / 2f;
+        skinMouseY = skinPanelY + skinPanelH / 3f;
 
         int buttonW = 100;
         int buttonH = 22;
@@ -284,23 +291,26 @@ public class ConfigScreen extends Screen {
     }
 
     private void renderSkinPanel(DrawContext context) {
-        int skinPanelH = 90;
         context.fill(skinPanelX, skinPanelY, skinPanelX + skinPanelW, skinPanelY + skinPanelH, 0xFF1E1E1E);
         drawBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, accentColor);
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
 
-        int faceSize = 48;
-        int faceX = skinPanelX + (skinPanelW - faceSize) / 2;
-        int faceY = skinPanelY + 8;
-
-        net.minecraft.client.gui.PlayerSkinDrawer.draw(context, client.player.getSkinTextures(), faceX, faceY, faceSize);
+        int entitySize = (int) (skinPanelW * 0.6);
+        net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(
+                context,
+                skinPanelX, skinPanelY,
+                skinPanelX + skinPanelW, skinPanelY + skinPanelH,
+                entitySize, 0.0625f,
+                skinMouseX, skinMouseY,
+                client.player
+        );
 
         String name = client.getSession().getUsername();
         int nameWidth = this.textRenderer.getWidth(name);
         int nameX = skinPanelX + (skinPanelW - nameWidth) / 2;
-        context.drawText(this.textRenderer, name, nameX, faceY + faceSize + 8, TEXT_MAIN, false);
+        context.drawText(this.textRenderer, name, nameX, skinPanelY + skinPanelH + 6, TEXT_MAIN, false);
     }
 
     private void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
@@ -330,6 +340,11 @@ public class ConfigScreen extends Screen {
                 buildCategoryContent();
                 return true;
             }
+        }
+
+        if (inside(skinPanelX, skinPanelY, skinPanelW, skinPanelH, mouseX, mouseY)) {
+            draggingSkin = true;
+            return true;
         }
 
         for (ToggleRow row : toggles) {
@@ -376,6 +391,11 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (draggingSkin) {
+            skinMouseX += (float) deltaX;
+            skinMouseY += (float) deltaY;
+            return true;
+        }
         if (draggingSlider != null) {
             draggingSlider.updateFromMouse(mouseX);
             return true;
@@ -386,6 +406,7 @@ public class ConfigScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         draggingSlider = null;
+        draggingSkin = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
