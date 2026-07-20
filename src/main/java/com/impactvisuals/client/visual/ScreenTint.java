@@ -1,38 +1,35 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.particle.ParticleTypes;
 
 public class ScreenTint {
 
-    private static final int STAR_COUNT = 40;
-    private static final long BASE_CYCLE_MILLIS = 9000;
+    private static int tickCounter = 0;
 
-    public static void render(DrawContext context) {
+    public static void tick() {
         ModConfig cfg = ModConfig.get();
         if (!cfg.purpleSkyEnabled) return;
 
-        int width = context.getScaledWindowWidth();
-        int height = context.getScaledWindowHeight();
-        int bandHeight = height / 3;
+        MinecraftClient client = MinecraftClient.getInstance();
+        ClientPlayerEntity player = client.player;
+        if (player == null || client.world == null) return;
 
-        long now = System.currentTimeMillis();
-        for (int i = 0; i < STAR_COUNT; i++) {
-            long seed = i * 928371L;
-            double xFrac = ((seed * 2654435761L) & 0xFFFF) / 65535.0;
-            double speedFactor = 0.5 + (((seed * 40503L) & 0xFF) / 255.0);
-            long starCycle = (long) (BASE_CYCLE_MILLIS / speedFactor);
-            long phase = seed % starCycle;
-            long t = (now + phase) % starCycle;
-            double progress = t / (double) starCycle;
+        tickCounter++;
+        if (tickCounter < 3) return;
+        tickCounter = 0;
 
-            int x = (int) (xFrac * width);
-            int y = (int) (progress * bandHeight);
-            int alpha = (int) (255 * (1.0 - progress * 0.6));
-            if (alpha < 0) alpha = 0;
+        var random = player.getRandom();
+        for (int i = 0; i < 2; i++) {
+            double offsetX = (random.nextDouble() - 0.5) * 40.0;
+            double offsetZ = (random.nextDouble() - 0.5) * 40.0;
+            double x = player.getX() + offsetX;
+            double z = player.getZ() + offsetZ;
+            double y = player.getY() + 20 + random.nextDouble() * 15;
 
-            int color = (alpha << 24) | 0xFFFFFF;
-            context.fill(x, y, x + 1, y + 2, color);
+            client.world.addParticle(ParticleTypes.SNOWFLAKE, x, y, z, 0.0, -0.02, 0.0);
         }
     }
 }
