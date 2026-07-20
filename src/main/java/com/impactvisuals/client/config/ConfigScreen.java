@@ -77,7 +77,7 @@ public class ConfigScreen extends Screen {
         panelY = (this.height - panelH) / 2;
 
         sidebarW = 100;
-        sidebarItemY = panelY + 38;
+        sidebarItemY = panelY + 46;
         sidebarItemH = 22;
 
         skinPanelW = 100;
@@ -246,9 +246,9 @@ public class ConfigScreen extends Screen {
         context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
         context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, accentColor);
 
-        int logoSize = 26;
+        int logoSize = 36;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
-                panelX + 10, panelY + 6, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
+                panelX + 8, panelY + 4, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
 
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = sidebarItemY + i * sidebarItemH;
@@ -646,4 +646,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-            }
+                                          }
