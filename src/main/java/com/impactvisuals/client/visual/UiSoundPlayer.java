@@ -11,7 +11,7 @@ public class UiSoundPlayer {
         if (!ModConfig.get().menuSoundEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         client.getSoundManager().play(
-                PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f)
+                PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
         );
     }
 }
