@@ -27,6 +27,9 @@ public class ConfigScreen extends Screen {
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
+    private static final net.minecraft.util.Identifier LOGO_TEXTURE =
+            net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
+
     private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE", "SOUND"};
 
     private final Screen parent;
@@ -236,8 +239,9 @@ public class ConfigScreen extends Screen {
         context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
         context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, accentColor);
 
-        String title = "IMPACT";
-        context.drawText(this.textRenderer, title, panelX + 12, panelY + 10, accentColor, false);
+        int logoSize = 26;
+        context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
+                panelX + 10, panelY + 6, logoSize, logoSize, 0, 0, 256, 256, 256, 256);
 
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = sidebarItemY + i * sidebarItemH;
@@ -621,4 +625,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                }
+                      }
