@@ -2,19 +2,24 @@ package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.particle.DustParticleEffect;
+import net.minecraft.particle.DustParticleEffect;
 import org.joml.Vector3f;
 
 public class ColoredHitParticles {
 
     private static final int[] PALETTE = {
-            0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
+            0xFFFF8C00, // Orange
+            0xFFB266FF, // Purple
+            0xFF3399FF, // Blue
+            0xFF55DD55, // Green
+            0xFFFF5555, // Red
+            0xFF33DDDD  // Cyan
     };
 
     public static void spawn(double x, double y, double z) {
         ModConfig cfg = ModConfig.get();
         int index = cfg.hitParticleColorIndex;
-        if (index <= 0 || index > PALETTE.length) return;
+        if (index <= 0 || index > PALETTE.length) return; // 0 = vanilla colors, skip
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
