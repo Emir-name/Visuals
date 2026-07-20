@@ -241,7 +241,7 @@ public class ConfigScreen extends Screen {
 
         int logoSize = 26;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
-                panelX + 10, panelY + 6, logoSize, logoSize, 0, 0, 256, 256, 256, 256);
+                panelX + 10, panelY + 6, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
 
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = sidebarItemY + i * sidebarItemH;
@@ -625,4 +625,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                      }
+            }
