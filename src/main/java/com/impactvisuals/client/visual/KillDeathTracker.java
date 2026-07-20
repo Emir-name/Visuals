@@ -63,6 +63,7 @@ public class KillDeathTracker {
             if (gone) {
                 kills++;
                 ExtraHud.announceKill(record.name);
+                CombatSounds.playKill();
 
                 if (cfg.bigKillBurstEnabled) {
                     for (int i = 0; i < 10; i++) {
@@ -83,6 +84,7 @@ public class KillDeathTracker {
                     lastKillMillis = now;
                     if (streakCount >= 2) {
                         ExtraHud.announceKill(streakLabel(streakCount) + "!");
+                        CombatSounds.playStreak();
                     }
                 }
 
