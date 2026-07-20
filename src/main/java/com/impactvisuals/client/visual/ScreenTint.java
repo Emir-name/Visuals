@@ -8,12 +8,25 @@ import net.minecraft.particle.ParticleTypes;
 public class ScreenTint {
 
     private static int tickCounter = 0;
+    private static net.minecraft.client.option.CloudRenderMode previousCloudMode = null;
 
     public static void tick() {
         ModConfig cfg = ModConfig.get();
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        var cloudOption = client.options.getCloudRenderModeValue();
+        if (cfg.purpleSkyEnabled) {
+            if (previousCloudMode == null) {
+                previousCloudMode = cloudOption.getValue();
+                cloudOption.setValue(net.minecraft.client.option.CloudRenderMode.OFF);
+            }
+        } else if (previousCloudMode != null) {
+            cloudOption.setValue(previousCloudMode);
+            previousCloudMode = null;
+        }
+
         if (!cfg.purpleSkyEnabled) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
         if (player == null || client.world == null) return;
 
