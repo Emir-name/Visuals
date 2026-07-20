@@ -14,7 +14,7 @@ public class ScreenTint {
         ModConfig cfg = ModConfig.get();
         MinecraftClient client = MinecraftClient.getInstance();
 
-        var cloudOption = client.options.getCloudRenderModeValue();
+        var cloudOption = client.options.getCloudRenderMode();
         if (cfg.purpleSkyEnabled) {
             if (previousCloudMode == null) {
                 previousCloudMode = cloudOption.getValue();
