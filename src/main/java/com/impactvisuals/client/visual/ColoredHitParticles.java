@@ -3,7 +3,6 @@ package com.impactvisuals.client.visual;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.particle.DustParticleEffect;
-import org.joml.Vector3f;
 
 public class ColoredHitParticles {
 
@@ -24,12 +23,8 @@ public class ColoredHitParticles {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
 
-        int color = PALETTE[index - 1];
-        float r = ((color >> 16) & 0xFF) / 255f;
-        float g = ((color >> 8) & 0xFF) / 255f;
-        float b = (color & 0xFF) / 255f;
-
-        DustParticleEffect effect = new DustParticleEffect(new Vector3f(r, g, b), 1.2f);
+        int color = PALETTE[index - 1] & 0xFFFFFF;
+        DustParticleEffect effect = new DustParticleEffect(color, 1.2f);
 
         for (int i = 0; i < 4; i++) {
             double ox = (client.world.random.nextDouble() - 0.5) * 0.4;
