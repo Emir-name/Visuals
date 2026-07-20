@@ -11,6 +11,8 @@ import com.impactvisuals.client.visual.CritSoundPlayer;
 import com.impactvisuals.client.visual.DamageFlash;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.ExtraHud;
+import com.impactvisuals.client.visual.HandGlow;
+import com.impactvisuals.client.visual.HeartbeatSound;
 import com.impactvisuals.client.visual.HitParticleRenderer;
 import com.impactvisuals.client.visual.HitSoundPlayer;
 import com.impactvisuals.client.visual.HitmarkerRenderer;
@@ -23,6 +25,7 @@ import com.impactvisuals.client.visual.SmallFireEffect;
 import com.impactvisuals.client.visual.StatsHud;
 import com.impactvisuals.client.visual.TargetHud;
 import com.impactvisuals.client.visual.TrajectoryRenderer;
+import com.impactvisuals.client.visual.UiSoundPlayer;
 import com.impactvisuals.client.visual.VignetteRenderer;
 import com.impactvisuals.client.visual.ZoomHandler;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -53,9 +56,12 @@ public final class ClientEventHandler {
             DamageFlash.tick();
             CosmeticTrails.tick();
             ScreenTint.tick();
+            HeartbeatSound.tick();
+            HandGlow.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
+                    UiSoundPlayer.play();
                     client.setScreen(new ConfigScreen(null));
                 }
             }
