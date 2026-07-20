@@ -11,7 +11,7 @@ public class CombatSounds {
         if (!ModConfig.get().killSoundEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         client.getSoundManager().play(
-                PositionedSoundInstance.master(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP.value(), 1.0f)
+                PositionedSoundInstance.master(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f)
         );
     }
 
@@ -19,7 +19,7 @@ public class CombatSounds {
         if (!ModConfig.get().streakSoundEnabled) return;
         MinecraftClient client = MinecraftClient.getInstance();
         client.getSoundManager().play(
-                PositionedSoundInstance.master(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE.value(), 1.0f)
+                PositionedSoundInstance.master(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f)
         );
     }
 }
