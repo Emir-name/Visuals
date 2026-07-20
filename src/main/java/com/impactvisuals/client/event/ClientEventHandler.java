@@ -52,6 +52,7 @@ public final class ClientEventHandler {
             SmallFireEffect.tick();
             DamageFlash.tick();
             CosmeticTrails.tick();
+            ScreenTint.tick();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -65,7 +66,6 @@ public final class ClientEventHandler {
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
-            ScreenTint.render(drawContext);
             VignetteRenderer.render(drawContext);
             TargetHud.render(drawContext);
             InfoHud.render(drawContext);
