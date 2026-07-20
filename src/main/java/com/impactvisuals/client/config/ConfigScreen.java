@@ -27,7 +27,7 @@ public class ConfigScreen extends Screen {
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFFA0A0A0;
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE", "SOUND"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -71,8 +71,8 @@ public class ConfigScreen extends Screen {
         panelY = (this.height - panelH) / 2;
 
         sidebarW = 100;
-        sidebarItemY = panelY + 40;
-        sidebarItemH = 24;
+        sidebarItemY = panelY + 38;
+        sidebarItemH = 22;
 
         skinPanelW = 90;
         skinPanelX = panelX + panelW - skinPanelW - 10;
@@ -188,6 +188,17 @@ public class ConfigScreen extends Screen {
                     () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
             cycles.add(new CycleRow("Hit Particle Color", contentX, gridStartY + rowH + 10, colorNames,
                     () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
+
+            int belowY = gridStartY + 2 * (rowH + 10) + 10;
+            toggles.add(new ToggleRow("Colored Trails", contentX, belowY, () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v));
+            toggles.add(new ToggleRow("Hand Glow", contentX, belowY + rowH, () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v));
+        } else if (currentCategory == 9) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Streak Sound", () -> cfg.streakSoundEnabled, v -> cfg.streakSoundEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
         }
     }
 
@@ -429,6 +440,14 @@ public class ConfigScreen extends Screen {
         cfg.crosshairStyleIndex = 0;
         cfg.hitmarkerStyleIndex = 0;
         cfg.hitParticleColorIndex = 0;
+        cfg.killSoundEnabled = true;
+        cfg.heartbeatSoundEnabled = false;
+        cfg.streakSoundEnabled = true;
+        cfg.menuSoundEnabled = true;
+        cfg.footstepSoundEnabled = false;
+        cfg.healFlashEnabled = true;
+        cfg.coloredTrailsEnabled = false;
+        cfg.handGlowEnabled = false;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -436,6 +455,7 @@ public class ConfigScreen extends Screen {
     @Override
     public void close() {
         cfg.save();
+        com.impactvisuals.client.visual.UiSoundPlayer.play();
         if (this.client != null) {
             this.client.setScreen(parent);
         }
