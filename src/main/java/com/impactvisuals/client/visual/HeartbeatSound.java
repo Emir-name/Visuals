@@ -30,7 +30,7 @@ public class HeartbeatSound {
         lastBeatMillis = now;
 
         client.getSoundManager().play(
-                PositionedSoundInstance.master(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.8f)
+                PositionedSoundInstance.master(SoundEvents.BLOCK_NOTE_BLOCK_BASS, 0.8f)
         );
     }
 }
