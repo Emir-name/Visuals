@@ -58,7 +58,7 @@ public class CosmeticTrails {
                 }
                 if (cfg.footstepSoundEnabled) {
                     client.getSoundManager().play(
-                            PositionedSoundInstance.master(SoundEvents.BLOCK_WOOL_STEP.value(), 1.2f)
+                            PositionedSoundInstance.master(SoundEvents.BLOCK_WOOL_STEP, 1.2f)
                     );
                 }
             }
