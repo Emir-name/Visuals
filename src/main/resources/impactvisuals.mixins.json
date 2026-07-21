@@ -6,7 +6,8 @@
   "client": [
     "HeldItemRendererMixin",
     "SkyColorMixin",
-    "CustomSkinMixin"
+    "CustomSkinMixin",
+    "TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
