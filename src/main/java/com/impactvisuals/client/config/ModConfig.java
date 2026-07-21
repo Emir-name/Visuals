@@ -84,6 +84,8 @@ public class ModConfig {
     public boolean coloredTrailsEnabled = false;
     public boolean handGlowEnabled = false;
 
+    public int selectedSkinIndex = 0; // 0=default, 1-8=preset, 9=custom
+
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
     public int targetHudRangeBlocks = 6;
