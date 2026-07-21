@@ -13,12 +13,7 @@ import java.util.function.Consumer;
 public class ConfigScreen extends Screen {
 
     private static final int[] PALETTE = {
-            0xFFFF8C00, // Orange
-            0xFFB266FF, // Purple
-            0xFF3399FF, // Blue
-            0xFF55DD55, // Green
-            0xFFFF5555, // Red
-            0xFF33DDDD  // Cyan
+            0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
     };
 
     private static final int PANEL_BG = 0xE6141414;
@@ -30,7 +25,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE", "SOUND"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE", "SOUND", "SKINS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -72,7 +67,7 @@ public class ConfigScreen extends Screen {
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
         panelW = 560;
-        panelH = 320;
+        panelH = 340;
         panelX = (this.width - panelW) / 2;
         panelY = (this.height - panelH) / 2;
 
@@ -209,6 +204,11 @@ public class ConfigScreen extends Screen {
             addToggle(3, contentX, colGap, gridStartY, rowH, "Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
             addToggle(4, contentX, colGap, gridStartY, rowH, "Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
+        } else if (currentCategory == 10) {
+            String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
+                    "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
+            cycles.add(new CycleRow("Skin (self-view only)", contentX, gridStartY, skinNames,
+                    () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
         }
     }
 
@@ -473,6 +473,7 @@ public class ConfigScreen extends Screen {
         cfg.healFlashEnabled = true;
         cfg.coloredTrailsEnabled = false;
         cfg.handGlowEnabled = false;
+        cfg.selectedSkinIndex = 0;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -646,4 +647,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                                          }
+                         }
