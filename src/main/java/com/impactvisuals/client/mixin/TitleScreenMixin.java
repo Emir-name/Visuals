@@ -20,14 +20,14 @@ public class TitleScreenMixin {
         int width = self.width;
         int height = self.height;
 
-        int topColor = 0x662D0000;
-        int bottomColor = 0x99120000;
-        context.fillGradient(0, 0, width, height / 2, topColor, 0x00000000);
-        context.fillGradient(0, height / 2, width, height, 0x00000000, bottomColor);
+        int topColor = 0x882D0000;
+        int bottomColor = 0xB3120000;
+        context.fillGradient(0, 0, width, height / 3, topColor, 0x00000000);
+        context.fillGradient(0, height - height / 3, width, height, 0x00000000, bottomColor);
 
-        int logoSize = 64;
-        int logoX = (width - logoSize) / 2;
-        int logoY = 6;
+        int logoSize = 40;
+        int logoX = width - logoSize - 8;
+        int logoY = height - logoSize - 8;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
                 logoX, logoY, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
     }
