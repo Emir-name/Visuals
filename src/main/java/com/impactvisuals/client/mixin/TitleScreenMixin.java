@@ -1,9 +1,13 @@
 package com.impactvisuals.client.mixin;
 
+import com.impactvisuals.client.friends.FriendsScreen;
+import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +18,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TitleScreenMixin {
 
     private static final Identifier LOGO_TEXTURE = Identifier.of("impactvisuals", "textures/gui/logo.png");
+
+    @Inject(method = "init", at = @At("TAIL"))
+    private void impactvisuals$addFriendsButton(CallbackInfo ci) {
+        if (!ModConfig.get().friendsFeatureEnabled) return;
+
+        Screen self = (Screen) (Object) this;
+        self.addDrawableChild(ButtonWidget.builder(Text.literal("Друзья"), btn ->
+                        self.client.setScreen(new FriendsScreen(self)))
+                .dimensions(8, 8, 90, 20).build());
+    }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void impactvisuals$fireOverlay(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
