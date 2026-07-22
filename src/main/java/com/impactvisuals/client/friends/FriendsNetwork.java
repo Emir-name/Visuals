@@ -24,6 +24,8 @@ public class FriendsNetwork {
     private static final HttpClient HTTP = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
     private static final ConcurrentHashMap<String, Status> CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, net.minecraft.util.Identifier> HEAD_TEXTURES = new ConcurrentHashMap<>();
+    private static final java.util.Set<String> HEAD_FETCHING = ConcurrentHashMap.newKeySet();
     private static ScheduledExecutorService heartbeatExecutor;
 
     private static final String FIREBASE_URL = "https://impact-visual-724a7-default-rtdb.firebaseio.com";
@@ -33,8 +35,6 @@ public class FriendsNetwork {
     }
 
     public static void startHeartbeat(String username) {
-        if (!ModConfig.get().friendsFeatureEnabled) return;
-
         stopHeartbeat();
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
         heartbeatExecutor.scheduleAtFixedRate(() -> sendHeartbeat(username), 0, 20, TimeUnit.SECONDS);
@@ -99,5 +99,41 @@ public class FriendsNetwork {
 
     public static Status getCached(String username) {
         return CACHE.get(username);
+    }
+
+    public static net.minecraft.util.Identifier getHeadTexture(String username) {
+        return HEAD_TEXTURES.get(username);
+    }
+
+    public static void fetchHead(String username) {
+        String key = username.toLowerCase();
+        if (HEAD_TEXTURES.containsKey(username) || !HEAD_FETCHING.add(key)) return;
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create("https://minotar.net/avatar/" + username + "/32.png"))
+                    .GET().build();
+            HTTP.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray()).thenAccept(response -> {
+                byte[] bytes = response.body();
+                MinecraftClient.getInstance().execute(() -> {
+                    try {
+                        net.minecraft.client.texture.NativeImage image =
+                                net.minecraft.client.texture.NativeImage.read(new java.io.ByteArrayInputStream(bytes));
+                        net.minecraft.client.texture.NativeImageBackedTexture texture =
+                                new net.minecraft.client.texture.NativeImageBackedTexture(image);
+                        net.minecraft.util.Identifier id = net.minecraft.util.Identifier.of("impactvisuals", "friend_head_" + key);
+                        MinecraftClient.getInstance().getTextureManager().registerTexture(id, texture);
+                        HEAD_TEXTURES.put(username, id);
+                    } catch (Exception ignored) {
+                    } finally {
+                        HEAD_FETCHING.remove(key);
+                    }
+                });
+            }).exceptionally(ex -> {
+                HEAD_FETCHING.remove(key);
+                return null;
+            });
+        } catch (Exception ignored) {
+            HEAD_FETCHING.remove(key);
+        }
     }
 }
