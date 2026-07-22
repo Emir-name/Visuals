@@ -4,6 +4,7 @@ import com.impactvisuals.client.config.ConfigScreen;
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
+import com.impactvisuals.client.friends.FriendsNetwork;
 import com.impactvisuals.client.visual.ColoredHitParticles;
 import com.impactvisuals.client.visual.CooldownIndicator;
 import com.impactvisuals.client.visual.CosmeticTrails;
@@ -29,6 +30,7 @@ import com.impactvisuals.client.visual.UiSoundPlayer;
 import com.impactvisuals.client.visual.VignetteRenderer;
 import com.impactvisuals.client.visual.ZoomHandler;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -44,6 +46,14 @@ public final class ClientEventHandler {
 
     public static void register() {
         AttackEntityCallback.EVENT.register(ClientEventHandler::onAttack);
+
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            if (client.player != null) {
+                FriendsNetwork.startHeartbeat(client.player.getGameProfile().getName());
+            }
+        });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> FriendsNetwork.stopHeartbeat());
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             DamageNumberRenderer.tick();
