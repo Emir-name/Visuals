@@ -19,6 +19,10 @@ public class FriendsScreen extends Screen {
     private TextFieldWidget addFriendField;
 
     private static final int ACCENT = 0xFFFF8C00;
+    private static final int PANEL_W = 360;
+
+    private int left;
+    private int centerX;
 
     public FriendsScreen(Screen parent) {
         super(Text.literal("Friends"));
@@ -30,9 +34,8 @@ public class FriendsScreen extends Screen {
     protected void init() {
         this.clearChildren();
 
-        int centerX = this.width / 2;
-        int panelW = 360;
-        int left = centerX - panelW / 2;
+        centerX = this.width / 2;
+        left = centerX - PANEL_W / 2;
 
         addFriendField = new TextFieldWidget(this.textRenderer, left, 30, 200, 20, Text.literal("Add friend"));
         addFriendField.setMaxLength(32);
@@ -63,13 +66,13 @@ public class FriendsScreen extends Screen {
                 if (status != null && !status.server.isBlank() && !status.server.equals("menu")) {
                     MinecraftClient.getInstance().keyboard.setClipboard(status.server);
                 }
-            }).dimensions(left + panelW - 150, y, 70, 20).build());
+            }).dimensions(left + PANEL_W - 150, y, 70, 20).build());
 
             this.addDrawableChild(ButtonWidget.builder(Text.literal("Remove"), btn -> {
                 cfg.friendsList.remove(friend);
                 cfg.save();
                 this.init();
-            }).dimensions(left + panelW - 75, y, 75, 20).build());
+            }).dimensions(left + PANEL_W - 75, y, 75, 20).build());
 
             rowY += 26;
         }
@@ -91,11 +94,7 @@ public class FriendsScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.fill(0, 0, this.width, this.height, 0xCC101010);
-
-        int centerX = this.width / 2;
-        int panelW = 360;
-        int left = centerX - panelW / 2;
+        context.fill(0, 0, this.width, this.height, 0xEE101010);
 
         context.drawText(this.textRenderer, "Friends (self-hosted via Firebase)", left, 12, ACCENT, false);
         context.drawText(this.textRenderer, "Nickname:", left, 54, 0xFFAAAAAA, false);
