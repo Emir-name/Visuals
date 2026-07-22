@@ -85,6 +85,7 @@ public class FriendsScreen extends Screen {
     private void refreshAll() {
         for (String friend : cfg.friendsList) {
             FriendsNetwork.fetchStatus(friend);
+            FriendsNetwork.fetchHead(friend);
         }
     }
 
@@ -105,10 +106,16 @@ public class FriendsScreen extends Screen {
             FriendsNetwork.Status status = FriendsNetwork.getCached(friend);
             boolean online = status != null && (now - status.lastSeen) < 120_000;
 
-            int dotColor = online ? 0xFF55DD55 : 0xFF888888;
-            context.fill(left, rowY + 6, left + 8, rowY + 14, dotColor);
+            net.minecraft.util.Identifier head = FriendsNetwork.getHeadTexture(friend);
+            if (head != null) {
+                context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, head,
+                        left, rowY, 0, 0, 16, 16, 32, 32, 32, 32);
+            }
 
-            context.drawText(this.textRenderer, friend, left + 14, rowY + 5, 0xFFFFFFFF, false);
+            int dotColor = online ? 0xFF55DD55 : 0xFF888888;
+            context.fill(left + 20, rowY + 6, left + 28, rowY + 14, dotColor);
+
+            context.drawText(this.textRenderer, friend, left + 34, rowY + 5, 0xFFFFFFFF, false);
 
             String info;
             if (status == null) {
@@ -119,7 +126,7 @@ public class FriendsScreen extends Screen {
                 long minutesAgo = (now - status.lastSeen) / 60_000;
                 info = "last seen " + minutesAgo + "m ago";
             }
-            context.drawText(this.textRenderer, info, left + 130, rowY + 5, 0xFFAAAAAA, false);
+            context.drawText(this.textRenderer, info, left + 150, rowY + 5, 0xFFAAAAAA, false);
 
             rowY += 26;
         }
