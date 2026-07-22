@@ -16,7 +16,6 @@ public class FriendsScreen extends Screen {
     private final Screen parent;
     private final ModConfig cfg;
 
-    private TextFieldWidget urlField;
     private TextFieldWidget addFriendField;
 
     private static final int ACCENT = 0xFFFF8C00;
@@ -35,17 +34,7 @@ public class FriendsScreen extends Screen {
         int panelW = 360;
         int left = centerX - panelW / 2;
 
-        urlField = new TextFieldWidget(this.textRenderer, left, 30, panelW, 20, Text.literal("Firebase URL"));
-        urlField.setMaxLength(200);
-        urlField.setText(cfg.firebaseUrl);
-        this.addDrawableChild(urlField);
-
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Save URL"), btn -> {
-            cfg.firebaseUrl = urlField.getText().trim();
-            cfg.save();
-        }).dimensions(left + panelW + 10, 30, 90, 20).build());
-
-        addFriendField = new TextFieldWidget(this.textRenderer, left, 58, 200, 20, Text.literal("Add friend"));
+        addFriendField = new TextFieldWidget(this.textRenderer, left, 30, 200, 20, Text.literal("Add friend"));
         addFriendField.setMaxLength(32);
         addFriendField.setPlaceholder(Text.literal("nickname"));
         this.addDrawableChild(addFriendField);
@@ -59,12 +48,12 @@ public class FriendsScreen extends Screen {
                 refreshAll();
                 this.init();
             }
-        }).dimensions(left + 210, 58, 70, 20).build());
+        }).dimensions(left + 210, 30, 70, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Refresh"), btn -> refreshAll())
-                .dimensions(left + 290, 58, 70, 20).build());
+                .dimensions(left + 290, 30, 70, 20).build());
 
-        int rowY = 92;
+        int rowY = 64;
         List<String> friends = new ArrayList<>(cfg.friendsList);
         for (String friend : friends) {
             int y = rowY;
@@ -108,9 +97,9 @@ public class FriendsScreen extends Screen {
         int left = centerX - panelW / 2;
 
         context.drawText(this.textRenderer, "Friends (self-hosted via Firebase)", left, 12, ACCENT, false);
-        context.drawText(this.textRenderer, "Nickname:", left, 82, 0xFFAAAAAA, false);
+        context.drawText(this.textRenderer, "Nickname:", left, 54, 0xFFAAAAAA, false);
 
-        int rowY = 92;
+        int rowY = 64;
         long now = System.currentTimeMillis();
         for (String friend : cfg.friendsList) {
             FriendsNetwork.Status status = FriendsNetwork.getCached(friend);
