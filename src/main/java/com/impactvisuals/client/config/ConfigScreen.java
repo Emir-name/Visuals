@@ -209,6 +209,9 @@ public class ConfigScreen extends Screen {
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
             cycles.add(new CycleRow("Skin (self-view only)", contentX, gridStartY, skinNames,
                     () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
+
+            toggles.add(new ToggleRow("Friends Button (main menu)", contentX, gridStartY + rowH + 20,
+                    () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v));
         }
     }
 
@@ -474,6 +477,7 @@ public class ConfigScreen extends Screen {
         cfg.coloredTrailsEnabled = false;
         cfg.handGlowEnabled = false;
         cfg.selectedSkinIndex = 0;
+        cfg.friendsFeatureEnabled = false;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -647,4 +651,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                         }
+                }
