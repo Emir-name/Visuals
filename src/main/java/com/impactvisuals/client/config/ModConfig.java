@@ -84,7 +84,11 @@ public class ModConfig {
     public boolean coloredTrailsEnabled = false;
     public boolean handGlowEnabled = false;
 
-    public int selectedSkinIndex = 0; // 0=default, 1-8=preset, 9=custom
+    public int selectedSkinIndex = 0;
+
+    public boolean friendsFeatureEnabled = false;
+    public String firebaseUrl = "";
+    public java.util.List<String> friendsList = new java.util.ArrayList<>();
 
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
