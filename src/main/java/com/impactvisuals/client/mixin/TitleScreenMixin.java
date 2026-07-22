@@ -24,8 +24,6 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
 
     @Inject(method = "init", at = @At("TAIL"))
     private void impactvisuals$addFriendsButton(CallbackInfo ci) {
-        if (!ModConfig.get().friendsFeatureEnabled) return;
-
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Друзья"), btn ->
                         this.client.setScreen(new FriendsScreen(this)))
                 .dimensions(8, 8, 90, 20).build());
