@@ -26,17 +26,14 @@ public class FriendsNetwork {
     private static final ConcurrentHashMap<String, Status> CACHE = new ConcurrentHashMap<>();
     private static ScheduledExecutorService heartbeatExecutor;
 
+    private static final String FIREBASE_URL = "https://impact-visual-724a7-default-rtdb.firebaseio.com";
+
     private static String baseUrl() {
-        String url = ModConfig.get().firebaseUrl.trim();
-        if (url.endsWith("/")) {
-            url = url.substring(0, url.length() - 1);
-        }
-        return url;
+        return FIREBASE_URL;
     }
 
     public static void startHeartbeat(String username) {
         if (!ModConfig.get().friendsFeatureEnabled) return;
-        if (ModConfig.get().firebaseUrl.isBlank()) return;
 
         stopHeartbeat();
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
