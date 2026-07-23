@@ -34,6 +34,20 @@ public class FriendsNetwork {
         return FIREBASE_URL;
     }
 
+    private static boolean started = false;
+
+    public static void ensureStarted() {
+        if (started) return;
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getSession() == null) return;
+        String username = client.getSession().getUsername();
+        if (username == null || username.isBlank()) return;
+
+        started = true;
+        startHeartbeat(username);
+    }
+
     public static void startHeartbeat(String username) {
         stopHeartbeat();
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
