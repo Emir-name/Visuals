@@ -2,10 +2,9 @@ package com.impactvisuals.client.friends;
 
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
@@ -21,9 +20,6 @@ public class FriendsScreen extends Screen {
     private static final int ACCENT = 0xFFFF8C00;
     private static final int PANEL_W = 360;
 
-    private int left;
-    private int centerX;
-
     public FriendsScreen(Screen parent) {
         super(Text.literal("Friends"));
         this.parent = parent;
@@ -34,8 +30,46 @@ public class FriendsScreen extends Screen {
     protected void init() {
         this.clearChildren();
 
-        centerX = this.width / 2;
-        left = centerX - PANEL_W / 2;
+        int centerX = this.width / 2;
+        int left = centerX - PANEL_W / 2;
+
+        this.addDrawable((context, mouseX, mouseY, delta) -> {
+            context.fill(0, 0, this.width, this.height, 0xEE101010);
+
+            context.drawText(this.textRenderer, "Friends (self-hosted via Firebase)", left, 12, ACCENT, false);
+            context.drawText(this.textRenderer, "Nickname:", left, 54, 0xFFAAAAAA, false);
+
+            int rowY = 64;
+            long now = System.currentTimeMillis();
+            for (String friend : cfg.friendsList) {
+                FriendsNetwork.Status status = FriendsNetwork.getCached(friend);
+                boolean online = status != null && (now - status.lastSeen) < 120_000;
+
+                net.minecraft.util.Identifier head = FriendsNetwork.getHeadTexture(friend);
+                if (head != null) {
+                    context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, head,
+                            left, rowY, 0, 0, 16, 16, 32, 32, 32, 32);
+                }
+
+                int dotColor = online ? 0xFF55DD55 : 0xFF888888;
+                context.fill(left + 20, rowY + 6, left + 28, rowY + 14, dotColor);
+
+                context.drawText(this.textRenderer, friend, left + 34, rowY + 5, 0xFFFFFFFF, false);
+
+                String info;
+                if (status == null) {
+                    info = "no data";
+                } else if (online) {
+                    info = "online - " + status.server;
+                } else {
+                    long minutesAgo = (now - status.lastSeen) / 60_000;
+                    info = "last seen " + minutesAgo + "m ago";
+                }
+                context.drawText(this.textRenderer, info, left + 150, rowY + 5, 0xFFAAAAAA, false);
+
+                rowY += 26;
+            }
+        });
 
         addFriendField = new TextFieldWidget(this.textRenderer, left, 30, 200, 20, Text.literal("Add friend"));
         addFriendField.setMaxLength(32);
@@ -90,47 +124,6 @@ public class FriendsScreen extends Screen {
             FriendsNetwork.fetchStatus(friend);
             FriendsNetwork.fetchHead(friend);
         }
-    }
-
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.fill(0, 0, this.width, this.height, 0xEE101010);
-
-        context.drawText(this.textRenderer, "Friends (self-hosted via Firebase)", left, 12, ACCENT, false);
-        context.drawText(this.textRenderer, "Nickname:", left, 54, 0xFFAAAAAA, false);
-
-        int rowY = 64;
-        long now = System.currentTimeMillis();
-        for (String friend : cfg.friendsList) {
-            FriendsNetwork.Status status = FriendsNetwork.getCached(friend);
-            boolean online = status != null && (now - status.lastSeen) < 120_000;
-
-            net.minecraft.util.Identifier head = FriendsNetwork.getHeadTexture(friend);
-            if (head != null) {
-                context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, head,
-                        left, rowY, 0, 0, 16, 16, 32, 32, 32, 32);
-            }
-
-            int dotColor = online ? 0xFF55DD55 : 0xFF888888;
-            context.fill(left + 20, rowY + 6, left + 28, rowY + 14, dotColor);
-
-            context.drawText(this.textRenderer, friend, left + 34, rowY + 5, 0xFFFFFFFF, false);
-
-            String info;
-            if (status == null) {
-                info = "no data";
-            } else if (online) {
-                info = "online - " + status.server;
-            } else {
-                long minutesAgo = (now - status.lastSeen) / 60_000;
-                info = "last seen " + minutesAgo + "m ago";
-            }
-            context.drawText(this.textRenderer, info, left + 150, rowY + 5, 0xFFAAAAAA, false);
-
-            rowY += 26;
-        }
-
-        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
