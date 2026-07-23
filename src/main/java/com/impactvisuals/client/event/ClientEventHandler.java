@@ -30,7 +30,6 @@ import com.impactvisuals.client.visual.UiSoundPlayer;
 import com.impactvisuals.client.visual.VignetteRenderer;
 import com.impactvisuals.client.visual.ZoomHandler;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -47,14 +46,6 @@ public final class ClientEventHandler {
     public static void register() {
         AttackEntityCallback.EVENT.register(ClientEventHandler::onAttack);
 
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            if (client.player != null) {
-                FriendsNetwork.startHeartbeat(client.player.getGameProfile().getName());
-            }
-        });
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> FriendsNetwork.stopHeartbeat());
-
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             DamageNumberRenderer.tick();
             TrajectoryRenderer.tick();
@@ -68,6 +59,7 @@ public final class ClientEventHandler {
             ScreenTint.tick();
             HeartbeatSound.tick();
             HandGlow.tick();
+            FriendsNetwork.ensureStarted();
 
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
