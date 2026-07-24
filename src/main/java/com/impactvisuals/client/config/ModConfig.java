@@ -88,6 +88,7 @@ public class ModConfig {
 
     public boolean friendsFeatureEnabled = false;
     public boolean activeEffectsHudEnabled = true;
+    public boolean russianLanguage = false;
     public String firebaseUrl = "";
     public java.util.List<String> friendsList = new java.util.ArrayList<>();
 
