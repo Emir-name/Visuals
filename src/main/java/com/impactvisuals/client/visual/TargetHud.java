@@ -3,6 +3,7 @@ package com.impactvisuals.client.visual;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
@@ -24,30 +25,43 @@ public class TargetHud {
 
         int screenWidth = context.getScaledWindowWidth();
         int screenHeight = context.getScaledWindowHeight();
-        int centerX = screenWidth / 2;
-        int y = screenHeight / 2 - 40;
+
+        int cardW = 130;
+        int cardH = 46;
+        int cardX = screenWidth / 2 - cardW / 2;
+        int cardY = screenHeight / 2 - 70;
+
+        HudCard.draw(context, cardX, cardY, cardW, cardH);
+
+        int iconSize = 28;
+        int iconX = cardX + 6;
+        int iconY = cardY + (cardH - iconSize) / 2;
+
+        if (target instanceof AbstractClientPlayerEntity player) {
+            net.minecraft.client.gui.PlayerSkinDrawer.draw(context, player.getSkinTextures(), iconX, iconY, iconSize);
+        } else {
+            context.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0xFF3A3A3A);
+        }
+
+        int textX = iconX + iconSize + 8;
 
         Text name = target.getDisplayName() != null ? target.getDisplayName() : Text.literal(target.getName().getString());
+        String nameStr = name.getString();
+        context.drawText(client.textRenderer, nameStr, textX, cardY + 8, 0xFFFFFFFF, false);
+
         float health = target.getHealth();
         float maxHealth = target.getMaxHealth();
+        String hpText = "HP \u2022 " + Math.round(health);
+        context.drawText(client.textRenderer, hpText, textX, cardY + 19, 0xFFAAAAAA, false);
 
-        String nameStr = name.getString();
-        int nameWidth = client.textRenderer.getWidth(nameStr);
-        context.drawText(client.textRenderer, nameStr, centerX - nameWidth / 2, y, 0xFFFFFFFF, true);
-
-        int barWidth = 60;
+        int barX = cardX + 6;
+        int barY = cardY + cardH - 8;
+        int barWidth = cardW - 12;
         int barHeight = 4;
-        int barX = centerX - barWidth / 2;
-        int barY = y + 11;
         float pct = maxHealth > 0 ? Math.max(0f, Math.min(1f, health / maxHealth)) : 0f;
 
-        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x99000000);
-        int fillColor = pct > 0.5f ? 0xFF55FF55 : (pct > 0.2f ? 0xFFFFFF55 : 0xFFFF5555);
-        context.fill(barX, barY, barX + Math.round(barWidth * pct), barY + barHeight, fillColor);
-
-        String hpText = String.format("%.1f / %.1f", health, maxHealth);
-        int hpWidth = client.textRenderer.getWidth(hpText);
-        context.drawText(client.textRenderer, hpText, centerX - hpWidth / 2, barY + 6, 0xFFCCCCCC, true);
+        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x66000000);
+        context.fill(barX, barY, barX + Math.round(barWidth * pct), barY + barHeight, 0xFFB266FF);
     }
 
     private static LivingEntity findLookedAtLivingEntity(MinecraftClient client, double range) {
