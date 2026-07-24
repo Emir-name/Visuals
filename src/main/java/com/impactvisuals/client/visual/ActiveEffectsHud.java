@@ -17,12 +17,18 @@ public class ActiveEffectsHud {
         var effects = client.player.getStatusEffects();
         if (effects.isEmpty()) return;
 
+        int lineH = 12;
+        int cardW = 150;
+        int cardH = 20 + effects.size() * lineH;
         int x = 6;
         int y = 60;
-        int lineH = 12;
 
-        context.drawText(client.textRenderer, "Potions", x, y, 0xFFFF8C00, true);
-        y += 12;
+        HudCard.draw(context, x, y, cardW, cardH);
+
+        int textX = x + 8;
+        int textY = y + 6;
+        context.drawText(client.textRenderer, "Potions", textX, textY, 0xFFFF8C00, false);
+        textY += 14;
 
         for (StatusEffectInstance effect : effects) {
             String name = effect.getEffectType().value().getName().getString();
@@ -32,13 +38,13 @@ public class ActiveEffectsHud {
             }
 
             int color = effect.getEffectType().value().getColor() | 0xFF000000;
-            context.fill(x, y + 2, x + 6, y + 8, color);
+            context.fill(textX, textY + 2, textX + 6, textY + 8, color);
 
             String time = formatDuration(effect.getDuration());
             String line = name + "  " + time;
-            context.drawText(client.textRenderer, line, x + 10, y, 0xFFFFFFFF, true);
+            context.drawText(client.textRenderer, line, textX + 10, textY, 0xFFFFFFFF, false);
 
-            y += lineH;
+            textY += lineH;
         }
     }
 
