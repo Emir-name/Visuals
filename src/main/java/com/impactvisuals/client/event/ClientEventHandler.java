@@ -5,6 +5,7 @@ import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.friends.FriendsNetwork;
+import com.impactvisuals.client.visual.ActiveEffectsHud;
 import com.impactvisuals.client.visual.ColoredHitParticles;
 import com.impactvisuals.client.visual.CooldownIndicator;
 import com.impactvisuals.client.visual.CosmeticTrails;
@@ -85,6 +86,7 @@ public final class ClientEventHandler {
             ExtraHud.render(drawContext);
             DamageFlash.render(drawContext);
             ImpactPunch.render(drawContext);
+            ActiveEffectsHud.render(drawContext);
         });
     }
 
