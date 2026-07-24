@@ -13,7 +13,12 @@ import java.util.function.Consumer;
 public class ConfigScreen extends Screen {
 
     private static final int[] PALETTE = {
-            0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
+            0xFFFF8C00, // Orange
+            0xFFB266FF, // Purple
+            0xFF3399FF, // Blue
+            0xFF55DD55, // Green
+            0xFFFF5555, // Red
+            0xFF33DDDD  // Cyan
     };
 
     private static final int PANEL_BG = 0xE6141414;
@@ -25,7 +30,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT", "HUD", "EXTRA", "MISC", "QOL", "THEME", "MORE", "FX", "STYLE", "SOUND", "SKINS"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -114,10 +119,17 @@ public class ConfigScreen extends Screen {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
             addToggle(2, contentX, colGap, gridStartY, rowH, "Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Hit Sound", () -> cfg.hitSoundEnabled, v -> cfg.hitSoundEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
         } else if (currentCategory == 1) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
+        } else if (currentCategory == 2) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Info HUD", () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v);
             addToggle(2, contentX, colGap, gridStartY, rowH, "Coordinates", () -> cfg.coordinatesHudEnabled, v -> cfg.coordinatesHudEnabled = v);
@@ -127,13 +139,6 @@ public class ConfigScreen extends Screen {
 
             sliders.add(new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15,
                     cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
-        } else if (currentCategory == 2) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Crosshair Dot", () -> cfg.crosshairDotEnabled, v -> cfg.crosshairDotEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
         } else if (currentCategory == 3) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
@@ -141,6 +146,7 @@ public class ConfigScreen extends Screen {
             addToggle(3, contentX, colGap, gridStartY, rowH, "XP %", () -> cfg.xpPercentEnabled, v -> cfg.xpPercentEnabled = v);
             addToggle(4, contentX, colGap, gridStartY, rowH, "Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
+            addToggle(6, contentX, colGap, gridStartY, rowH, "Active Effects", () -> cfg.activeEffectsHudEnabled, v -> cfg.activeEffectsHudEnabled = v);
         } else if (currentCategory == 4) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
@@ -149,23 +155,19 @@ public class ConfigScreen extends Screen {
             addToggle(4, contentX, colGap, gridStartY, rowH, "Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
         } else if (currentCategory == 5) {
-            int swatchSize = 40;
-            int swatchGap = 14;
-            int cols = 3;
-            for (int i = 0; i < PALETTE.length; i++) {
-                int col = i % cols;
-                int row = i / cols;
-                int x = contentX + col * (swatchSize + swatchGap);
-                int y = gridStartY + row * (swatchSize + swatchGap);
-                swatches.add(new SwatchButton(i, x, y, swatchSize));
-            }
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
         } else if (currentCategory == 6) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
 
             if (cfg.customHandleEnabled) {
                 int sliderY = gridStartY + 2 * rowH + 18;
@@ -180,38 +182,36 @@ public class ConfigScreen extends Screen {
                         cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
             }
         } else if (currentCategory == 7) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
-        } else if (currentCategory == 8) {
             String[] crosshairNames = {"Off", "Dot", "Cross", "Ring"};
             String[] colorNames = {"Vanilla", "Orange", "Purple", "Blue", "Green", "Red", "Cyan"};
             cycles.add(new CycleRow("Crosshair Style", contentX, gridStartY, crosshairNames,
                     () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
             cycles.add(new CycleRow("Hit Particle Color", contentX, gridStartY + rowH + 10, colorNames,
                     () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
-
-            int belowY = gridStartY + 2 * (rowH + 10) + 10;
-            toggles.add(new ToggleRow("Colored Trails", contentX, belowY, () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v));
-            toggles.add(new ToggleRow("Hand Glow", contentX, belowY + rowH, () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v));
+        } else if (currentCategory == 8) {
+            addToggle(0, contentX, colGap, gridStartY, rowH, "Hit Sound", () -> cfg.hitSoundEnabled, v -> cfg.hitSoundEnabled = v);
+            addToggle(1, contentX, colGap, gridStartY, rowH, "Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
+            addToggle(2, contentX, colGap, gridStartY, rowH, "Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
+            addToggle(3, contentX, colGap, gridStartY, rowH, "Streak Sound", () -> cfg.streakSoundEnabled, v -> cfg.streakSoundEnabled = v);
+            addToggle(4, contentX, colGap, gridStartY, rowH, "Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
+            addToggle(5, contentX, colGap, gridStartY, rowH, "Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
+            addToggle(6, contentX, colGap, gridStartY, rowH, "Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
         } else if (currentCategory == 9) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Streak Sound", () -> cfg.streakSoundEnabled, v -> cfg.streakSoundEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
+            int swatchSize = 40;
+            int swatchGap = 14;
+            int cols = 3;
+            for (int i = 0; i < PALETTE.length; i++) {
+                int col = i % cols;
+                int row = i / cols;
+                int x = contentX + col * (swatchSize + swatchGap);
+                int y = gridStartY + row * (swatchSize + swatchGap);
+                swatches.add(new SwatchButton(i, x, y, swatchSize));
+            }
         } else if (currentCategory == 10) {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
             cycles.add(new CycleRow("Skin (self-view only)", contentX, gridStartY, skinNames,
                     () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
-
-            toggles.add(new ToggleRow("Friends Button (main menu)", contentX, gridStartY + rowH + 20,
-                    () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v));
         }
     }
 
@@ -477,7 +477,7 @@ public class ConfigScreen extends Screen {
         cfg.coloredTrailsEnabled = false;
         cfg.handGlowEnabled = false;
         cfg.selectedSkinIndex = 0;
-        cfg.friendsFeatureEnabled = false;
+        cfg.activeEffectsHudEnabled = true;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -651,4 +651,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                }
+                                 }
