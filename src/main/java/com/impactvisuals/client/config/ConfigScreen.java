@@ -13,12 +13,7 @@ import java.util.function.Consumer;
 public class ConfigScreen extends Screen {
 
     private static final int[] PALETTE = {
-            0xFFFF8C00, // Orange
-            0xFFB266FF, // Purple
-            0xFF3399FF, // Blue
-            0xFF55DD55, // Green
-            0xFFFF5555, // Red
-            0xFF33DDDD  // Cyan
+            0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
     };
 
     private static final int PANEL_BG = 0xE6141414;
@@ -52,6 +47,7 @@ public class ConfigScreen extends Screen {
 
     private int doneX, doneY, doneW, doneH;
     private int resetX, resetY, resetW, resetH;
+    private int langX, langY, langW, langH;
 
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
@@ -100,6 +96,11 @@ public class ConfigScreen extends Screen {
         doneY = buttonY;
         doneW = buttonW;
         doneH = buttonH;
+
+        langW = 40;
+        langH = 18;
+        langX = panelX + panelW - langW - 10;
+        langY = panelY + 8;
 
         buildCategoryContent();
     }
@@ -266,7 +267,7 @@ public class ConfigScreen extends Screen {
             }
 
             int color = active ? accentColor : TEXT_DIM;
-            context.drawText(this.textRenderer, CATEGORY_NAMES[i], panelX + 14, itemY + 8, color, false);
+            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), panelX + 14, itemY + 8, color, false);
         }
 
         for (ToggleRow row : toggles) {
@@ -287,6 +288,7 @@ public class ConfigScreen extends Screen {
 
         drawButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
         drawButton(context, doneX, doneY, doneW, doneH, "DONE", mouseX, mouseY);
+        drawButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
 
         renderSkinPanel(context);
 
@@ -328,8 +330,9 @@ public class ConfigScreen extends Screen {
         int bg = hovered ? accentDimColor : TRACK_OFF;
         context.fill(x, y, x + w, y + h, bg);
         drawBorder(context, x, y, w, h, accentColor);
-        int textWidth = this.textRenderer.getWidth(label);
-        context.drawText(this.textRenderer, label, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
+        String translated = Lang.t(label);
+        int textWidth = this.textRenderer.getWidth(translated);
+        context.drawText(this.textRenderer, translated, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
     }
 
     @Override
@@ -386,6 +389,12 @@ public class ConfigScreen extends Screen {
 
         if (inside(doneX, doneY, doneW, doneH, mouseX, mouseY)) {
             close();
+            return true;
+        }
+
+        if (inside(langX, langY, langW, langH, mouseX, mouseY)) {
+            cfg.russianLanguage = !cfg.russianLanguage;
+            cfg.save();
             return true;
         }
 
@@ -478,6 +487,7 @@ public class ConfigScreen extends Screen {
         cfg.handGlowEnabled = false;
         cfg.selectedSkinIndex = 0;
         cfg.activeEffectsHudEnabled = true;
+        cfg.russianLanguage = false;
         cfg.targetHudRangeBlocks = 6;
         buildCategoryContent();
     }
@@ -531,7 +541,7 @@ public class ConfigScreen extends Screen {
         }
 
         void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
-            context.drawText(screen.textRenderer, label, x, y + 1, TEXT_MAIN, false);
+            context.drawText(screen.textRenderer, Lang.t(label), x, y + 1, TEXT_MAIN, false);
 
             int size = 10;
             int bx = bulletX();
@@ -578,7 +588,7 @@ public class ConfigScreen extends Screen {
         }
 
         void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
-            String text = label + ": " + value;
+            String text = Lang.t(label) + ": " + value;
             context.drawText(screen.textRenderer, text, x, y - 10, TEXT_MAIN, false);
 
             int trackY = y + 4;
@@ -647,8 +657,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
             int current = Math.max(0, Math.min(options.length - 1, getter.getAsInt()));
-            String text = label + ": " + options[current] + "  (tap to change)";
+            String text = Lang.t(label) + ": " + Lang.t(options[current]) + "  " + Lang.t("(tap to change)");
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                                 }
+            }
