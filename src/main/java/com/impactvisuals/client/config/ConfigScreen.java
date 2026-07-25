@@ -3,24 +3,35 @@ package com.impactvisuals.client.config;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
+/**
+ * Full-screen settings UI: sidebar of categories on the left, searchable
+ * grid of feature cards on the right, live skin preview in the top-right
+ * corner. Same features/categories as before - only the look changed.
+ */
 public class ConfigScreen extends Screen {
 
     private static final int[] PALETTE = {
             0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
     };
 
-    private static final int PANEL_BG = 0xE6141414;
-    private static final int SIDEBAR_BG = 0xF01A1A1A;
-    private static final int TRACK_OFF = 0xFF3A3A3A;
+    private static final int BG = 0xFF101012;
+    private static final int SIDEBAR_BG = 0xFF17171A;
+    private static final int CARD_BG = 0xFF1D1D21;
+    private static final int CARD_BG_HOVER = 0xFF232328;
+    private static final int TRACK_OFF = 0xFF3A3A3E;
     private static final int TEXT_MAIN = 0xFFEFEFEF;
-    private static final int TEXT_DIM = 0xFFA0A0A0;
+    private static final int TEXT_DIM = 0xFF9A9AA0;
 
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
@@ -33,21 +44,33 @@ public class ConfigScreen extends Screen {
     private int accentColor;
     private int accentDimColor;
 
-    private int panelX, panelY, panelW, panelH;
+    // Layout
     private int sidebarW;
-    private int sidebarItemY, sidebarItemH;
+    private int headerH;
+    private int contentX, contentTop, contentBottom, contentW;
+    private int cardW, cardH, colGap, rowGap;
     private int skinPanelW, skinPanelH, skinPanelX, skinPanelY;
+    private int closeX, closeY, closeW, closeH;
+    private int resetX, resetY, resetW, resetH;
+    private int langX, langY, langW, langH;
 
     private int currentCategory = 0;
+    private int scrollOffset = 0;
+    private int maxScroll = 0;
 
-    private final List<ToggleRow> toggles = new ArrayList<>();
+    private TextFieldWidget searchField;
+    private String searchQuery = "";
+
+    private final List<ToggleCard> toggles = new ArrayList<>();
     private final List<SliderRow> sliders = new ArrayList<>();
     private final List<SwatchButton> swatches = new ArrayList<>();
     private final List<CycleRow> cycles = new ArrayList<>();
 
-    private int doneX, doneY, doneW, doneH;
-    private int resetX, resetY, resetW, resetH;
-    private int langX, langY, langW, langH;
+    // computed each render() call, reused by mouseClicked()/mouseDragged()
+    private final List<Placed<ToggleCard>> placedToggles = new ArrayList<>();
+    private final List<Placed<SliderRow>> placedSliders = new ArrayList<>();
+    private final List<Placed<CycleRow>> placedCycles = new ArrayList<>();
+    private int swatchAreaY;
 
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
@@ -67,41 +90,55 @@ public class ConfigScreen extends Screen {
         previousBlurriness = client.options.getMenuBackgroundBlurriness().getValue();
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
-        panelW = 560;
-        panelH = 340;
-        panelX = (this.width - panelW) / 2;
-        panelY = (this.height - panelH) / 2;
-
-        sidebarW = 100;
-        sidebarItemY = panelY + 46;
-        sidebarItemH = 22;
+        sidebarW = Math.max(120, Math.min(170, this.width / 5));
+        headerH = 40;
 
         skinPanelW = 100;
-        skinPanelH = 160;
-        skinPanelX = panelX + panelW - skinPanelW - 10;
-        skinPanelY = panelY + 34;
-
+        skinPanelH = 128;
+        skinPanelX = this.width - skinPanelW - 16;
+        skinPanelY = headerH + 12;
         skinMouseX = skinPanelX + skinPanelW / 2f;
         skinMouseY = skinPanelY + skinPanelH / 3f;
 
-        int buttonW = 100;
-        int buttonH = 22;
-        int buttonY = panelY + panelH - 34;
-        resetX = panelX + panelW - 20 - buttonW * 2 - 10;
-        resetY = buttonY;
-        resetW = buttonW;
-        resetH = buttonH;
+        contentX = sidebarW + 20;
+        contentTop = headerH + 10;
+        contentBottom = this.height - 10;
+        contentW = Math.max(200, (skinPanelX - 16) - contentX);
 
-        doneX = panelX + panelW - 20 - buttonW;
-        doneY = buttonY;
-        doneW = buttonW;
-        doneH = buttonH;
+        colGap = 14;
+        cardW = (contentW - colGap) / 2;
+        cardH = 40;
+        rowGap = 10;
 
-        langW = 40;
-        langH = 18;
-        langX = panelX + panelW - langW - 10;
-        langY = panelY + 8;
+        int headerButtonH = 18;
+        int headerY = (headerH - headerButtonH) / 2;
 
+        langW = 34;
+        langH = headerButtonH;
+        langX = this.width - langW - 12;
+        langY = headerY;
+
+        resetW = 60;
+        resetH = headerButtonH;
+        resetX = langX - resetW - 8;
+        resetY = headerY;
+
+        closeW = 20;
+        closeH = headerButtonH;
+        closeX = resetX - closeW - 8;
+        closeY = headerY;
+
+        int searchW = Math.max(90, closeX - contentX - 16);
+        searchField = new TextFieldWidget(this.textRenderer, contentX, headerY, searchW, headerButtonH, Text.literal(""));
+        searchField.setMaxLength(40);
+        searchField.setPlaceholder(Text.literal(Lang.t("Search")));
+        searchField.setChangedListener(s -> {
+            searchQuery = s.toLowerCase();
+            scrollOffset = 0;
+        });
+        addDrawableChild(searchField);
+
+        scrollOffset = 0;
         buildCategoryContent();
     }
 
@@ -111,118 +148,90 @@ public class ConfigScreen extends Screen {
         swatches.clear();
         cycles.clear();
 
-        int contentX = panelX + sidebarW + 30;
-        int gridStartY = panelY + 50;
-        int rowH = 28;
-        int colGap = 160;
-
         if (currentCategory == 0) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
+            addToggle("Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
+            addToggle("Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
+            addToggle("Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
+            addToggle("Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
+            addToggle("Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
+            addToggle("Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
         } else if (currentCategory == 1) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
+            addToggle("Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
+            addToggle("Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
+            addToggle("Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
+            addToggle("Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
+            addToggle("Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
+            addToggle("Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
         } else if (currentCategory == 2) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Info HUD", () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Coordinates", () -> cfg.coordinatesHudEnabled, v -> cfg.coordinatesHudEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Compass", () -> cfg.compassHudEnabled, v -> cfg.compassHudEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "K/D Counter", () -> cfg.killDeathCounterEnabled, v -> cfg.killDeathCounterEnabled = v);
-
-            sliders.add(new SliderRow("Target HUD Range", contentX, gridStartY + 3 * rowH + 14, panelW - sidebarW - 60, 1, 15,
-                    cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
+            addToggle("Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
+            addToggle("Info HUD", () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v);
+            addToggle("Coordinates", () -> cfg.coordinatesHudEnabled, v -> cfg.coordinatesHudEnabled = v);
+            addToggle("Compass", () -> cfg.compassHudEnabled, v -> cfg.compassHudEnabled = v);
+            addToggle("Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
+            addToggle("K/D Counter", () -> cfg.killDeathCounterEnabled, v -> cfg.killDeathCounterEnabled = v);
+            sliders.add(new SliderRow("Target HUD Range", 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
         } else if (currentCategory == 3) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Hunger %", () -> cfg.hungerPercentEnabled, v -> cfg.hungerPercentEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "XP %", () -> cfg.xpPercentEnabled, v -> cfg.xpPercentEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
-            addToggle(6, contentX, colGap, gridStartY, rowH, "Active Effects", () -> cfg.activeEffectsHudEnabled, v -> cfg.activeEffectsHudEnabled = v);
+            addToggle("Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
+            addToggle("Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
+            addToggle("Hunger %", () -> cfg.hungerPercentEnabled, v -> cfg.hungerPercentEnabled = v);
+            addToggle("XP %", () -> cfg.xpPercentEnabled, v -> cfg.xpPercentEnabled = v);
+            addToggle("Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
+            addToggle("Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
+            addToggle("Active Effects", () -> cfg.activeEffectsHudEnabled, v -> cfg.activeEffectsHudEnabled = v);
         } else if (currentCategory == 4) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Offhand Item Name", () -> cfg.offhandItemNameEnabled, v -> cfg.offhandItemNameEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Total Playtime", () -> cfg.totalPlaytimeEnabled, v -> cfg.totalPlaytimeEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
+            addToggle("Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
+            addToggle("Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
+            addToggle("Offhand Item Name", () -> cfg.offhandItemNameEnabled, v -> cfg.offhandItemNameEnabled = v);
+            addToggle("Total Playtime", () -> cfg.totalPlaytimeEnabled, v -> cfg.totalPlaytimeEnabled = v);
+            addToggle("Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
+            addToggle("Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
         } else if (currentCategory == 5) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
+            addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
+            addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
+            addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
+            addToggle("Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
+            addToggle("Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
+            addToggle("Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
         } else if (currentCategory == 6) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
+            addToggle("Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
+            addToggle("Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
+            addToggle("Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
+            addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
+            addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
+            addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
 
             if (cfg.customHandleEnabled) {
-                int sliderY = gridStartY + 2 * rowH + 18;
-                int sliderW = panelW - sidebarW - 60;
-                sliders.add(new SliderRow("Scale %", contentX, sliderY, sliderW, 30, 200,
-                        cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
-                sliders.add(new SliderRow("Rotate X", contentX, sliderY + 34, sliderW, 0, 360,
-                        cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
-                sliders.add(new SliderRow("Rotate Y", contentX, sliderY + 68, sliderW, 0, 360,
-                        cfg.customHandleRotY, v -> cfg.customHandleRotY = v));
-                sliders.add(new SliderRow("Rotate Z", contentX, sliderY + 102, sliderW, 0, 360,
-                        cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
+                sliders.add(new SliderRow("Scale %", 30, 200, cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
+                sliders.add(new SliderRow("Rotate X", 0, 360, cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
+                sliders.add(new SliderRow("Rotate Y", 0, 360, cfg.customHandleRotY, v -> cfg.customHandleRotY = v));
+                sliders.add(new SliderRow("Rotate Z", 0, 360, cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
             }
         } else if (currentCategory == 7) {
             String[] crosshairNames = {"Off", "Dot", "Cross", "Ring"};
             String[] colorNames = {"Vanilla", "Orange", "Purple", "Blue", "Green", "Red", "Cyan"};
-            cycles.add(new CycleRow("Crosshair Style", contentX, gridStartY, crosshairNames,
-                    () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
-            cycles.add(new CycleRow("Hit Particle Color", contentX, gridStartY + rowH + 10, colorNames,
-                    () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
+            cycles.add(new CycleRow("Crosshair Style", crosshairNames, () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
+            cycles.add(new CycleRow("Hit Particle Color", colorNames, () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
         } else if (currentCategory == 8) {
-            addToggle(0, contentX, colGap, gridStartY, rowH, "Hit Sound", () -> cfg.hitSoundEnabled, v -> cfg.hitSoundEnabled = v);
-            addToggle(1, contentX, colGap, gridStartY, rowH, "Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
-            addToggle(2, contentX, colGap, gridStartY, rowH, "Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
-            addToggle(3, contentX, colGap, gridStartY, rowH, "Streak Sound", () -> cfg.streakSoundEnabled, v -> cfg.streakSoundEnabled = v);
-            addToggle(4, contentX, colGap, gridStartY, rowH, "Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
-            addToggle(5, contentX, colGap, gridStartY, rowH, "Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
-            addToggle(6, contentX, colGap, gridStartY, rowH, "Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
+            addToggle("Hit Sound", () -> cfg.hitSoundEnabled, v -> cfg.hitSoundEnabled = v);
+            addToggle("Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
+            addToggle("Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
+            addToggle("Streak Sound", () -> cfg.streakSoundEnabled, v -> cfg.streakSoundEnabled = v);
+            addToggle("Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
+            addToggle("Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
+            addToggle("Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
         } else if (currentCategory == 9) {
-            int swatchSize = 40;
-            int swatchGap = 14;
-            int cols = 3;
             for (int i = 0; i < PALETTE.length; i++) {
-                int col = i % cols;
-                int row = i / cols;
-                int x = contentX + col * (swatchSize + swatchGap);
-                int y = gridStartY + row * (swatchSize + swatchGap);
-                swatches.add(new SwatchButton(i, x, y, swatchSize));
+                swatches.add(new SwatchButton(i));
             }
         } else if (currentCategory == 10) {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
-            cycles.add(new CycleRow("Skin (self-view only)", contentX, gridStartY, skinNames,
-                    () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
+            cycles.add(new CycleRow("Skin (self-view only)", skinNames, () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
         }
     }
 
-    private void addToggle(int index, int contentX, int colGap, int gridStartY, int rowH,
-                            String label, BooleanSupplier getter, Consumer<Boolean> setter) {
-        int col = index % 2;
-        int row = index / 2;
-        int x = contentX + col * colGap;
-        int y = gridStartY + row * rowH;
-        toggles.add(new ToggleRow(label, x, y, getter, setter));
+    private void addToggle(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
+        toggles.add(new ToggleCard(label, getter, setter));
     }
 
     private void updateThemeColors() {
@@ -238,65 +247,161 @@ public class ConfigScreen extends Screen {
         accentDimColor = 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
+    /** True if a toggle card's label or description matches the current search query. */
+    private boolean matchesSearch(String label) {
+        if (searchQuery.isEmpty()) return true;
+        if (Lang.t(label).toLowerCase().contains(searchQuery)) return true;
+        return Lang.desc(label).toLowerCase().contains(searchQuery);
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         updateThemeColors();
 
-        context.fill(0, 0, this.width, this.height, 0x99000000);
+        context.fill(0, 0, this.width, this.height, BG);
 
-        context.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_BG);
-        drawBorder(context, panelX, panelY, panelW, panelH, accentColor);
+        // sidebar
+        context.fill(0, 0, sidebarW, this.height, SIDEBAR_BG);
+        context.fill(sidebarW, 0, sidebarW + 1, this.height, 0x40000000 | (accentColor & 0xFFFFFF));
 
-        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
-        context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, accentColor);
-
-        int logoSize = 36;
+        int logoSize = 26;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
-                panelX + 8, panelY + 4, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
+                12, 8, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
+        context.drawText(this.textRenderer, Text.literal("Impact Visuals").formatted(Formatting.BOLD),
+                12 + logoSize + 8, 8 + (logoSize - 8) / 2, TEXT_MAIN, false);
 
+        int navStartY = 8 + logoSize + 14;
+        int navItemH = 24;
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = sidebarItemY + i * sidebarItemH;
+            int itemY = navStartY + i * navItemH;
             boolean active = i == currentCategory;
-            boolean hovered = inside(panelX, itemY, sidebarW, sidebarItemH, mouseX, mouseY);
+            boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
 
             if (active) {
-                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, accentDimColor);
-                context.fill(panelX, itemY, panelX + 2, itemY + sidebarItemH, accentColor);
+                context.fill(6, itemY + 2, sidebarW - 6, itemY + navItemH - 2, accentDimColor);
             } else if (hovered) {
-                context.fill(panelX, itemY, panelX + sidebarW, itemY + sidebarItemH, 0x30FFFFFF);
+                context.fill(6, itemY + 2, sidebarW - 6, itemY + navItemH - 2, 0x20FFFFFF);
             }
 
-            int color = active ? accentColor : TEXT_DIM;
-            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), panelX + 14, itemY + 8, color, false);
+            int dotSize = 6;
+            int dotY = itemY + (navItemH - dotSize) / 2;
+            context.fill(14, dotY, 14 + dotSize, dotY + dotSize, active ? accentColor : TEXT_DIM);
+
+            int color = active ? TEXT_MAIN : TEXT_DIM;
+            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
         }
 
-        for (ToggleRow row : toggles) {
-            row.render(context, this, mouseX, mouseY);
+        // header
+        String title = Lang.t(CATEGORY_NAMES[currentCategory]);
+        context.getMatrices().push();
+        context.getMatrices().translate(contentX, 12, 0);
+        context.getMatrices().scale(1.4f, 1.4f, 1f);
+        context.drawText(this.textRenderer, Text.literal(title).formatted(Formatting.BOLD), 0, 0, TEXT_MAIN, false);
+        context.getMatrices().pop();
+
+        drawHeaderButton(context, closeX, closeY, closeW, closeH, "x", mouseX, mouseY);
+        drawHeaderButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
+        drawHeaderButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
+
+        // content (scissored + scrollable)
+        context.enableScissor(contentX, contentTop, contentX + contentW + skinPanelW + 16, contentBottom);
+
+        placedToggles.clear();
+        placedSliders.clear();
+        placedCycles.clear();
+
+        int y = contentTop - scrollOffset;
+
+        List<ToggleCard> visible = new ArrayList<>();
+        for (ToggleCard t : toggles) {
+            if (matchesSearch(t.label)) visible.add(t);
         }
 
-        for (SliderRow row : sliders) {
-            row.render(context, this, mouseX, mouseY);
+        for (int i = 0; i < visible.size(); i++) {
+            int col = i % 2;
+            int row = i / 2;
+            int cx = contentX + col * (cardW + colGap);
+            int cy = y + row * (cardH + rowGap);
+            placedToggles.add(new Placed<>(visible.get(i), cx, cy, cardW, cardH));
+        }
+        int rows = (visible.size() + 1) / 2;
+        y += rows * (cardH + rowGap);
+        if (!visible.isEmpty()) y += 4;
+
+        int sliderRowH = 38;
+        for (SliderRow s : sliders) {
+            placedSliders.add(new Placed<>(s, contentX, y, contentW, sliderRowH));
+            y += sliderRowH;
+        }
+        if (!sliders.isEmpty()) y += 6;
+
+        int cycleRowH = 34;
+        for (CycleRow c : cycles) {
+            placedCycles.add(new Placed<>(c, contentX, y, contentW, cycleRowH));
+            y += cycleRowH + 8;
+        }
+        if (!cycles.isEmpty()) y += 4;
+
+        swatchAreaY = y;
+        int contentBottomY = y;
+        if (!swatches.isEmpty()) {
+            int swatchSize = 36;
+            int swatchGap = 12;
+            int cols = Math.max(1, (contentW + swatchGap) / (swatchSize + swatchGap));
+            int rowsSw = (swatches.size() + cols - 1) / cols;
+            contentBottomY = y + rowsSw * (swatchSize + swatchGap);
         }
 
-        for (SwatchButton swatch : swatches) {
-            swatch.render(context, this, mouseX, mouseY);
+        maxScroll = Math.max(0, (contentBottomY + scrollOffset - contentTop) - (contentBottom - contentTop));
+        if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+
+        for (Placed<ToggleCard> p : placedToggles) {
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+        }
+        for (Placed<SliderRow> p : placedSliders) {
+            p.item.render(context, this, p.x, p.y, p.w, mouseX, mouseY);
+        }
+        for (Placed<CycleRow> p : placedCycles) {
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+        }
+        if (!swatches.isEmpty()) {
+            int swatchSize = 36;
+            int swatchGap = 12;
+            int cols = Math.max(1, (contentW + swatchGap) / (swatchSize + swatchGap));
+            for (int i = 0; i < swatches.size(); i++) {
+                int col = i % cols;
+                int row = i / cols;
+                int sx = contentX + col * (swatchSize + swatchGap);
+                int sy = swatchAreaY + row * (swatchSize + swatchGap);
+                swatches.get(i).render(context, this, sx, sy, swatchSize, mouseX, mouseY);
+            }
         }
 
-        for (CycleRow row : cycles) {
-            row.render(context, this, mouseX, mouseY);
-        }
+        context.disableScissor();
 
-        drawButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
-        drawButton(context, doneX, doneY, doneW, doneH, "DONE", mouseX, mouseY);
-        drawButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
+        if (visible.isEmpty() && toggles.size() > 0) {
+            String msg = Lang.t("No results");
+            int w = this.textRenderer.getWidth(msg);
+            context.drawText(this.textRenderer, msg, contentX + (contentW - w) / 2, contentTop + 20, TEXT_DIM, false);
+        }
 
         renderSkinPanel(context);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
+    private void drawHeaderButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
+        boolean hovered = inside(x, y, w, h, mouseX, mouseY);
+        int bg = hovered ? accentDimColor : CARD_BG;
+        context.fill(x, y, x + w, y + h, bg);
+        drawBorder(context, x, y, w, h, hovered ? accentColor : TRACK_OFF);
+        String translated = Lang.t(label);
+        int textWidth = this.textRenderer.getWidth(translated);
+        context.drawText(this.textRenderer, translated, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
+    }
+
     private void renderSkinPanel(DrawContext context) {
-        context.fill(skinPanelX, skinPanelY, skinPanelX + skinPanelW, skinPanelY + skinPanelH, 0xFF1E1E1E);
+        context.fill(skinPanelX, skinPanelY, skinPanelX + skinPanelW, skinPanelY + skinPanelH, CARD_BG);
         drawBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, accentColor);
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -325,24 +430,19 @@ public class ConfigScreen extends Screen {
         context.fill(x + w - 1, y, x + w, y + h, color);
     }
 
-    private void drawButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
-        boolean hovered = inside(x, y, w, h, mouseX, mouseY);
-        int bg = hovered ? accentDimColor : TRACK_OFF;
-        context.fill(x, y, x + w, y + h, bg);
-        drawBorder(context, x, y, w, h, accentColor);
-        String translated = Lang.t(label);
-        int textWidth = this.textRenderer.getWidth(translated);
-        context.drawText(this.textRenderer, translated, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
-    }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
 
+        int navStartY = 8 + 26 + 14;
+        int navItemH = 24;
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = sidebarItemY + i * sidebarItemH;
-            if (inside(panelX, itemY, sidebarW, sidebarItemH, mouseX, mouseY) && currentCategory != i) {
+            int itemY = navStartY + i * navItemH;
+            if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY) && currentCategory != i) {
                 currentCategory = i;
+                scrollOffset = 0;
+                searchField.setText("");
+                searchQuery = "";
                 buildCategoryContent();
                 return true;
             }
@@ -353,52 +453,71 @@ public class ConfigScreen extends Screen {
             return true;
         }
 
-        for (ToggleRow row : toggles) {
-            if (row.isInside(mouseX, mouseY)) {
-                row.toggle();
-                return true;
-            }
+        if (inside(closeX, closeY, closeW, closeH, mouseX, mouseY)) {
+            close();
+            return true;
         }
-
-        for (SwatchButton swatch : swatches) {
-            if (swatch.isInside(mouseX, mouseY)) {
-                cfg.accentColorIndex = swatch.paletteIndex;
-                return true;
-            }
-        }
-
-        for (CycleRow row : cycles) {
-            if (row.isInside(mouseX, mouseY)) {
-                row.advance();
-                return true;
-            }
-        }
-
-        for (SliderRow row : sliders) {
-            if (row.isInsideTrack(mouseX, mouseY)) {
-                draggingSlider = row;
-                row.updateFromMouse(mouseX);
-                return true;
-            }
-        }
-
         if (inside(resetX, resetY, resetW, resetH, mouseX, mouseY)) {
             resetToDefaults();
             return true;
         }
-
-        if (inside(doneX, doneY, doneW, doneH, mouseX, mouseY)) {
-            close();
-            return true;
-        }
-
         if (inside(langX, langY, langW, langH, mouseX, mouseY)) {
             cfg.russianLanguage = !cfg.russianLanguage;
             cfg.save();
             return true;
         }
 
+        if (mouseY >= contentTop && mouseY <= contentBottom) {
+            for (Placed<ToggleCard> p : placedToggles) {
+                if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    p.item.toggle();
+                    return true;
+                }
+            }
+            for (Placed<CycleRow> p : placedCycles) {
+                if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    p.item.advance();
+                    return true;
+                }
+            }
+            if (!swatches.isEmpty()) {
+                int swatchSize = 36;
+                int swatchGap = 12;
+                int cols = Math.max(1, (contentW + swatchGap) / (swatchSize + swatchGap));
+                for (int i = 0; i < swatches.size(); i++) {
+                    int col = i % cols;
+                    int row = i / cols;
+                    int sx = contentX + col * (swatchSize + swatchGap);
+                    int sy = swatchAreaY + row * (swatchSize + swatchGap);
+                    if (inside(sx, sy, swatchSize, swatchSize, mouseX, mouseY)) {
+                        cfg.accentColorIndex = i;
+                        return true;
+                    }
+                }
+            }
+            for (Placed<SliderRow> p : placedSliders) {
+                int trackY = p.y + 20;
+                int trackH = 8;
+                if (mouseX >= p.x && mouseX < p.x + p.w && mouseY >= trackY - 6 && mouseY < trackY + trackH + 6) {
+                    draggingSlider = p.item;
+                    p.item.updateFromMouse(mouseX, p.x, p.w);
+                    return true;
+                }
+            }
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (mouseX >= contentX && mouseY >= contentTop && mouseY <= contentBottom) {
+            scrollOffset -= (int) (verticalAmount * 18);
+            if (scrollOffset < 0) scrollOffset = 0;
+            if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
@@ -409,7 +528,12 @@ public class ConfigScreen extends Screen {
             return true;
         }
         if (draggingSlider != null) {
-            draggingSlider.updateFromMouse(mouseX);
+            for (Placed<SliderRow> p : placedSliders) {
+                if (p.item == draggingSlider) {
+                    draggingSlider.updateFromMouse(mouseX, p.x, p.w);
+                    break;
+                }
+            }
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -512,16 +636,27 @@ public class ConfigScreen extends Screen {
         return false;
     }
 
-    private class ToggleRow {
+    /** A UI element paired with its computed screen-space position for this frame. */
+    private static class Placed<T> {
+        final T item;
+        final int x, y, w, h;
+
+        Placed(T item, int x, int y, int w, int h) {
+            this.item = item;
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
+    }
+
+    private class ToggleCard {
         final String label;
-        final int x, y;
         final BooleanSupplier getter;
         final Consumer<Boolean> setter;
 
-        ToggleRow(String label, int x, int y, BooleanSupplier getter, Consumer<Boolean> setter) {
+        ToggleCard(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
             this.label = label;
-            this.x = x;
-            this.y = y;
             this.getter = getter;
             this.setter = setter;
         }
@@ -530,75 +665,69 @@ public class ConfigScreen extends Screen {
             setter.accept(!getter.getAsBoolean());
         }
 
-        private int bulletX() {
-            return x + 130;
-        }
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+            boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
+            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
 
-        boolean isInside(double mouseX, double mouseY) {
-            int size = 10;
-            int bx = bulletX();
-            return mouseX >= bx && mouseX < bx + size && mouseY >= y && mouseY < y + size;
-        }
+            context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
+                    x + 8, y + 6, TEXT_MAIN, false);
 
-        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
-            context.drawText(screen.textRenderer, Lang.t(label), x, y + 1, TEXT_MAIN, false);
-
-            int size = 10;
-            int bx = bulletX();
-            boolean on = getter.getAsBoolean();
-
-            if (on) {
-                context.fill(bx, y, bx + size, y + size, screen.accentColor);
-            } else {
-                screen.drawBorder(context, bx, y, size, size, TEXT_DIM);
+            String desc = Lang.desc(label);
+            if (!desc.isEmpty()) {
+                int pillW = 30;
+                int maxDescW = w - 16 - pillW;
+                Text trimmed = Text.literal(screen.textRenderer.trimToWidth(desc, maxDescW));
+                context.drawText(screen.textRenderer, trimmed, x + 8, y + 6 + 11, TEXT_DIM, false);
             }
+
+            int pillW = 26;
+            int pillH = 13;
+            int px = x + w - pillW - 8;
+            int py = y + (h - pillH) / 2;
+            boolean on = getter.getAsBoolean();
+            context.fill(px, py, px + pillW, py + pillH, on ? screen.accentColor : TRACK_OFF);
+            int knobSize = 9;
+            int knobX = on ? px + pillW - knobSize - 2 : px + 2;
+            int knobY = py + (pillH - knobSize) / 2;
+            context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
         }
     }
 
     private class SliderRow {
         final String label;
-        final int x, y, width;
         final int min;
         final int max;
         int value;
         final Consumer<Integer> setter;
 
-        SliderRow(String label, int x, int y, int width, int min, int max, int initial, Consumer<Integer> setter) {
+        SliderRow(String label, int min, int max, int initial, Consumer<Integer> setter) {
             this.label = label;
-            this.x = x;
-            this.y = y;
-            this.width = width;
             this.min = min;
             this.max = max;
             this.value = initial;
             this.setter = setter;
         }
 
-        boolean isInsideTrack(double mouseX, double mouseY) {
-            int trackY = y + 14;
-            int trackH = 8;
-            return mouseX >= x && mouseX < x + width && mouseY >= trackY - 6 && mouseY < trackY + trackH + 6;
-        }
-
-        void updateFromMouse(double mouseX) {
+        void updateFromMouse(double mouseX, int x, int width) {
             double pct = (mouseX - x) / (double) width;
             pct = Math.max(0, Math.min(1, pct));
             value = (int) Math.round(min + pct * (max - min));
             setter.accept(value);
         }
 
-        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int mouseX, int mouseY) {
             String text = Lang.t(label) + ": " + value;
-            context.drawText(screen.textRenderer, text, x, y - 10, TEXT_MAIN, false);
+            context.drawText(screen.textRenderer, text, x, y, TEXT_MAIN, false);
 
-            int trackY = y + 4;
+            int trackY = y + 20;
             int trackH = 8;
 
-            context.fill(x, trackY, x + width, trackY + trackH, TRACK_OFF);
+            context.fill(x, trackY, x + w, trackY + trackH, TRACK_OFF);
             double pct = (value - min) / (double) (max - min);
-            int filledW = (int) (width * pct);
+            int filledW = (int) (w * pct);
             context.fill(x, trackY, x + filledW, trackY + trackH, screen.accentColor);
-            screen.drawBorder(context, x, trackY, width, trackH, screen.accentColor);
+            screen.drawBorder(context, x, trackY, w, trackH, screen.accentColor);
 
             int knobSize = 12;
             int knobX = x + filledW - knobSize / 2;
@@ -609,20 +738,12 @@ public class ConfigScreen extends Screen {
 
     private class SwatchButton {
         final int paletteIndex;
-        final int x, y, size;
 
-        SwatchButton(int paletteIndex, int x, int y, int size) {
+        SwatchButton(int paletteIndex) {
             this.paletteIndex = paletteIndex;
-            this.x = x;
-            this.y = y;
-            this.size = size;
         }
 
-        boolean isInside(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + size && mouseY >= y && mouseY < y + size;
-        }
-
-        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int size, int mouseX, int mouseY) {
             int color = PALETTE[paletteIndex];
             context.fill(x, y, x + size, y + size, color);
             boolean selected = screen.cfg.accentColorIndex == paletteIndex;
@@ -632,15 +753,12 @@ public class ConfigScreen extends Screen {
 
     private class CycleRow {
         final String label;
-        final int x, y;
         final String[] options;
-        final java.util.function.IntSupplier getter;
-        final java.util.function.IntConsumer setter;
+        final IntSupplier getter;
+        final IntConsumer setter;
 
-        CycleRow(String label, int x, int y, String[] options, java.util.function.IntSupplier getter, java.util.function.IntConsumer setter) {
+        CycleRow(String label, String[] options, IntSupplier getter, IntConsumer setter) {
             this.label = label;
-            this.x = x;
-            this.y = y;
             this.options = options;
             this.getter = getter;
             this.setter = setter;
@@ -651,14 +769,18 @@ public class ConfigScreen extends Screen {
             setter.accept(next);
         }
 
-        boolean isInside(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + 260 && mouseY >= y && mouseY < y + 18;
-        }
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+            boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
+            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
 
-        void render(DrawContext context, ConfigScreen screen, int mouseX, int mouseY) {
             int current = Math.max(0, Math.min(options.length - 1, getter.getAsInt()));
-            String text = Lang.t(label) + ": " + Lang.t(options[current]) + "  " + Lang.t("(tap to change)");
-            context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
+            context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
+                    x + 8, y + (h - 8) / 2, TEXT_MAIN, false);
+
+            String valueText = Lang.t(options[current]) + "  >";
+            int valueW = screen.textRenderer.getWidth(valueText);
+            context.drawText(screen.textRenderer, valueText, x + w - valueW - 10, y + (h - 8) / 2, screen.accentColor, false);
         }
     }
-    }
+}
