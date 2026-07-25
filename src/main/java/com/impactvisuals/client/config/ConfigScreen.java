@@ -1,5 +1,6 @@
 package com.impactvisuals.client.config;
 
+import com.impactvisuals.client.friends.FriendsNetwork;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -36,7 +37,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -65,12 +66,20 @@ public class ConfigScreen extends Screen {
     private final List<SliderRow> sliders = new ArrayList<>();
     private final List<SwatchButton> swatches = new ArrayList<>();
     private final List<CycleRow> cycles = new ArrayList<>();
+    private final List<FriendEntry> friendEntries = new ArrayList<>();
 
     // computed each render() call, reused by mouseClicked()/mouseDragged()
     private final List<Placed<ToggleCard>> placedToggles = new ArrayList<>();
     private final List<Placed<SliderRow>> placedSliders = new ArrayList<>();
     private final List<Placed<CycleRow>> placedCycles = new ArrayList<>();
+    private final List<Placed<FriendEntry>> placedFriends = new ArrayList<>();
     private int swatchAreaY;
+    private int effContentTop;
+
+    private TextFieldWidget addFriendField;
+    private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
+    private static final int FRIENDS_HEADER_H = 32;
+    private static final int FRIEND_ROW_H = 30;
 
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
@@ -141,6 +150,17 @@ public class ConfigScreen extends Screen {
             scrollOffset = 0;
         });
         addDrawableChild(searchField);
+
+        addFriendBtnH = 18;
+        int addFieldY = contentTop + (FRIENDS_HEADER_H - addFriendBtnH) / 2;
+        addFriendBtnX = contentX + contentW - addFriendBtnW;
+        addFriendBtnY = addFieldY;
+        int addFieldW = Math.max(80, contentW - addFriendBtnW - 8);
+        addFriendField = new TextFieldWidget(this.textRenderer, contentX, addFieldY, addFieldW, addFriendBtnH, Text.literal(""));
+        addFriendField.setMaxLength(16);
+        addFriendField.setPlaceholder(Text.literal(Lang.t("Nickname")));
+        addDrawableChild(addFriendField);
+        addFriendField.setVisible(currentCategory == 11);
 
         scrollOffset = 0;
         categoryStartNanos = System.nanoTime();
@@ -232,11 +252,49 @@ public class ConfigScreen extends Screen {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
             cycles.add(new CycleRow("Skin (self-view only)", skinNames, () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
+        } else if (currentCategory == 11) {
+            addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
+            friendEntries.clear();
+            for (String name : cfg.friendsList) {
+                friendEntries.add(new FriendEntry(name));
+            }
+        }
+
+        if (addFriendField != null) {
+            addFriendField.setVisible(currentCategory == 11);
         }
     }
 
     private void addToggle(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
         toggles.add(new ToggleCard(label, getter, setter));
+    }
+
+    private void addFriend() {
+        String name = addFriendField.getText().trim();
+        if (name.isEmpty() || !name.matches("[A-Za-z0-9_]{1,16}")) return;
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getSession() != null && name.equalsIgnoreCase(client.getSession().getUsername())) return;
+
+        for (String existing : cfg.friendsList) {
+            if (existing.equalsIgnoreCase(name)) {
+                addFriendField.setText("");
+                return;
+            }
+        }
+
+        cfg.friendsList.add(name);
+        cfg.save();
+        com.impactvisuals.client.friends.FriendsNetwork.fetchStatus(name);
+        com.impactvisuals.client.friends.FriendsNetwork.fetchHead(name);
+        addFriendField.setText("");
+        buildCategoryContent();
+    }
+
+    private void removeFriend(String name) {
+        cfg.friendsList.removeIf(existing -> existing.equalsIgnoreCase(name));
+        cfg.save();
+        buildCategoryContent();
     }
 
     private void updateThemeColors() {
@@ -314,14 +372,20 @@ public class ConfigScreen extends Screen {
         drawHeaderButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
         drawHeaderButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
 
+        effContentTop = contentTop;
+        if (currentCategory == 11) {
+            effContentTop = contentTop + FRIENDS_HEADER_H;
+            drawHeaderButton(context, addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, "Add", mouseX, mouseY);
+        }
+
         // content (scissored + scrollable)
-        context.enableScissor(contentX, contentTop, contentX + contentW + skinPanelW + 16, contentBottom);
+        context.enableScissor(contentX, effContentTop, contentX + contentW + skinPanelW + 16, contentBottom);
 
         placedToggles.clear();
         placedSliders.clear();
         placedCycles.clear();
 
-        int y = contentTop - scrollOffset;
+        int y = effContentTop - scrollOffset;
 
         List<ToggleCard> visible = new ArrayList<>();
         for (ToggleCard t : toggles) {
@@ -363,7 +427,16 @@ public class ConfigScreen extends Screen {
             contentBottomY = y + rowsSw * (swatchSize + swatchGap);
         }
 
-        maxScroll = Math.max(0, (contentBottomY + scrollOffset - contentTop) - (contentBottom - contentTop));
+        placedFriends.clear();
+        if (currentCategory == 11) {
+            for (FriendEntry fe : friendEntries) {
+                placedFriends.add(new Placed<>(fe, contentX, y, contentW, FRIEND_ROW_H));
+                y += FRIEND_ROW_H + 6;
+            }
+            contentBottomY = y;
+        }
+
+        maxScroll = Math.max(0, (contentBottomY + scrollOffset - effContentTop) - (contentBottom - effContentTop));
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
         for (Placed<ToggleCard> p : placedToggles) {
@@ -388,12 +461,20 @@ public class ConfigScreen extends Screen {
             }
         }
 
+        for (Placed<FriendEntry> p : placedFriends) {
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+        }
+        if (currentCategory == 11 && friendEntries.isEmpty()) {
+            String hint = Lang.t("No friends added yet");
+            context.drawText(this.textRenderer, hint, contentX, effContentTop + 6, TEXT_DIM, false);
+        }
+
         long fadeElapsed = nowNanos - categoryStartNanos;
         if (fadeElapsed < FADE_DURATION_NANOS) {
             float t = Math.max(0f, Math.min(1f, fadeElapsed / (float) FADE_DURATION_NANOS));
             int fadeAlpha = (int) ((1f - t) * 200);
             int overlay = (fadeAlpha << 24);
-            context.fill(contentX - 6, contentTop - 6, contentX + contentW + skinPanelW + 20, contentBottom, overlay);
+            context.fill(contentX - 6, effContentTop - 6, contentX + contentW + skinPanelW + 20, contentBottom, overlay);
         }
 
         context.disableScissor();
@@ -486,8 +567,12 @@ public class ConfigScreen extends Screen {
             cfg.save();
             return true;
         }
+        if (currentCategory == 11 && inside(addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, mouseX, mouseY)) {
+            addFriend();
+            return true;
+        }
 
-        if (mouseY >= contentTop && mouseY <= contentBottom) {
+        if (mouseY >= effContentTop && mouseY <= contentBottom) {
             for (Placed<ToggleCard> p : placedToggles) {
                 if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
                     p.item.toggle();
@@ -497,6 +582,17 @@ public class ConfigScreen extends Screen {
             for (Placed<CycleRow> p : placedCycles) {
                 if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
                     p.item.advance();
+                    return true;
+                }
+            }
+            for (Placed<FriendEntry> p : placedFriends) {
+                if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    int removeSize = 16;
+                    int removeX = p.x + p.w - removeSize - 6;
+                    int removeY = p.y + (p.h - removeSize) / 2;
+                    if (inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY)) {
+                        removeFriend(p.item.username);
+                    }
                     return true;
                 }
             }
@@ -531,7 +627,7 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (mouseX >= contentX && mouseY >= contentTop && mouseY <= contentBottom) {
+        if (mouseX >= contentX && mouseY >= effContentTop && mouseY <= contentBottom) {
             scrollOffset -= (int) (verticalAmount * 18);
             if (scrollOffset < 0) scrollOffset = 0;
             if (scrollOffset > maxScroll) scrollOffset = maxScroll;
@@ -564,6 +660,16 @@ public class ConfigScreen extends Screen {
         draggingSlider = null;
         draggingSkin = false;
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (currentCategory == 11 && addFriendField.isFocused()
+                && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
+            addFriend();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private boolean inside(int x, int y, int w, int h, double mouseX, double mouseY) {
@@ -633,6 +739,7 @@ public class ConfigScreen extends Screen {
         cfg.activeEffectsHudEnabled = true;
         cfg.russianLanguage = false;
         cfg.targetHudRangeBlocks = 6;
+        cfg.friendsFeatureEnabled = false;
         buildCategoryContent();
     }
 
@@ -819,4 +926,61 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, valueText, x + w - valueW - 10, y + (h - 8) / 2, screen.accentColor, false);
         }
     }
-                     }
+
+    /** One row in the FRIENDS tab: head icon, name, online/server status, remove button. */
+    private class FriendEntry {
+        final String username;
+
+        FriendEntry(String username) {
+            this.username = username;
+        }
+
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+            boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
+            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+
+            int iconSize = 18;
+            int iconX = x + 6;
+            int iconY = y + (h - iconSize) / 2;
+            net.minecraft.util.Identifier head = FriendsNetwork.getHeadTexture(username);
+            if (head != null) {
+                context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, head,
+                        iconX, iconY, 0, 0, iconSize, iconSize, 32, 32, 32, 32);
+            } else {
+                context.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0xFF2A2A2E);
+                FriendsNetwork.fetchHead(username);
+            }
+
+            FriendsNetwork.Status status = FriendsNetwork.getCached(username);
+            boolean online = status != null && (System.currentTimeMillis() - status.lastSeen) < 90_000;
+            int dotSize = 6;
+            int dotX = iconX + iconSize - dotSize + 1;
+            int dotY = iconY + iconSize - dotSize + 1;
+            context.fill(dotX, dotY, dotX + dotSize, dotY + dotSize, online ? 0xFF55DD55 : 0xFF666666);
+
+            int textX = iconX + iconSize + 8;
+            context.drawText(screen.textRenderer, Text.literal(username).formatted(Formatting.BOLD),
+                    textX, y + 5, TEXT_MAIN, false);
+
+            String statusText = online ? niceServerName(status.server) : Lang.t("Offline");
+            context.drawText(screen.textRenderer, statusText, textX, y + 16, online ? screen.accentColor : TEXT_DIM, false);
+
+            int removeSize = 16;
+            int removeX = x + w - removeSize - 6;
+            int removeY = y + (h - removeSize) / 2;
+            boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
+            context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
+            String x_ = "x";
+            int xw = screen.textRenderer.getWidth(x_);
+            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+        }
+
+        private String niceServerName(String server) {
+            if (server == null || server.isEmpty()) return Lang.t("Online");
+            if (server.equals("singleplayer")) return Lang.t("Singleplayer");
+            if (server.equals("menu")) return Lang.t("Online");
+            return server;
+        }
+    }
+            }
