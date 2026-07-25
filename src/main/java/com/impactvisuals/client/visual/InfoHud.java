@@ -20,6 +20,17 @@ public class InfoHud {
     private static final int SEP_COLOR = 0xFF707070;
     private static final int MS_COLOR = 0xFFAAAAAA;
 
+    // Last drawn position/size of the badge, so click handling (e.g. on the pause
+    // screen, where the cursor is actually free) can tell if a click landed on it.
+    private static int lastX, lastY, lastW, lastH;
+
+    /** True if the given (screen-space) coordinates fall inside the last drawn badge. */
+    public static boolean isInsideBadge(double mouseX, double mouseY) {
+        return lastW > 0 && lastH > 0
+                && mouseX >= lastX && mouseX <= lastX + lastW
+                && mouseY >= lastY && mouseY <= lastY + lastH;
+    }
+
     public static void render(DrawContext context) {
         ModConfig cfg = ModConfig.get();
         if (!cfg.infoHudEnabled) return;
@@ -52,6 +63,11 @@ public class InfoHud {
         int screenWidth = context.getScaledWindowWidth();
         int x = screenWidth - boxW - 6;
         int y = 6;
+
+        lastX = x;
+        lastY = y;
+        lastW = boxW;
+        lastH = boxH;
 
         HudCard.draw(context, x, y, boxW, boxH);
 
