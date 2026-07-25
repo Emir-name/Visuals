@@ -56,8 +56,12 @@ public class FriendsNetwork {
         stopHeartbeat();
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
         heartbeatExecutor.scheduleAtFixedRate(() -> {
-            if (!ModConfig.get().friendsFeatureEnabled) return;
-            sendHeartbeat(username);
+            // Broadcasting *my own* presence is opt-in and gated by the toggle.
+            if (ModConfig.get().friendsFeatureEnabled) {
+                sendHeartbeat(username);
+            }
+            // Reading my friends' already-shared status is not a privacy action on
+            // my part, so it always runs - this is what keeps the friends list live.
             refreshFriends();
         }, 0, 20, TimeUnit.SECONDS);
     }
