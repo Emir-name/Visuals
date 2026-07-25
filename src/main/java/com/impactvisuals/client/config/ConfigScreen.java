@@ -148,7 +148,6 @@ public class ConfigScreen extends Screen {
             addToggle(4, contentX, colGap, gridStartY, rowH, "Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
             addToggle(5, contentX, colGap, gridStartY, rowH, "Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
             addToggle(6, contentX, colGap, gridStartY, rowH, "Active Effects", () -> cfg.activeEffectsHudEnabled, v -> cfg.activeEffectsHudEnabled = v);
-            addToggle(7, contentX, colGap, gridStartY, rowH, "FPS Badge", () -> cfg.fpsHudEnabled, v -> cfg.fpsHudEnabled = v);
         } else if (currentCategory == 4) {
             addToggle(0, contentX, colGap, gridStartY, rowH, "Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
             addToggle(1, contentX, colGap, gridStartY, rowH, "Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
@@ -662,4 +661,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, text, x, y + 4, TEXT_MAIN, false);
         }
     }
-                }
+    }
