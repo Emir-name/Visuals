@@ -80,6 +80,8 @@ public class ConfigScreen extends Screen {
     private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
     private static final int FRIENDS_HEADER_H = 32;
     private static final int FRIEND_ROW_H = 30;
+    private long lastFriendsRefreshNanos = 0;
+    private static final long FRIENDS_REFRESH_INTERVAL_NANOS = 5_000_000_000L;
 
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
@@ -258,6 +260,8 @@ public class ConfigScreen extends Screen {
             for (String name : cfg.friendsList) {
                 friendEntries.add(new FriendEntry(name));
             }
+            FriendsNetwork.refreshFriends();
+            lastFriendsRefreshNanos = System.nanoTime();
         }
 
         if (addFriendField != null) {
@@ -376,6 +380,11 @@ public class ConfigScreen extends Screen {
         if (currentCategory == 11) {
             effContentTop = contentTop + FRIENDS_HEADER_H;
             drawHeaderButton(context, addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, "Add", mouseX, mouseY);
+
+            if (nowNanos - lastFriendsRefreshNanos > FRIENDS_REFRESH_INTERVAL_NANOS) {
+                FriendsNetwork.refreshFriends();
+                lastFriendsRefreshNanos = nowNanos;
+            }
         }
 
         // content (scissored + scrollable)
@@ -983,4 +992,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-            }
+                          }
