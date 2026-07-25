@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -26,6 +28,8 @@ public class FriendsNetwork {
     private static final ConcurrentHashMap<String, Status> CACHE = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, net.minecraft.util.Identifier> HEAD_TEXTURES = new ConcurrentHashMap<>();
     private static final java.util.Set<String> HEAD_FETCHING = ConcurrentHashMap.newKeySet();
+    // last server we already showed a "friend joined" notice for, so we don't spam it every poll
+    private static final ConcurrentHashMap<String, String> NOTIFIED_SERVER = new ConcurrentHashMap<>();
     private static ScheduledExecutorService heartbeatExecutor;
 
     private static final String FIREBASE_URL = "https://impact-visual-724a7-default-rtdb.firebaseio.com";
@@ -51,7 +55,11 @@ public class FriendsNetwork {
     public static void startHeartbeat(String username) {
         stopHeartbeat();
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
-        heartbeatExecutor.scheduleAtFixedRate(() -> sendHeartbeat(username), 0, 20, TimeUnit.SECONDS);
+        heartbeatExecutor.scheduleAtFixedRate(() -> {
+            if (!ModConfig.get().friendsFeatureEnabled) return;
+            sendHeartbeat(username);
+            refreshFriends();
+        }, 0, 20, TimeUnit.SECONDS);
     }
 
     public static void stopHeartbeat() {
@@ -88,6 +96,14 @@ public class FriendsNetwork {
         return "menu";
     }
 
+    /** Refresh the cached status of every added friend. Called from the heartbeat loop. */
+    public static void refreshFriends() {
+        for (String friend : ModConfig.get().friendsList) {
+            fetchStatus(friend);
+            fetchHead(friend);
+        }
+    }
+
     public static void fetchStatus(String username) {
         if (baseUrl().isBlank()) return;
         try {
@@ -103,11 +119,36 @@ public class FriendsNetwork {
                     Status status = GSON.fromJson(body, Status.class);
                     if (status != null) {
                         CACHE.put(username, status);
+                        checkJoinNotification(username, status);
                     }
                 } catch (Exception ignored) {
                 }
             });
         } catch (Exception ignored) {
+        }
+    }
+
+    private static void checkJoinNotification(String friendName, Status status) {
+        String myServer = currentServerAddress();
+        boolean onRealServer = !myServer.equals("menu") && !myServer.equals("singleplayer");
+
+        if (onRealServer && myServer.equals(status.server)) {
+            String alreadyNotifiedFor = NOTIFIED_SERVER.get(friendName);
+            if (!myServer.equals(alreadyNotifiedFor)) {
+                NOTIFIED_SERVER.put(friendName, myServer);
+                MinecraftClient.getInstance().execute(() -> {
+                    MinecraftClient client = MinecraftClient.getInstance();
+                    if (client.player != null) {
+                        client.player.sendMessage(
+                                Text.literal("[Impact Visuals] ").formatted(Formatting.LIGHT_PURPLE)
+                                        .append(Text.literal(friendName).formatted(Formatting.WHITE, Formatting.BOLD))
+                                        .append(Text.literal(" is on this server!").formatted(Formatting.GRAY)),
+                                false);
+                    }
+                });
+            }
+        } else {
+            NOTIFIED_SERVER.remove(friendName);
         }
     }
 
