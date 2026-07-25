@@ -40,7 +40,7 @@ public class ActiveEffectsHud {
             }
 
             net.minecraft.client.texture.Sprite sprite = spriteManager.getSprite(effect.getEffectType());
-            context.drawSprite(textX, textY - 2, 0, 12, 12, sprite);
+            context.drawSpriteStretched(net.minecraft.client.render.RenderLayer::getGuiTextured, sprite, textX, textY - 2, 12, 12);
 
             String time = formatDuration(effect.getDuration());
             String line = name + "  " + time;
