@@ -14,6 +14,7 @@ import com.impactvisuals.client.visual.CritSoundPlayer;
 import com.impactvisuals.client.visual.DamageFlash;
 import com.impactvisuals.client.visual.DamageNumberRenderer;
 import com.impactvisuals.client.visual.ExtraHud;
+import com.impactvisuals.client.visual.FpsHud;
 import com.impactvisuals.client.visual.HandGlow;
 import com.impactvisuals.client.visual.HeartbeatSound;
 import com.impactvisuals.client.visual.HitParticleRenderer;
@@ -89,6 +90,7 @@ public final class ClientEventHandler {
             ImpactPunch.render(drawContext);
             ActiveEffectsHud.render(drawContext);
             BetterNearHud.render(drawContext);
+            FpsHud.render(drawContext);
         });
     }
 
