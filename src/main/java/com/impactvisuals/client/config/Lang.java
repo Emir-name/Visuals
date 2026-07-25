@@ -49,7 +49,6 @@ public class Lang {
         RU.put("Armor HUD", "ХАД брони");
         RU.put("Biome", "Биом");
         RU.put("Active Effects", "Активные эффекты");
-        RU.put("FPS Badge", "Индикатор FPS");
 
         RU.put("Light Level", "Уровень света");
         RU.put("Held Item Name", "Имя предмета");
