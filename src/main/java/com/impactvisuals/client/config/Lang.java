@@ -116,6 +116,13 @@ public class Lang {
         RU.put("(tap to change)", "(тапни, чтобы сменить)");
         RU.put("Search", "Поиск");
         RU.put("No results", "Ничего не найдено");
+        RU.put("FRIENDS", "ДРУЗЬЯ");
+        RU.put("Nickname", "Ник");
+        RU.put("Add", "Добавить");
+        RU.put("Offline", "Не в сети");
+        RU.put("Online", "В сети");
+        RU.put("Singleplayer", "Одиночная игра");
+        RU.put("No friends added yet", "Друзья ещё не добавлены");
     }
 
     private static final Map<String, String> DESC_EN = new HashMap<>();
@@ -179,6 +186,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Heartbeat Sound", "Heartbeat sound at low health", "Звук сердцебиения при малом HP");
         put(DESC_EN, DESC_RU, "Menu Sound", "UI sound when using the menu", "Звук интерфейса при работе с меню");
         put(DESC_EN, DESC_RU, "Footstep Sound", "Custom footstep sound", "Свой звук шагов");
+        put(DESC_EN, DESC_RU, "Friends Feature", "Share your server with friends you add below", "Показывать друзьям, добавленным ниже, ваш сервер");
     }
 
     private static void put(Map<String, String> en, Map<String, String> ru, String key, String enVal, String ruVal) {
