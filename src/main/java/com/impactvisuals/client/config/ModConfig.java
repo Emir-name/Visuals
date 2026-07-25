@@ -88,7 +88,6 @@ public class ModConfig {
 
     public boolean friendsFeatureEnabled = false;
     public boolean activeEffectsHudEnabled = true;
-    public boolean fpsHudEnabled = false;
     public boolean russianLanguage = false;
     public boolean betterNearEnabled = true;
     public String firebaseUrl = "";
