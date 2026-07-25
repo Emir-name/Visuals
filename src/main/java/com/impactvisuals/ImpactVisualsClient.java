@@ -3,6 +3,7 @@ package com.impactvisuals;
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.event.ClientEventHandler;
+import com.impactvisuals.client.event.PauseScreenBadgeHandler;
 import com.impactvisuals.client.sound.ModSounds;
 import net.fabricmc.api.ClientModInitializer;
 
@@ -16,6 +17,7 @@ public class ImpactVisualsClient implements ClientModInitializer {
         ModKeybinds.register();
         ModSounds.register();
         ClientEventHandler.register();
+        PauseScreenBadgeHandler.register();
         System.out.println("[ImpactVisuals] Client visual effects initialized.");
     }
 }
