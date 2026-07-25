@@ -18,7 +18,7 @@ public class ActiveEffectsHud {
         if (effects.isEmpty()) return;
 
         int lineH = 12;
-        int cardW = 150;
+        int cardW = 160;
         int cardH = 20 + effects.size() * lineH;
         int x = 6;
         int y = 60;
@@ -30,6 +30,8 @@ public class ActiveEffectsHud {
         context.drawText(client.textRenderer, "Potions", textX, textY, 0xFFFF8C00, false);
         textY += 14;
 
+        var spriteManager = client.getStatusEffectSpriteManager();
+
         for (StatusEffectInstance effect : effects) {
             String name = effect.getEffectType().value().getName().getString();
             int amplifier = effect.getAmplifier();
@@ -37,12 +39,12 @@ public class ActiveEffectsHud {
                 name += " " + toRoman(amplifier + 1);
             }
 
-            int color = effect.getEffectType().value().getColor() | 0xFF000000;
-            context.fill(textX, textY + 2, textX + 6, textY + 8, color);
+            net.minecraft.client.texture.Sprite sprite = spriteManager.getSprite(effect.getEffectType());
+            context.drawSprite(textX, textY - 2, 0, 12, 12, sprite);
 
             String time = formatDuration(effect.getDuration());
             String line = name + "  " + time;
-            context.drawText(client.textRenderer, line, textX + 10, textY, 0xFFFFFFFF, false);
+            context.drawText(client.textRenderer, line, textX + 16, textY, 0xFFFFFFFF, false);
 
             textY += lineH;
         }
