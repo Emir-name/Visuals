@@ -78,6 +78,10 @@ public class ConfigScreen extends Screen {
     private float skinMouseY;
     private int previousBlurriness = 0;
 
+    private long lastFrameNanos = System.nanoTime();
+    private long categoryStartNanos = System.nanoTime();
+    private static final long FADE_DURATION_NANOS = 220_000_000L;
+
     public ConfigScreen(Screen parent) {
         super(Text.literal("Impact Visuals"));
         this.parent = parent;
@@ -139,6 +143,7 @@ public class ConfigScreen extends Screen {
         addDrawableChild(searchField);
 
         scrollOffset = 0;
+        categoryStartNanos = System.nanoTime();
         buildCategoryContent();
     }
 
@@ -258,6 +263,12 @@ public class ConfigScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         updateThemeColors();
 
+        long nowNanos = System.nanoTime();
+        float dt = (nowNanos - lastFrameNanos) / 1_000_000_000f;
+        if (dt > 0.1f) dt = 0.1f;
+        if (dt < 0f) dt = 0f;
+        lastFrameNanos = nowNanos;
+
         context.fill(0, 0, this.width, this.height, BG);
 
         // sidebar
@@ -356,7 +367,7 @@ public class ConfigScreen extends Screen {
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
         for (Placed<ToggleCard> p : placedToggles) {
-            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY, dt);
         }
         for (Placed<SliderRow> p : placedSliders) {
             p.item.render(context, this, p.x, p.y, p.w, mouseX, mouseY);
@@ -375,6 +386,14 @@ public class ConfigScreen extends Screen {
                 int sy = swatchAreaY + row * (swatchSize + swatchGap);
                 swatches.get(i).render(context, this, sx, sy, swatchSize, mouseX, mouseY);
             }
+        }
+
+        long fadeElapsed = nowNanos - categoryStartNanos;
+        if (fadeElapsed < FADE_DURATION_NANOS) {
+            float t = Math.max(0f, Math.min(1f, fadeElapsed / (float) FADE_DURATION_NANOS));
+            int fadeAlpha = (int) ((1f - t) * 200);
+            int overlay = (fadeAlpha << 24);
+            context.fill(contentX - 6, contentTop - 6, contentX + contentW + skinPanelW + 20, contentBottom, overlay);
         }
 
         context.disableScissor();
@@ -441,6 +460,7 @@ public class ConfigScreen extends Screen {
             if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY) && currentCategory != i) {
                 currentCategory = i;
                 scrollOffset = 0;
+                categoryStartNanos = System.nanoTime();
                 searchField.setText("");
                 searchQuery = "";
                 buildCategoryContent();
@@ -654,18 +674,20 @@ public class ConfigScreen extends Screen {
         final String label;
         final BooleanSupplier getter;
         final Consumer<Boolean> setter;
+        float animT;
 
         ToggleCard(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
             this.label = label;
             this.getter = getter;
             this.setter = setter;
+            this.animT = getter.getAsBoolean() ? 1f : 0f;
         }
 
         void toggle() {
             setter.accept(!getter.getAsBoolean());
         }
 
-        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY, float dt) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
             context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
             screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
@@ -681,17 +703,31 @@ public class ConfigScreen extends Screen {
                 context.drawText(screen.textRenderer, trimmed, x + 8, y + 6 + 11, TEXT_DIM, false);
             }
 
+            float target = getter.getAsBoolean() ? 1f : 0f;
+            animT += (target - animT) * Math.min(1f, dt * 12f);
+            if (Math.abs(target - animT) < 0.004f) animT = target;
+
             int pillW = 26;
             int pillH = 13;
             int px = x + w - pillW - 8;
             int py = y + (h - pillH) / 2;
-            boolean on = getter.getAsBoolean();
-            context.fill(px, py, px + pillW, py + pillH, on ? screen.accentColor : TRACK_OFF);
+            int trackColor = lerpColor(TRACK_OFF, screen.accentColor, animT);
+            context.fill(px, py, px + pillW, py + pillH, trackColor);
             int knobSize = 9;
-            int knobX = on ? px + pillW - knobSize - 2 : px + 2;
+            int travel = pillW - knobSize - 4;
+            int knobX = px + 2 + Math.round(travel * animT);
             int knobY = py + (pillH - knobSize) / 2;
             context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
         }
+    }
+
+    private static int lerpColor(int a, int b, float t) {
+        int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
+        int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
+        int r = Math.round(ar + (br - ar) * t);
+        int g = Math.round(ag + (bg - ag) * t);
+        int bl = Math.round(ab + (bb - ab) * t);
+        return 0xFF000000 | (r << 16) | (g << 8) | bl;
     }
 
     private class SliderRow {
@@ -783,4 +819,4 @@ public class ConfigScreen extends Screen {
             context.drawText(screen.textRenderer, valueText, x + w - valueW - 10, y + (h - 8) / 2, screen.accentColor, false);
         }
     }
-}
+                     }
