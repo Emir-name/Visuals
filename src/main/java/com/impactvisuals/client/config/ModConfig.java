@@ -63,6 +63,7 @@ public class ModConfig {
     public boolean hitImpactPunchEnabled = true;
     public boolean killStreakEnabled = true;
     public boolean bigKillBurstEnabled = true;
+    public boolean killLaserEnabled = true;
     public boolean pulsingVignetteEnabled = false;
     public boolean sweepTrailEnabled = false;
 
