@@ -139,6 +139,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Trajectory Predict", "Predicted path line for thrown projectiles", "Линия предсказания траектории снаряда");
         put(DESC_EN, DESC_RU, "Kill Streak", "On-screen notice for kill streaks", "Уведомление о серии убийств");
         put(DESC_EN, DESC_RU, "Big Kill Burst", "Bigger particle burst on a kill", "Крупный эффект частиц при убийстве");
+        put(DESC_EN, DESC_RU, "Kill Laser", "Big pink particle beam on a kill", "Большой розовый луч из частиц при убийстве");
         put(DESC_EN, DESC_RU, "Pulsing Vignette", "Screen edges pulse during combat", "Пульсирующее затемнение краёв экрана");
         put(DESC_EN, DESC_RU, "Sweep Trail", "Motion trail behind weapon swings", "След движения за взмахом оружия");
         put(DESC_EN, DESC_RU, "Heal Flash", "Green flash when you're healed", "Зелёная вспышка при лечении");
