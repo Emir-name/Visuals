@@ -186,6 +186,7 @@ public class ConfigScreen extends Screen {
             addToggle("Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
             addToggle("Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
             addToggle("Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
+            addToggle("Kill Laser", () -> cfg.killLaserEnabled, v -> cfg.killLaserEnabled = v);
             addToggle("Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
             addToggle("Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
             addToggle("Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
@@ -728,6 +729,7 @@ public class ConfigScreen extends Screen {
         cfg.hitImpactPunchEnabled = true;
         cfg.killStreakEnabled = true;
         cfg.bigKillBurstEnabled = true;
+        cfg.killLaserEnabled = true;
         cfg.pulsingVignetteEnabled = false;
         cfg.sweepTrailEnabled = false;
         cfg.rainbowThemeEnabled = false;
@@ -992,4 +994,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                          }
+}
