@@ -114,7 +114,7 @@ public class KillDeathTracker {
         DustParticleEffect pinkGlow = new DustParticleEffect(pinkColor, 3.0f);
         DustParticleEffect whiteCore = new DustParticleEffect(whiteColor, 1.4f);
 
-        java.util.Random rnd = client.world.random;
+        net.minecraft.util.math.random.Random rnd = client.world.random;
         for (int i = 0; i <= steps; i++) {
             double t = (double) i / steps;
             double py = y + height * t;
