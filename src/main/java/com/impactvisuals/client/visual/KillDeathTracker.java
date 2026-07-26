@@ -5,7 +5,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -75,6 +77,10 @@ public class KillDeathTracker {
                     }
                 }
 
+                if (cfg.killLaserEnabled) {
+                    spawnKillLaser(client, record.x, record.y, record.z);
+                }
+
                 if (cfg.killStreakEnabled) {
                     if (now - lastKillMillis <= STREAK_WINDOW_MILLIS) {
                         streakCount++;
@@ -97,6 +103,29 @@ public class KillDeathTracker {
             deaths++;
         }
         lastHealth = health;
+    }
+
+    /** A short, thick pink particle beam from the killer's eyes to the kill location. */
+    private static void spawnKillLaser(MinecraftClient client, double endX, double endY, double endZ) {
+        if (client.player == null) return;
+        net.minecraft.util.math.Vec3d eye = client.player.getEyePos();
+
+        double dx = endX - eye.x;
+        double dy = endY - eye.y;
+        double dz = endZ - eye.z;
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (len < 0.05) return;
+
+        DustParticleEffect pink = new DustParticleEffect(new Vector3f(1f, 0.25f, 0.9f), 2.4f);
+
+        int steps = Math.max(6, (int) (len / 0.15));
+        for (int i = 0; i <= steps; i++) {
+            double t = (double) i / steps;
+            double px = eye.x + dx * t;
+            double py = eye.y + dy * t;
+            double pz = eye.z + dz * t;
+            client.world.addParticle(pink, px, py, pz, 0, 0, 0);
+        }
     }
 
     private static String streakLabel(int count) {
