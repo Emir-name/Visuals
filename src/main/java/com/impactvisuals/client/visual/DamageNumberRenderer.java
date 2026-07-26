@@ -19,12 +19,16 @@ public class DamageNumberRenderer {
 
     public static void spawn(double x, double y, double z, float amount, boolean critical) {
         if (!ModConfig.get().damageNumbersEnabled) return;
-        NUMBERS.add(new DamageNumber(x, y, z, amount, critical, ModConfig.get().damageNumberLifetimeSeconds));
+        synchronized (NUMBERS) {
+            NUMBERS.add(new DamageNumber(x, y, z, amount, critical, ModConfig.get().damageNumberLifetimeSeconds));
+        }
     }
 
     public static void tick() {
         if (NUMBERS.isEmpty()) return;
-        NUMBERS.removeIf(n -> !n.tick(0.05f));
+        synchronized (NUMBERS) {
+            NUMBERS.removeIf(n -> !n.tick(0.05f));
+        }
     }
 
     public static void render(WorldRenderContext context) {
@@ -39,7 +43,12 @@ public class DamageNumberRenderer {
         Vec3d camPos = context.camera().getPos();
         Quaternionf camRotation = context.camera().getRotation();
 
-        for (DamageNumber n : NUMBERS) {
+        List<DamageNumber> snapshot;
+        synchronized (NUMBERS) {
+            snapshot = new ArrayList<>(NUMBERS);
+        }
+
+        for (DamageNumber n : snapshot) {
             float alpha = n.alpha();
             if (alpha <= 0f) continue;
 
