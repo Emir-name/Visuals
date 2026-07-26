@@ -7,7 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
-import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -116,7 +115,8 @@ public class KillDeathTracker {
         double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (len < 0.05) return;
 
-        DustParticleEffect pink = new DustParticleEffect(new Vector3f(1f, 0.25f, 0.9f), 2.4f);
+        int pinkColor = (255 << 16) | (64 << 8) | 230; // packed RGB: bright pink
+        DustParticleEffect pink = new DustParticleEffect(pinkColor, 2.4f);
 
         int steps = Math.max(6, (int) (len / 0.15));
         for (int i = 0; i <= steps; i++) {
