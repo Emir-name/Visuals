@@ -104,27 +104,28 @@ public class KillDeathTracker {
         lastHealth = health;
     }
 
-    /** A short, thick pink particle beam from the killer's eyes to the kill location. */
-    private static void spawnKillLaser(MinecraftClient client, double endX, double endY, double endZ) {
-        if (client.player == null) return;
-        net.minecraft.util.math.Vec3d eye = client.player.getEyePos();
+    /** A tall pink-and-white beam of light shooting straight up from the kill location, like a beacon. */
+    private static void spawnKillLaser(MinecraftClient client, double x, double y, double z) {
+        double height = 24.0;
+        int steps = (int) (height / 0.12);
 
-        double dx = endX - eye.x;
-        double dy = endY - eye.y;
-        double dz = endZ - eye.z;
-        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (len < 0.05) return;
+        int pinkColor = (255 << 16) | (64 << 8) | 230; // bright pink halo
+        int whiteColor = (255 << 16) | (255 << 8) | 255; // white core
+        DustParticleEffect pinkGlow = new DustParticleEffect(pinkColor, 3.0f);
+        DustParticleEffect whiteCore = new DustParticleEffect(whiteColor, 1.4f);
 
-        int pinkColor = (255 << 16) | (64 << 8) | 230; // packed RGB: bright pink
-        DustParticleEffect pink = new DustParticleEffect(pinkColor, 2.4f);
-
-        int steps = Math.max(6, (int) (len / 0.15));
+        java.util.Random rnd = client.world.random;
         for (int i = 0; i <= steps; i++) {
             double t = (double) i / steps;
-            double px = eye.x + dx * t;
-            double py = eye.y + dy * t;
-            double pz = eye.z + dz * t;
-            client.world.addParticle(pink, px, py, pz, 0, 0, 0);
+            double py = y + height * t;
+
+            double jitterX = (rnd.nextDouble() - 0.5) * 0.5;
+            double jitterZ = (rnd.nextDouble() - 0.5) * 0.5;
+            client.world.addParticle(pinkGlow, x + jitterX, py, z + jitterZ, 0, 0, 0);
+
+            if (i % 2 == 0) {
+                client.world.addParticle(whiteCore, x, py, z, 0, 0, 0);
+            }
         }
     }
 
