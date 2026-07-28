@@ -212,6 +212,7 @@ public class ConfigScreen extends Screen {
             addToggle("Offhand Item Name", () -> cfg.offhandItemNameEnabled, v -> cfg.offhandItemNameEnabled = v);
             addToggle("Total Playtime", () -> cfg.totalPlaytimeEnabled, v -> cfg.totalPlaytimeEnabled = v);
             addToggle("Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
+            addToggle("Auto Jump", () -> cfg.autoJumpEnabled, v -> cfg.autoJumpEnabled = v);
             addToggle("Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
         } else if (currentCategory == 5) {
             addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
@@ -716,6 +717,7 @@ public class ConfigScreen extends Screen {
         cfg.offhandItemNameEnabled = false;
         cfg.totalPlaytimeEnabled = false;
         cfg.zoomEnabled = true;
+        cfg.autoJumpEnabled = false;
         cfg.realClockEnabled = false;
         cfg.accentColorIndex = 0;
         cfg.critSoundEnabled = true;
@@ -994,4 +996,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
+        }
