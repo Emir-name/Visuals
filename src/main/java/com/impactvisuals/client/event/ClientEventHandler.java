@@ -6,6 +6,7 @@ import com.impactvisuals.client.config.ModKeybinds;
 import com.impactvisuals.client.util.RenderUtils;
 import com.impactvisuals.client.friends.FriendsNetwork;
 import com.impactvisuals.client.visual.ActiveEffectsHud;
+import com.impactvisuals.client.visual.AutoJump;
 import com.impactvisuals.client.visual.BetterNearHud;
 import com.impactvisuals.client.visual.ColoredHitParticles;
 import com.impactvisuals.client.visual.CooldownIndicator;
@@ -54,6 +55,7 @@ public final class ClientEventHandler {
             HitmarkerRenderer.tick();
             KillDeathTracker.tick();
             ZoomHandler.tick();
+            AutoJump.tick();
             PlaytimeTracker.tick();
             SmallFireEffect.tick();
             DamageFlash.tick();
