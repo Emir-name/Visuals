@@ -20,6 +20,7 @@ public class ModConfig {
 
     public boolean hitParticlesEnabled = true;
     public boolean targetHudEnabled = true;
+    public boolean targetHudDebugEnabled = false;
     public boolean damageNumbersEnabled = true;
     public boolean criticalFlashEnabled = true;
     public boolean trajectoryPredictionEnabled = true;
