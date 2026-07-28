@@ -73,14 +73,20 @@ public class TargetHud {
             health = ratio[0];
             maxHealth = ratio[1];
         } else {
-            // 2) A separate floating marker entity above the target's head showing a
-            // live current-HP number (common on servers where max HP goes past 20).
-            Float liveCurrent = findFloatingHealthNumber(client, target);
-            if (liveCurrent != null) {
-                health = liveCurrent;
-                // maxHealth stays whatever the vanilla attribute reported; on servers
-                // that do this, the max attribute is usually kept accurate even though
-                // current health isn't ticked live.
+            // 2) Vanilla's own "below name" scoreboard slot - the same mechanism the
+            // client uses natively to draw a live number under a nametag. This is
+            // exactly what most RPG servers use for HP that goes past 20, and it's
+            // not tied to any entity attribute or extra entity, which is why the
+            // entity-attribute value and the entity search both missed it.
+            Integer belowNameScore = findBelowNameScore(client, target);
+            if (belowNameScore != null) {
+                health = belowNameScore;
+            } else {
+                // 3) Fallback: a separate floating marker entity above the target's head.
+                Float liveCurrent = findFloatingHealthNumber(client, target);
+                if (liveCurrent != null) {
+                    health = liveCurrent;
+                }
             }
         }
 
@@ -121,6 +127,23 @@ public class TargetHud {
      * of live "HP readout" some servers spawn instead of updating the real player
      * entity's health attribute. Returns the parsed number, or null if none found.
      */
+    /**
+     * Reads the live number vanilla itself would render under the target's nametag,
+     * via the server-controlled "below name" scoreboard slot. This is how most
+     * servers show HP that goes past the vanilla 20-heart cap, and it updates in
+     * real time because it's literally the same data vanilla uses.
+     */
+    private static Integer findBelowNameScore(MinecraftClient client, LivingEntity target) {
+        if (client.world == null) return null;
+        net.minecraft.scoreboard.Scoreboard scoreboard = client.world.getScoreboard();
+        net.minecraft.scoreboard.ScoreboardObjective objective =
+                scoreboard.getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.BELOW_NAME);
+        if (objective == null) return null;
+
+        net.minecraft.scoreboard.ScoreboardScore score = scoreboard.getScore(target, objective);
+        return score != null ? score.getScore() : null;
+    }
+
     private static Float findFloatingHealthNumber(MinecraftClient client, LivingEntity target) {
         if (client.world == null) return null;
 
@@ -169,6 +192,9 @@ public class TargetHud {
 
         client.player.sendMessage(Text.literal("[TargetHUD debug] target=" + target.getName().getString()
                 + " health=" + target.getHealth() + "/" + target.getMaxHealth()), false);
+
+        Integer belowName = findBelowNameScore(client, target);
+        client.player.sendMessage(Text.literal("[TargetHUD debug] belowNameScore=" + belowName), false);
 
         if (nearby.isEmpty()) {
             client.player.sendMessage(Text.literal("[TargetHUD debug] no other named entities within 4 blocks"), false);
