@@ -55,6 +55,7 @@ public class Lang {
         RU.put("Offhand Item Name", "Имя во второй руке");
         RU.put("Total Playtime", "Общее время игры");
         RU.put("Zoom (hold C)", "Зум (держать C)");
+        RU.put("Auto Jump", "Авто прыжок");
         RU.put("Real Clock", "Реальные часы");
 
         RU.put("Purple Sky", "Фиолетовое небо");
@@ -164,6 +165,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Offhand Item Name", "Name of the item in your off hand", "Название предмета во второй руке");
         put(DESC_EN, DESC_RU, "Total Playtime", "Total time played across sessions", "Общее время игры за все сессии");
         put(DESC_EN, DESC_RU, "Zoom (hold C)", "Hold C to zoom in", "Зажмите C, чтобы приблизить обзор");
+        put(DESC_EN, DESC_RU, "Auto Jump", "Automatically jumps over blocks while moving", "Автоматически перепрыгивает блоки при движении");
         put(DESC_EN, DESC_RU, "Real Clock", "Show your device's real-world time", "Показывать реальное время устройства");
 
         put(DESC_EN, DESC_RU, "Purple Sky", "Recolor the sky and fog purple", "Перекрашивает небо и туман в фиолетовый");
