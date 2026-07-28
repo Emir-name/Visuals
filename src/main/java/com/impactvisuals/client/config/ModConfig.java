@@ -47,6 +47,7 @@ public class ModConfig {
     public boolean offhandItemNameEnabled = false;
     public boolean totalPlaytimeEnabled = false;
     public boolean zoomEnabled = true;
+    public boolean autoJumpEnabled = false;
     public boolean realClockEnabled = false;
     public long totalPlaytimeMillis = 0L;
 
