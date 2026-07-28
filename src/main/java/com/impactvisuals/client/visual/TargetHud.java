@@ -87,6 +87,10 @@ public class TargetHud {
         String hpText = "HP \u2022 " + formatNumber(health) + "/" + formatNumber(maxHealth);
         context.drawText(client.textRenderer, hpText, textX, cardY + 19, 0xFFAAAAAA, false);
 
+        if (cfg.targetHudDebugEnabled) {
+            dumpNearbyEntities(client, target);
+        }
+
         int barX = cardX + 6;
         int barY = cardY + cardH - 8;
         int barWidth = cardW - 12;
@@ -143,6 +147,42 @@ public class TargetHud {
             }
         }
         return null;
+    }
+
+    private static long lastDumpNanos = 0;
+
+    /**
+     * Debug helper: prints every entity within a few blocks of the target (with a
+     * custom name) to the player's own chat, along with its offset from the target's
+     * feet, so we can pinpoint which entity is the live HP readout. Client-side only,
+     * throttled to avoid spam, nothing is sent to the server.
+     */
+    private static void dumpNearbyEntities(MinecraftClient client, LivingEntity target) {
+        long now = System.nanoTime();
+        if (now - lastDumpNanos < 1_000_000_000L) return;
+        lastDumpNanos = now;
+        if (client.world == null || client.player == null) return;
+
+        Box searchBox = target.getBoundingBox().expand(4.0);
+        List<Entity> nearby = client.world.getOtherEntities(target, searchBox,
+                e -> e.getCustomName() != null && e != target);
+
+        client.player.sendMessage(Text.literal("[TargetHUD debug] target=" + target.getName().getString()
+                + " health=" + target.getHealth() + "/" + target.getMaxHealth()), false);
+
+        if (nearby.isEmpty()) {
+            client.player.sendMessage(Text.literal("[TargetHUD debug] no other named entities within 4 blocks"), false);
+            return;
+        }
+
+        for (Entity e : nearby) {
+            double dx = e.getX() - target.getX();
+            double dy = e.getY() - target.getY();
+            double dz = e.getZ() - target.getZ();
+            String line = String.format("[TargetHUD debug] \"%s\" type=%s offset=(%.2f, %.2f, %.2f)",
+                    e.getCustomName().getString(), e.getType().toString(), dx, dy, dz);
+            client.player.sendMessage(Text.literal(line), false);
+        }
     }
 
     private static String formatNumber(float value) {
