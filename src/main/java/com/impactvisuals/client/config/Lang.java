@@ -35,6 +35,7 @@ public class Lang {
         RU.put("Heal Flash", "Вспышка лечения");
 
         RU.put("Target HUD", "ХАД цели");
+        RU.put("Target HUD Debug", "Отладка ХАД цели");
         RU.put("Info HUD", "Инфо ХАД");
         RU.put("Coordinates", "Координаты");
         RU.put("Compass", "Компас");
@@ -146,6 +147,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Heal Flash", "Green flash when you're healed", "Зелёная вспышка при лечении");
 
         put(DESC_EN, DESC_RU, "Target HUD", "Info card for the entity under your crosshair", "Карточка с инфо о цели под прицелом");
+        put(DESC_EN, DESC_RU, "Target HUD Debug", "Dumps nearby entities/nametags to chat for diagnosing wrong HP", "Выводит в чат сущности рядом с целью для диагностики ХП");
         put(DESC_EN, DESC_RU, "Info HUD", "Top-right badge: name, FPS, frame time", "Плашка в углу: ник, FPS, время кадра");
         put(DESC_EN, DESC_RU, "Coordinates", "Show your current X/Y/Z", "Показывать текущие координаты");
         put(DESC_EN, DESC_RU, "Compass", "On-screen heading compass", "Компас направления на экране");
