@@ -140,7 +140,7 @@ public class TargetHud {
                 scoreboard.getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.BELOW_NAME);
         if (objective == null) return null;
 
-        net.minecraft.scoreboard.ScoreboardScore score = scoreboard.getScore(target, objective);
+        net.minecraft.scoreboard.ReadableScoreboardScore score = scoreboard.getScore(target, objective);
         return score != null ? score.getScore() : null;
     }
 
