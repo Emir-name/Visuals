@@ -33,6 +33,7 @@ public class ConfigScreen extends Screen {
     private static final int TRACK_OFF = 0xFF3A3A3E;
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFF9A9AA0;
+    private static final int KEYBOX_W = 20;
 
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
@@ -85,6 +86,7 @@ public class ConfigScreen extends Screen {
 
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
+    private String rebindingLabel = null;
     private float skinMouseX;
     private float skinMouseY;
     private int previousBlurriness = 0;
@@ -166,6 +168,13 @@ public class ConfigScreen extends Screen {
 
         scrollOffset = 0;
         categoryStartNanos = System.nanoTime();
+
+        int openedCategory = currentCategory;
+        for (int cat = 0; cat < CATEGORY_NAMES.length; cat++) {
+            currentCategory = cat;
+            buildCategoryContent();
+        }
+        currentCategory = openedCategory;
         buildCategoryContent();
     }
 
@@ -273,6 +282,7 @@ public class ConfigScreen extends Screen {
 
     private void addToggle(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
         toggles.add(new ToggleCard(label, getter, setter));
+        FeatureKeybindManager.register(label, getter, setter);
     }
 
     private void addFriend() {
@@ -586,6 +596,11 @@ public class ConfigScreen extends Screen {
         if (mouseY >= effContentTop && mouseY <= contentBottom) {
             for (Placed<ToggleCard> p : placedToggles) {
                 if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    int keyboxY = p.y + (p.h - KEYBOX_W) / 2;
+                    if (inside(p.x + 6, keyboxY, KEYBOX_W, KEYBOX_W, mouseX, mouseY)) {
+                        rebindingLabel = p.item.label;
+                        return true;
+                    }
                     p.item.toggle();
                     return true;
                 }
@@ -675,6 +690,20 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (rebindingLabel != null) {
+            if (keyCode == 256) { // ESC cancels without changing anything
+                rebindingLabel = null;
+                return true;
+            }
+            if (keyCode == 259) { // Backspace clears the binding
+                FeatureKeybindManager.clearKey(rebindingLabel);
+            } else {
+                FeatureKeybindManager.setKey(rebindingLabel, keyCode);
+            }
+            rebindingLabel = null;
+            return true;
+        }
+
         if (currentCategory == 11 && addFriendField.isFocused()
                 && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
             addFriend();
@@ -812,15 +841,30 @@ public class ConfigScreen extends Screen {
             context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
             screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
 
+            boolean rebinding = label.equals(screen.rebindingLabel);
+            int keyboxSize = KEYBOX_W;
+            int keyboxX = x + 6;
+            int keyboxY = y + (h - keyboxSize) / 2;
+            boolean keyboxHovered = screen.inside(keyboxX, keyboxY, keyboxSize, keyboxSize, mouseX, mouseY);
+            int keyboxBg = rebinding ? screen.accentColor : (keyboxHovered ? CARD_BG_HOVER : 0xFF2A2A2E);
+            context.fill(keyboxX, keyboxY, keyboxX + keyboxSize, keyboxY + keyboxSize, keyboxBg);
+            screen.drawBorder(context, keyboxX, keyboxY, keyboxSize, keyboxSize, screen.accentColor);
+            String keyText = rebinding ? "?" : FeatureKeybindManager.displayName(label);
+            int keyTextW = screen.textRenderer.getWidth(keyText);
+            context.drawText(screen.textRenderer, keyText,
+                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - 8) / 2, TEXT_MAIN, false);
+
+            int textX = keyboxX + keyboxSize + 8;
+
             context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
-                    x + 8, y + 6, TEXT_MAIN, false);
+                    textX, y + 6, TEXT_MAIN, false);
 
             String desc = Lang.desc(label);
             if (!desc.isEmpty()) {
                 int pillW = 30;
-                int maxDescW = w - 16 - pillW;
-                Text trimmed = Text.literal(screen.textRenderer.trimToWidth(desc, maxDescW));
-                context.drawText(screen.textRenderer, trimmed, x + 8, y + 6 + 11, TEXT_DIM, false);
+                int maxDescW = w - (textX - x) - 8 - pillW;
+                Text trimmed = Text.literal(screen.textRenderer.trimToWidth(desc, Math.max(0, maxDescW)));
+                context.drawText(screen.textRenderer, trimmed, textX, y + 6 + 11, TEXT_DIM, false);
             }
 
             float target = getter.getAsBoolean() ? 1f : 0f;
@@ -996,4 +1040,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-        }
+                      }
