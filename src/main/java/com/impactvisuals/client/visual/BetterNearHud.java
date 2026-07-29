@@ -56,6 +56,12 @@ public class BetterNearHud {
             String name = p.getGameProfile().getName();
             context.drawText(client.textRenderer, name, textX + 16, rowY + 2, 0xFFFFFFFF, false);
 
+            int nameWidth = client.textRenderer.getWidth(name);
+            int nextX = textX + 16 + nameWidth + 4;
+            if (com.impactvisuals.client.network.IvUserRegistry.isRegistered(name)) {
+                context.drawText(client.textRenderer, "IV", nextX, rowY + 2, 0xFFB266FF, false);
+            }
+
             int distance = (int) p.distanceTo(client.player);
             String distText = distance + "m";
             int distWidth = client.textRenderer.getWidth(distText);
