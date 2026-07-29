@@ -24,26 +24,41 @@ public class CustomSkinMixin {
             "textures/entity/skins/preset8.png"
     };
 
+    // Accessory: cape presets, same self-view-only convention as the skin presets above.
+    private static final String[] CAPE_PATHS = {
+            "textures/entity/cape/red.png",
+            "textures/entity/cape/blue.png",
+            "textures/entity/cape/gold.png",
+            "textures/entity/cape/rainbow.png"
+    };
+
     @Inject(method = "getSkinTextures", at = @At("RETURN"), cancellable = true)
     private void impactvisuals$overrideSkin(CallbackInfoReturnable<SkinTextures> cir) {
         ModConfig cfg = ModConfig.get();
-        int index = cfg.selectedSkinIndex;
-        if (index <= 0) return;
-
         MinecraftClient client = MinecraftClient.getInstance();
         if ((Object) this != client.player) return;
 
-        Identifier customTexture;
-        if (index == 9) {
-            customTexture = Identifier.of("impactvisuals", "textures/entity/skins/custom.png");
-        } else if (index >= 1 && index <= PRESET_PATHS.length) {
-            customTexture = Identifier.of("impactvisuals", PRESET_PATHS[index - 1]);
-        } else {
-            return;
+        SkinTextures original = cir.getReturnValue();
+
+        Identifier skinTexture = original.texture();
+        int skinIndex = cfg.selectedSkinIndex;
+        if (skinIndex == 9) {
+            skinTexture = Identifier.of("impactvisuals", "textures/entity/skins/custom.png");
+        } else if (skinIndex >= 1 && skinIndex <= PRESET_PATHS.length) {
+            skinTexture = Identifier.of("impactvisuals", PRESET_PATHS[skinIndex - 1]);
         }
 
-        SkinTextures original = cir.getReturnValue();
-        SkinTextures replaced = new SkinTextures(customTexture, null, original.capeTexture(),
+        Identifier capeTexture = original.capeTexture();
+        int capeIndex = cfg.selectedCapeIndex;
+        if (capeIndex >= 1 && capeIndex <= CAPE_PATHS.length) {
+            capeTexture = Identifier.of("impactvisuals", CAPE_PATHS[capeIndex - 1]);
+        }
+
+        if (skinTexture == original.texture() && capeTexture == original.capeTexture()) {
+            return; // nothing overridden, leave vanilla result alone
+        }
+
+        SkinTextures replaced = new SkinTextures(skinTexture, null, capeTexture,
                 original.elytraTexture(), original.model(), original.secure());
         cir.setReturnValue(replaced);
     }
