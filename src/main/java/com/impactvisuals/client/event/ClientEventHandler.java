@@ -56,6 +56,7 @@ public final class ClientEventHandler {
             KillDeathTracker.tick();
             ZoomHandler.tick();
             AutoJump.tick();
+            com.impactvisuals.client.visual.JumpRingHud.tick();
             com.impactvisuals.client.config.FeatureKeybindManager.tick();
             PlaytimeTracker.tick();
             SmallFireEffect.tick();
