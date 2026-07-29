@@ -88,6 +88,7 @@ public class ModConfig {
     public boolean handGlowEnabled = false;
 
     public int selectedSkinIndex = 0;
+    public int selectedCapeIndex = 0;
 
     public boolean friendsFeatureEnabled = false;
     public boolean activeEffectsHudEnabled = true;
