@@ -20,6 +20,7 @@ public class ModConfig {
 
     public boolean hitParticlesEnabled = true;
     public boolean targetHudEnabled = true;
+    public boolean buildHelperEnabled = false;
     public boolean targetHudDebugEnabled = false;
     public boolean damageNumbersEnabled = true;
     public boolean criticalFlashEnabled = true;
