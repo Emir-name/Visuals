@@ -266,6 +266,9 @@ public class ConfigScreen extends Screen {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
             cycles.add(new CycleRow("Skin (self-view only)", skinNames, () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
+
+            String[] capeNames = {"None/Default", "Red", "Blue", "Gold", "Rainbow"};
+            cycles.add(new CycleRow("Cape (self-view only)", capeNames, () -> cfg.selectedCapeIndex, v -> cfg.selectedCapeIndex = v));
         } else if (currentCategory == 11) {
             addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
             friendEntries.clear();
@@ -780,6 +783,7 @@ public class ConfigScreen extends Screen {
         cfg.coloredTrailsEnabled = false;
         cfg.handGlowEnabled = false;
         cfg.selectedSkinIndex = 0;
+        cfg.selectedCapeIndex = 0;
         cfg.activeEffectsHudEnabled = true;
         cfg.russianLanguage = false;
         cfg.targetHudRangeBlocks = 6;
@@ -1042,4 +1046,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                          }
+    }
