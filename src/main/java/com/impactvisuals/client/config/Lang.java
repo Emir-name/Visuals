@@ -89,6 +89,7 @@ public class Lang {
         RU.put("Footstep Sound", "Звук шагов");
 
         RU.put("Skin (self-view only)", "Скин (только у себя)");
+        RU.put("Cape (self-view only)", "Плащ (только у себя)");
 
         RU.put("RESET", "СБРОС");
         RU.put("DONE", "ГОТОВО");
