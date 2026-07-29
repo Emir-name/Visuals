@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
@@ -47,11 +46,49 @@ public class BuildHelperHud {
         matrices.push();
         matrices.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        WorldRenderer.drawBox(matrices, consumers.getBuffer(net.minecraft.client.render.RenderLayer.getLines()),
+        drawBoxOutline(matrices, consumers.getBuffer(net.minecraft.client.render.RenderLayer.getLines()),
                 box, 0.71f, 0.4f, 1.0f, 0.85f);
 
         matrices.pop();
         consumers.draw();
+    }
+
+    /**
+     * Manually draws the 12 edges of a box as line segments. Written by hand instead
+     * of relying on WorldRenderer's built-in box helper, since that method's exact
+     * signature shifts between Minecraft versions and isn't worth chasing here.
+     */
+    private static void drawBoxOutline(MatrixStack matrices, net.minecraft.client.render.VertexConsumer buffer,
+                                        Box box, float r, float g, float b, float a) {
+        var entry = matrices.peek();
+        float minX = (float) box.minX, minY = (float) box.minY, minZ = (float) box.minZ;
+        float maxX = (float) box.maxX, maxY = (float) box.maxY, maxZ = (float) box.maxZ;
+
+        float[][] edges = {
+                // bottom face
+                {minX, minY, minZ, maxX, minY, minZ}, {maxX, minY, minZ, maxX, minY, maxZ},
+                {maxX, minY, maxZ, minX, minY, maxZ}, {minX, minY, maxZ, minX, minY, minZ},
+                // top face
+                {minX, maxY, minZ, maxX, maxY, minZ}, {maxX, maxY, minZ, maxX, maxY, maxZ},
+                {maxX, maxY, maxZ, minX, maxY, maxZ}, {minX, maxY, maxZ, minX, maxY, minZ},
+                // verticals
+                {minX, minY, minZ, minX, maxY, minZ}, {maxX, minY, minZ, maxX, maxY, minZ},
+                {maxX, minY, maxZ, maxX, maxY, maxZ}, {minX, minY, maxZ, minX, maxY, maxZ},
+        };
+
+        for (float[] e : edges) {
+            float dx = e[3] - e[0], dy = e[4] - e[1], dz = e[5] - e[2];
+            float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (len < 1.0e-6f) continue;
+            dx /= len; dy /= len; dz /= len;
+
+            buffer.vertex(entry.getPositionMatrix(), e[0], e[1], e[2])
+                    .color(r, g, b, a)
+                    .normal(entry, dx, dy, dz);
+            buffer.vertex(entry.getPositionMatrix(), e[3], e[4], e[5])
+                    .color(r, g, b, a)
+                    .normal(entry, dx, dy, dz);
+        }
     }
 
     public static void renderHud(DrawContext context) {
@@ -97,4 +134,3 @@ public class BuildHelperHud {
         return hitPos;
     }
 }
-
