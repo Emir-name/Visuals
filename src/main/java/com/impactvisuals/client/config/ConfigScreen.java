@@ -202,6 +202,7 @@ public class ConfigScreen extends Screen {
         } else if (currentCategory == 2) {
             addToggle("Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
             addToggle("Build Helper", () -> cfg.buildHelperEnabled, v -> cfg.buildHelperEnabled = v);
+            addToggle("Jump Ring", () -> cfg.jumpRingEnabled, v -> cfg.jumpRingEnabled = v);
             addToggle("Target HUD Debug", () -> cfg.targetHudDebugEnabled, v -> cfg.targetHudDebugEnabled = v);
             addToggle("Info HUD", () -> cfg.infoHudEnabled, v -> cfg.infoHudEnabled = v);
             addToggle("Coordinates", () -> cfg.coordinatesHudEnabled, v -> cfg.coordinatesHudEnabled = v);
@@ -725,6 +726,7 @@ public class ConfigScreen extends Screen {
         cfg.hitParticlesEnabled = true;
         cfg.targetHudEnabled = true;
         cfg.buildHelperEnabled = false;
+        cfg.jumpRingEnabled = false;
         cfg.targetHudDebugEnabled = false;
         cfg.damageNumbersEnabled = true;
         cfg.criticalFlashEnabled = true;
@@ -1048,4 +1050,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
+                    }
