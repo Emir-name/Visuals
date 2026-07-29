@@ -76,6 +76,7 @@ public final class ClientEventHandler {
 
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             DamageNumberRenderer.render(context);
+            com.impactvisuals.client.visual.BuildHelperHud.renderWorld(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
@@ -91,6 +92,7 @@ public final class ClientEventHandler {
             DamageFlash.render(drawContext);
             ImpactPunch.render(drawContext);
             ActiveEffectsHud.render(drawContext);
+            com.impactvisuals.client.visual.BuildHelperHud.renderHud(drawContext);
             BetterNearHud.render(drawContext);
         });
     }
