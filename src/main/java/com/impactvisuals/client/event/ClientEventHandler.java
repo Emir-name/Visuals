@@ -57,6 +57,7 @@ public final class ClientEventHandler {
             ZoomHandler.tick();
             AutoJump.tick();
             com.impactvisuals.client.visual.JumpRingHud.tick();
+            tickFirebasePresence();
             com.impactvisuals.client.config.FeatureKeybindManager.tick();
             PlaytimeTracker.tick();
             SmallFireEffect.tick();
@@ -145,5 +146,28 @@ public final class ClientEventHandler {
             value *= 1.5f;
         }
         return value;
+    }
+
+    private static String presenceServerKey = null;
+
+    /** Starts/keeps the Firebase presence heartbeat running for the current server, and stops it on disconnect. */
+    private static void tickFirebasePresence() {
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        var player = client.player;
+        var entry = client.getCurrentServerEntry();
+        String serverKey = entry != null ? entry.address : null;
+
+        if (player == null || serverKey == null) {
+            if (presenceServerKey != null) {
+                com.impactvisuals.client.network.FirebasePresence.stop();
+                presenceServerKey = null;
+            }
+            return;
+        }
+
+        if (!serverKey.equals(presenceServerKey)) {
+            presenceServerKey = serverKey;
+            com.impactvisuals.client.network.FirebasePresence.start(serverKey, player.getGameProfile().getName());
+        }
     }
 }
