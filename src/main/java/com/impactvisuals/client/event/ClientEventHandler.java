@@ -79,6 +79,7 @@ public final class ClientEventHandler {
         WorldRenderEvents.AFTER_ENTITIES.register(context -> {
             DamageNumberRenderer.render(context);
             com.impactvisuals.client.visual.BuildHelperHud.renderWorld(context);
+            com.impactvisuals.client.visual.FocusTargetHighlight.render(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
