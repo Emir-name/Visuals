@@ -58,7 +58,7 @@ public class BetterNearHud {
 
             int nameWidth = client.textRenderer.getWidth(name);
             int nextX = textX + 16 + nameWidth + 4;
-            if (com.impactvisuals.client.network.IvUserRegistry.isRegistered(name)) {
+            if (com.impactvisuals.client.network.FirebasePresence.isOnline(name)) {
                 context.drawText(client.textRenderer, "IV", nextX, rowY + 2, 0xFFB266FF, false);
             }
 
