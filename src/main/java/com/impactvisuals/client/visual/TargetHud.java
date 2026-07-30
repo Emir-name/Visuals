@@ -63,7 +63,7 @@ public class TargetHud {
         String nameStr = name.getString();
         context.drawText(client.textRenderer, nameStr, textX, cardY + 8, 0xFFFFFFFF, false);
 
-        if (com.impactvisuals.client.network.IvUserRegistry.isRegistered(target.getName().getString())) {
+        if (com.impactvisuals.client.network.FirebasePresence.isOnline(target.getName().getString())) {
             int nameW = client.textRenderer.getWidth(nameStr);
             context.drawText(client.textRenderer, "IV", textX + nameW + 4, cardY + 8, 0xFFB266FF, false);
         }
