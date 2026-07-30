@@ -81,6 +81,7 @@ public class ConfigScreen extends Screen {
     private TextFieldWidget focusTargetField;
     private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
     private static final int FRIENDS_HEADER_H = 32;
+    private static final int FOCUS_TARGET_HEADER_H = 30;
     private static final int FRIEND_ROW_H = 30;
     private long lastFriendsRefreshNanos = 0;
     private static final long FRIENDS_REFRESH_INTERVAL_NANOS = 5_000_000_000L;
@@ -167,7 +168,8 @@ public class ConfigScreen extends Screen {
         addDrawableChild(addFriendField);
         addFriendField.setVisible(currentCategory == 11);
 
-        focusTargetField = new TextFieldWidget(this.textRenderer, contentX, contentTop + 4, contentW, 18, Text.literal(""));
+        int focusFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
+        focusTargetField = new TextFieldWidget(this.textRenderer, contentX, focusFieldY, contentW, 18, Text.literal(""));
         focusTargetField.setMaxLength(16);
         focusTargetField.setPlaceholder(Text.literal(Lang.t("Focus Target Name")));
         focusTargetField.setText(cfg.focusTargetName);
@@ -422,6 +424,8 @@ public class ConfigScreen extends Screen {
                 FriendsNetwork.refreshFriends();
                 lastFriendsRefreshNanos = nowNanos;
             }
+        } else if (currentCategory == 2) {
+            effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
         }
 
         // content (scissored + scrollable)
@@ -1071,5 +1075,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
-
+                                 }
