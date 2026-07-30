@@ -22,6 +22,8 @@ public class ModConfig {
     public boolean targetHudEnabled = true;
     public boolean buildHelperEnabled = false;
     public boolean jumpRingEnabled = false;
+    public boolean focusTargetEnabled = false;
+    public String focusTargetName = "";
     public boolean targetHudDebugEnabled = false;
     public boolean damageNumbersEnabled = true;
     public boolean criticalFlashEnabled = true;
