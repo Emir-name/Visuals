@@ -2,7 +2,6 @@ package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.network.FirebaseJumpSync;
-import com.impactvisuals.client.network.IvUserRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -68,7 +67,8 @@ public class JumpRingHud {
             MinecraftClient c = MinecraftClient.getInstance();
             if (c.player == null) return;
             if (event.name.equalsIgnoreCase(c.player.getGameProfile().getName())) return; // ignore our own echo
-            if (!IvUserRegistry.isRegistered(event.name)) return; // only show for known IV users
+            // No manual allow-list needed: only someone running this mod's code could
+            // ever produce a valid event on this Firebase path in the first place.
             incoming.add(event);
         });
     }
@@ -99,4 +99,3 @@ public class JumpRingHud {
         }
     }
 }
-
