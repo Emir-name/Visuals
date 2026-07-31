@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impact Visuals — клиентский мод для Minecraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#120F16;
+    --bg-surface:#1C1722;
+    --bg-surface-2:#241C2C;
+    --accent-violet:#B266FF;
+    --accent-crit:#FF4655;
+    --text-primary:#F5F1FA;
+    --text-muted:#9C93AC;
+    --border-soft: rgba(178,102,255,0.18);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:var(--bg-void);
+    color:var(--text-primary);
+    font-family:'Manrope', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  a{ color:inherit; }
+
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- layout shell ---------- */
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter: blur(10px);
+    background:rgba(18,15,22,0.72);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+    max-width:1080px; margin:0 auto;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Anton', sans-serif;
+    letter-spacing:0.04em;
+    font-size:18px;
+  }
+  .brand-dot{
+    width:10px; height:10px; border-radius:2px;
+    background:var(--accent-violet);
+    box-shadow:0 0 14px var(--accent-violet);
+    transform:rotate(45deg);
+  }
+  .nav-links{ display:flex; gap:28px; font-size:14px; color:var(--text-muted); }
+  .nav-links a{ text-decoration:none; transition:color .15s; }
+  .nav-links a:hover{ color:var(--text-primary); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    padding:120px 24px 100px;
+    text-align:center;
+    overflow:hidden;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(178,102,255,0.16), transparent 60%),
+      radial-gradient(ellipse 40% 30% at 80% 100%, rgba(255,70,85,0.10), transparent 60%);
+    pointer-events:none;
+  }
+
+  .float-field{
+    position:absolute; inset:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .float-num{
+    position:absolute;
+    font-family:'Anton', sans-serif;
+    font-size:22px;
+    opacity:0;
+    animation-name:floatUp;
+    animation-timing-function:ease-out;
+    animation-iteration-count:infinite;
+    text-shadow:0 0 18px currentColor;
+  }
+  .float-num.crit{ color:var(--accent-crit); font-size:30px; }
+  .float-num.violet{ color:var(--accent-violet); }
+  .float-num.dim{ color:#6E6480; font-size:15px; }
+
+  @keyframes floatUp{
+    0%{ transform:translateY(0) scale(0.85); opacity:0; }
+    12%{ opacity:0.9; }
+    75%{ opacity:0.55; }
+    100%{ transform:translateY(-140px) scale(1.05); opacity:0; }
+  }
+
+  .eyebrow{
+    position:relative;
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent-violet);
+    background:rgba(178,102,255,0.08);
+    border:1px solid var(--border-soft);
+    padding:6px 14px; border-radius:999px;
+    margin-bottom:28px;
+  }
+  .eyebrow .pulse{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent-violet);
+    box-shadow:0 0 8px var(--accent-violet);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  h1.title{
+    position:relative;
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    font-size:clamp(48px, 9vw, 96px);
+    line-height:0.95;
+    letter-spacing:0.01em;
+    margin:0 0 22px;
+    background:linear-gradient(180deg, #FFFFFF 0%, #E8DCFF 55%, var(--accent-violet) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .subtitle{
+    position:relative;
+    max-width:560px; margin:0 auto 40px;
+    color:var(--text-muted);
+    font-size:17px; line-height:1.6;
+  }
+  .subtitle b{ color:var(--text-primary); font-weight:700; }
+
+  .cta-row{
+    position:relative;
+    display:flex; gap:14px; justify-content:center; flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:15px 28px;
+    border-radius:12px;
+    font-weight:700; font-size:15px;
+    text-decoration:none;
+    border:1px solid transparent;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    cursor:pointer;
+  }
+  .btn:active{ transform:translateY(1px); }
+
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent-violet), #8C4CE0);
+    color:#120F16;
+    box-shadow:0 10px 30px -8px rgba(178,102,255,0.55);
+  }
+  .btn-primary:hover{ box-shadow:0 14px 36px -6px rgba(178,102,255,0.75); transform:translateY(-1px); }
+
+  .btn-ghost{
+    background:var(--bg-surface);
+    color:var(--text-primary);
+    border-color:var(--border-soft);
+  }
+  .btn-ghost:hover{ background:var(--bg-surface-2); }
+
+  .req-badges{
+    position:relative;
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    margin-top:34px;
+  }
+  .req-badge{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-muted);
+    border:1px solid var(--border-soft);
+    padding:6px 12px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.02);
+  }
+  .req-badge b{ color:var(--text-primary); }
+
+  /* ---------- sections generic ---------- */
+  section{ padding:88px 0; }
+  .section-head{ text-align:center; max-width:560px; margin:0 auto 52px; }
+  .section-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent-crit);
+    margin-bottom:12px;
+  }
+  h2{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    font-size:clamp(28px, 4vw, 40px);
+    margin:0 0 14px;
+    letter-spacing:0.01em;
+  }
+  .section-sub{ color:var(--text-muted); font-size:15px; line-height:1.6; }
+
+  /* ---------- features ---------- */
+  .features{ border-bottom:1px solid var(--border-soft); }
+  .feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    background:var(--border-soft);
+    border:1px solid var(--border-soft);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .feature-card{
+    background:var(--bg-surface);
+    padding:28px 24px;
+    transition:background .15s;
+  }
+  .feature-card:hover{ background:var(--bg-surface-2); }
+  .feature-icon{
+    width:38px; height:38px;
+    border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:16px;
+    font-size:18px;
+  }
+  .icon-violet{ background:rgba(178,102,255,0.14); color:var(--accent-violet); }
+  .icon-crit{ background:rgba(255,70,85,0.14); color:var(--accent-crit); }
+  .feature-card h3{
+    font-size:16px; margin:0 0 8px; font-weight:800;
+  }
+  .feature-card p{
+    font-size:13.5px; color:var(--text-muted); line-height:1.55; margin:0;
+  }
+
+  @media (max-width:760px){
+    .feature-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- install ---------- */
+  .install-steps{
+    display:flex; flex-direction:column; gap:0;
+    border-left:2px solid var(--border-soft);
+    margin-left:18px;
+  }
+  .step{
+    position:relative;
+    padding:0 0 40px 34px;
+  }
+  .step:last-child{ padding-bottom:0; }
+  .step-num{
+    position:absolute; left:-19px; top:0;
+    width:36px; height:36px; border-radius:50%;
+    background:var(--bg-surface);
+    border:2px solid var(--accent-violet);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600; font-size:13px;
+    color:var(--accent-violet);
+  }
+  .step h3{ margin:2px 0 6px; font-size:16px; font-weight:800; }
+  .step p{ margin:0; color:var(--text-muted); font-size:14px; line-height:1.6; }
+  .step code{
+    font-family:'JetBrains Mono', monospace;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    padding:2px 7px; border-radius:6px;
+    font-size:12.5px; color:var(--accent-violet);
+  }
+
+  /* ---------- honesty note ---------- */
+  .note{
+    border:1px solid var(--border-soft);
+    background:var(--bg-surface);
+    border-radius:14px;
+    padding:22px 24px;
+    display:flex; gap:14px;
+    align-items:flex-start;
+  }
+  .note .mark{
+    flex:0 0 auto;
+    width:28px; height:28px; border-radius:8px;
+    background:rgba(178,102,255,0.14);
+    color:var(--accent-violet);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-family:'JetBrains Mono', monospace;
+  }
+  .note p{ margin:0; color:var(--text-muted); font-size:13.5px; line-height:1.6; }
+  .note strong{ color:var(--text-primary); }
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--border-soft);
+    padding:36px 0;
+  }
+  .footer-inner{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+  }
+  .footer-inner .mono{ color:var(--text-muted); font-size:12.5px; }
+  .footer-links{ display:flex; gap:20px; font-size:13px; color:var(--text-muted); }
+  .footer-links a{ text-decoration:none; }
+  .footer-links a:hover{ color:var(--text-primary); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="brand"><span class="brand-dot"></span>IMPACT VISUALS</div>
+    <div class="nav-links">
+      <a href="#features">Функции</a>
+      <a href="#install">Установка</a>
+      <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="float-field" id="floatField"></div>
+
+  <div class="eyebrow"><span class="pulse"></span>Fabric &middot; Minecraft 1.21.4</div>
+
+  <h1 class="title">IMPACT<br>VISUALS</h1>
+
+  <p class="subtitle">
+    Клиентский косметический мод для Minecraft: <b>HUD, крит-эффекты, партиклы, кастомные скины и капы</b>.
+    Ничего не читерит — только то, что видно на скрине.
+  </p>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="impactvisuals-1_0_0.jar" download="impactvisuals-1_0_0.jar">
+      ⬇ Скачать последнюю версию
+    </a>
+    <a class="btn btn-ghost" href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">
+      Исходный код на GitHub
+    </a>
+  </div>
+
+  <div class="req-badges">
+    <span class="req-badge">Loader: <b>Fabric</b></span>
+    <span class="req-badge">MC: <b>1.21.4</b></span>
+    <span class="req-badge">Требует: <b>Fabric API</b></span>
+    <span class="req-badge">Сторона: <b>только клиент</b></span>
+  </div>
+</header>
+
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Что внутри</div>
+      <h2>Не читы. Только визуал.</h2>
+      <p class="section-sub">Всё, что делает мод, видно только на экране — никаких преимуществ в игре, никаких пакетов чужим клиентам.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon icon-crit">⚔</div>
+        <h3>Combat FX</h3>
+        <p>Всплывающие цифры урона, вспышка на крите, килл-стрики, лазер на добивании.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-violet">◎</div>
+        <h3>Target HUD</h3>
+        <p>Карточка цели под прицелом: ник, ХП в реальном времени, броня с прочностью.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-crit">⛏</div>
+        <h3>Build Helper</h3>
+        <p>Голограмма блока перед установкой — с правильной ориентацией лестниц и шалкеров.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-violet">✦</div>
+        <h3>Skins &amp; Capes</h3>
+        <p>Локальные пресеты скина и плаща — видно только тебе, ни на что не влияет.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-crit">◐</div>
+        <h3>Jump Ring</h3>
+        <p>Светящееся кольцо под ногами при прыжке — своё, и видно другим IV-игрокам онлайн.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-violet">▤</div>
+        <h3>Кастомные бинды</h3>
+        <p>Любой тумблер можно повесить на свою клавишу прямо в меню настроек.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-label">Установка</div>
+      <h2>Четыре шага</h2>
+      <p class="section-sub">Как и любой Fabric-мод — никакой особой магии.</p>
+    </div>
+
+    <div class="install-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Поставь Fabric Loader</h3>
+        <p>Скачай и запусти установщик с <code>fabricmc.net</code> для версии <code>1.21.4</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Поставь Fabric API</h3>
+        <p>Мод на него опирается — без него не запустится. Тоже кладётся в <code>mods</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Скачай Impact Visuals</h3>
+        <p>Возьми <code>.jar</code> со страницы релизов на GitHub — кнопка выше.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Положи в папку mods</h3>
+        <p><code>%appdata%/.minecraft/mods</code> на Windows — и запускай профиль Fabric.</p>
+      </div>
+    </div>
+
+    <div style="height:36px"></div>
+
+    <div class="note">
+      <div class="mark">i</div>
+      <p>
+        <strong>Текущая версия: v1.0.0</strong> — файл <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-surface-2);border:1px solid var(--border-soft);padding:2px 7px;border-radius:6px;">impactvisuals-1_0_0.jar</code>
+        лежит прямо рядом со страницей. При обновлении мода просто замени файл в репозитории на новую версию с тем же именем ссылки — или поменяй имя файла и в кнопке выше.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <span class="mono">impact-visuals &middot; client-side &middot; no server required</span>
+    <div class="footer-links">
+      <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/Emir-name/Visuals/releases" target="_blank" rel="noopener">Релизы</a>
+      <a href="https://github.com/Emir-name/Visuals/issues" target="_blank" rel="noopener">Баг-репорты</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Signature moment: the hero background floats the same kind of combat
+  // numbers the mod itself renders in-game (damage numbers / crit markers),
+  // so the page's first impression IS a live preview of the product.
+  (function(){
+    var field = document.getElementById('floatField');
+    var words = ['-7', '-12', 'CRIT', '-4', '+HIT', '-19', '-3', 'x2', '-8', '-15'];
+    var classes = ['crit', 'violet', 'dim'];
+
+    function spawn(){
+      var el = document.createElement('span');
+      el.className = 'float-num ' + classes[Math.floor(Math.random()*classes.length)];
+      el.textContent = words[Math.floor(Math.random()*words.length)];
+      el.style.left = (Math.random()*94 + 3) + '%';
+      el.style.bottom = (Math.random()*10) + '%';
+      var duration = 3.2 + Math.random()*2.2;
+      el.style.animationDuration = duration + 's';
+      field.appendChild(el);
+      setTimeout(function(){ field.removeChild(el); }, duration*1000 + 100);
+    }
+
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!prefersReduced){
+      for(var i=0;i<6;i++){ setTimeout(spawn, i*350); }
+      setInterval(spawn, 650);
+    }
+  })();
+</script>
+
+</body>
+</html>
