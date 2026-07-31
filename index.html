@@ -90,6 +90,10 @@
   .nav-links{ display:flex; align-items:center; gap:28px; font-size:14px; color:var(--text-muted); }
   .nav-links a{ text-decoration:none; transition:color .15s; }
   .nav-links a:hover{ color:var(--text-primary); }
+  @media (max-width:600px){
+    .nav-links{ gap:14px; }
+    .nav-links a.hide-xs{ display:none; }
+  }
   .nav-version{
     font-family:'JetBrains Mono', monospace;
     font-size:11px;
@@ -502,6 +506,33 @@
     font-size:12.5px; color:var(--accent-violet);
   }
 
+  .path-copy{
+    display:inline-flex; align-items:center; gap:10px;
+    margin-top:8px;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    border-radius:9px;
+    padding:9px 12px;
+    font-size:12.5px;
+    color:var(--text-primary);
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .path-copy:hover{ border-color:var(--accent-violet); background:var(--bg-surface); }
+  .path-copy.copied{ border-color:var(--accent-heal); color:var(--accent-heal); }
+  .path-copy-icon{ font-size:13px; opacity:0.75; }
+
+  /* ---------- scroll reveal ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(22px);
+    transition:opacity .6s ease, transform .6s ease;
+  }
+  .reveal.in-view{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+  }
+
   /* ---------- honesty note ---------- */
   .note{
     border:1px solid var(--border-soft);
@@ -548,8 +579,8 @@
   <div class="nav-inner">
     <div class="brand"><span class="brand-dot"></span>IMPACT VISUALS</div>
     <div class="nav-links">
-      <a href="#features">Функции</a>
-      <a href="#install">Установка</a>
+      <a href="#features" class="hide-xs">Функции</a>
+      <a href="#install" class="hide-xs">Установка</a>
       <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
       <span class="nav-version mono">v1.0.0</span>
     </div>
@@ -614,32 +645,32 @@
     </div>
 
     <div class="feature-grid">
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual viz-combat"><span>-12</span><span>CRIT</span><span>-7</span></div>
         <h3>Combat FX</h3>
         <p>Всплывающие цифры урона, вспышка на крите, килл-стрики, лазер на добивании.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual viz-hud"><div class="viz-hud-icon"></div><div class="viz-hud-track"><div class="viz-hud-fill"></div></div></div>
         <h3>Target HUD</h3>
         <p>Карточка цели под прицелом: ник, ХП в реальном времени, броня с прочностью.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual"><div class="viz-build"></div></div>
         <h3>Build Helper</h3>
         <p>Голограмма блока перед установкой — с правильной ориентацией лестниц и шалкеров.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual viz-skins"><span></span><span></span><span></span><span></span></div>
         <h3>Skins &amp; Capes</h3>
         <p>Локальные пресеты скина и плаща — видно только тебе, ни на что не влияет.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual"><div class="viz-ring"></div></div>
         <h3>Jump Ring</h3>
         <p>Светящееся кольцо под ногами при прыжке — своё, и видно другим IV-игрокам онлайн.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-visual"><div class="viz-key">V</div></div>
         <h3>Кастомные бинды</h3>
         <p>Любой тумблер можно повесить на свою клавишу прямо в меню настроек.</p>
@@ -657,31 +688,36 @@
     </div>
 
     <div class="install-steps">
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">1</div>
         <h3>Поставь Fabric Loader</h3>
         <p>Скачай и запусти установщик с <code>fabricmc.net</code> для версии <code>1.21.4</code>.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">2</div>
         <h3>Поставь Fabric API</h3>
         <p>Мод на него опирается — без него не запустится. Тоже кладётся в <code>mods</code>.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">3</div>
         <h3>Скачай Impact Visuals</h3>
         <p>Возьми <code>.jar</code> со страницы релизов на GitHub — кнопка выше.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">4</div>
         <h3>Положи в папку mods</h3>
-        <p><code>%appdata%/.minecraft/mods</code> на Windows — и запускай профиль Fabric.</p>
+        <p>Скопируй <code>.jar</code> в:</p>
+        <button class="path-copy mono" id="pathCopyBtn" type="button" data-path="%appdata%/.minecraft/mods">
+          <span id="pathCopyText">%appdata%/.minecraft/mods</span>
+          <span class="path-copy-icon" id="pathCopyIcon">⧉</span>
+        </button>
+        <p style="margin-top:6px;">На Windows — запускай профиль Fabric после этого.</p>
       </div>
     </div>
 
     <div style="height:36px"></div>
 
-    <div class="note">
+    <div class="note reveal">
       <div class="mark">i</div>
       <p>
         <strong>Текущая версия: v1.0.0</strong> — файл <code>impactvisuals-1_0_0.jar</code>
@@ -778,6 +814,67 @@
       setTimeout(step, s.hold);
     }
     step();
+  })();
+
+  // Scroll reveal: feature cards, install steps and the honesty note
+  // ease in as they enter the viewport instead of appearing all at once.
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if(!els.length) return;
+
+    if(prefersReduced || !('IntersectionObserver' in window)){
+      els.forEach(function(el){ el.classList.add('in-view'); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.15, rootMargin:'0px 0px -40px 0px' });
+
+    els.forEach(function(el, i){
+      el.style.transitionDelay = (Math.min(i%6, 5) * 60) + 'ms';
+      observer.observe(el);
+    });
+  })();
+
+  // Copy the mods-folder path to clipboard with a brief confirmation state.
+  (function(){
+    var btn = document.getElementById('pathCopyBtn');
+    if(!btn) return;
+    var textEl = document.getElementById('pathCopyText');
+    var iconEl = document.getElementById('pathCopyIcon');
+    var original = textEl.textContent;
+
+    btn.addEventListener('click', function(){
+      var path = btn.getAttribute('data-path');
+      var done = function(){
+        btn.classList.add('copied');
+        textEl.textContent = 'Скопировано';
+        iconEl.textContent = '✓';
+        setTimeout(function(){
+          btn.classList.remove('copied');
+          textEl.textContent = original;
+          iconEl.textContent = '⧉';
+        }, 1600);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(path).then(done)['catch'](function(){});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = path;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try{ document.execCommand('copy'); done(); }catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
   })();
 </script>
 
