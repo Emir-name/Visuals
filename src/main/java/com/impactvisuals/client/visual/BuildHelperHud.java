@@ -1,13 +1,20 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
+import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -15,9 +22,12 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Pure QoL/visual helper for building - shows where a block would land if you
- * placed one right now, and a small readout of distance/coords/remaining
- * count. Doesn't place or automate anything; you still click yourself.
+ * Pure QoL/visual helper for building - shows a translucent "hologram" of the
+ * exact block state that would be placed right now (correct stair
+ * half/facing, shulker box direction, slab top/bottom, etc.), using
+ * Minecraft's own placement logic instead of guessing, plus a wireframe
+ * outline and a small readout of distance/coords/remaining count. Doesn't
+ * place or automate anything - you still click yourself.
  */
 public class BuildHelperHud {
 
@@ -30,19 +40,41 @@ public class BuildHelperHud {
         if (client.crosshairTarget == null || client.crosshairTarget.getType() != HitResult.Type.BLOCK) return;
 
         ItemStack held = client.player.getMainHandStack();
-        if (!(held.getItem() instanceof BlockItem)) return;
+        if (!(held.getItem() instanceof BlockItem blockItem)) return;
 
-        BlockPos placePos = getPlacementPos((BlockHitResult) client.crosshairTarget, client.world);
+        BlockHitResult hit = (BlockHitResult) client.crosshairTarget;
+        BlockPos placePos = getPlacementPos(hit, client.world);
         if (placePos == null) return;
         if (!client.world.getBlockState(placePos).isReplaceable()) return;
 
-        Box box = new Box(placePos);
+        BlockState previewState = resolvePlacementState(client, blockItem, held, hit, placePos);
+        if (previewState == null) return;
+
         MatrixStack matrices = context.matrixStack();
         VertexConsumerProvider.Immediate consumers = (VertexConsumerProvider.Immediate) context.consumers();
         if (matrices == null || consumers == null) return;
 
         Vec3d camPos = context.camera().getPos();
 
+        // 1) The actual block model, correctly oriented, drawn translucent so it
+        // reads as a preview/hologram rather than a real placed block.
+        matrices.push();
+        matrices.translate(placePos.getX() - camPos.x, placePos.getY() - camPos.y, placePos.getZ() - camPos.z);
+
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 0.55f);
+
+        int fullBrightLight = LightmapTextureManager.pack(15, 15);
+        client.getBlockRenderManager().renderBlockAsEntity(previewState, matrices, consumers, fullBrightLight, OverlayTexture.DEFAULT_UV);
+        consumers.draw();
+
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
+
+        matrices.pop();
+
+        // 2) A thin accent outline around the same spot, for visibility against busy backgrounds.
+        Box box = new Box(placePos);
         matrices.push();
         matrices.translate(-camPos.x, -camPos.y, -camPos.z);
 
@@ -51,6 +83,24 @@ public class BuildHelperHud {
 
         matrices.pop();
         consumers.draw();
+    }
+
+    /**
+     * Asks the block itself how it would orient given the current placement
+     * context (facing, half, waterlogged, etc.) - the same logic vanilla uses
+     * when you actually place it - so stairs/shulkers/slabs/etc. preview correctly.
+     * Falls back to the block's default state if that logic can't run for some reason.
+     */
+    private static BlockState resolvePlacementState(MinecraftClient client, BlockItem blockItem, ItemStack stack,
+                                                      BlockHitResult hit, BlockPos placePos) {
+        try {
+            ItemUsageContext useContext = new ItemUsageContext(client.world, client.player, Hand.MAIN_HAND, stack, hit);
+            ItemPlacementContext placementContext = new ItemPlacementContext(useContext);
+            BlockState state = blockItem.getBlock().getPlacementState(placementContext);
+            return state != null ? state : blockItem.getBlock().getDefaultState();
+        } catch (Exception e) {
+            return blockItem.getBlock().getDefaultState();
+        }
     }
 
     /**
@@ -65,13 +115,10 @@ public class BuildHelperHud {
         float maxX = (float) box.maxX, maxY = (float) box.maxY, maxZ = (float) box.maxZ;
 
         float[][] edges = {
-                // bottom face
                 {minX, minY, minZ, maxX, minY, minZ}, {maxX, minY, minZ, maxX, minY, maxZ},
                 {maxX, minY, maxZ, minX, minY, maxZ}, {minX, minY, maxZ, minX, minY, minZ},
-                // top face
                 {minX, maxY, minZ, maxX, maxY, minZ}, {maxX, maxY, minZ, maxX, maxY, maxZ},
                 {maxX, maxY, maxZ, minX, maxY, maxZ}, {minX, maxY, maxZ, minX, maxY, minZ},
-                // verticals
                 {minX, minY, minZ, minX, maxY, minZ}, {maxX, minY, minZ, maxX, maxY, minZ},
                 {maxX, minY, maxZ, maxX, maxY, maxZ}, {minX, minY, maxZ, minX, maxY, maxZ},
         };
