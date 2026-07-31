@@ -6,14 +6,15 @@
 <title>Impact Visuals — клиентский мод для Minecraft</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-void:#120F16;
-    --bg-surface:#1C1722;
-    --bg-surface-2:#241C2C;
+    --bg-void:#0D0A12;
+    --bg-surface:#1A1420;
+    --bg-surface-2:#221A2E;
     --accent-violet:#B266FF;
     --accent-crit:#FF4655;
+    --accent-heal:#5FE8B0;
     --text-primary:#F5F1FA;
     --text-muted:#9C93AC;
     --border-soft: rgba(178,102,255,0.18);
@@ -29,11 +30,32 @@
     font-family:'Manrope', sans-serif;
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
+    position:relative;
+  }
+
+  /* faint scanline atmosphere — a HUD mod's page should feel like it's rendered on-screen */
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:1000;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode:overlay;
   }
 
   a{ color:inherit; }
-
   .mono{ font-family:'JetBrains Mono', monospace; }
+
+  a:focus-visible, button:focus-visible, .btn:focus-visible{
+    outline:2px solid var(--accent-violet);
+    outline-offset:3px;
+    border-radius:6px;
+  }
 
   /* ---------- layout shell ---------- */
   .wrap{
@@ -45,7 +67,7 @@
   nav{
     position:sticky; top:0; z-index:50;
     backdrop-filter: blur(10px);
-    background:rgba(18,15,22,0.72);
+    background:rgba(13,10,18,0.72);
     border-bottom:1px solid var(--border-soft);
   }
   .nav-inner{
@@ -65,15 +87,23 @@
     box-shadow:0 0 14px var(--accent-violet);
     transform:rotate(45deg);
   }
-  .nav-links{ display:flex; gap:28px; font-size:14px; color:var(--text-muted); }
+  .nav-links{ display:flex; align-items:center; gap:28px; font-size:14px; color:var(--text-muted); }
   .nav-links a{ text-decoration:none; transition:color .15s; }
   .nav-links a:hover{ color:var(--text-primary); }
+  .nav-version{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--accent-heal);
+    border:1px solid rgba(95,232,176,0.3);
+    background:rgba(95,232,176,0.08);
+    padding:4px 9px;
+    border-radius:999px;
+  }
 
   /* ---------- hero ---------- */
   .hero{
     position:relative;
-    padding:120px 24px 100px;
-    text-align:center;
+    padding:108px 24px 96px;
     overflow:hidden;
     border-bottom:1px solid var(--border-soft);
   }
@@ -82,8 +112,17 @@
     position:absolute; inset:0;
     background:
       radial-gradient(ellipse 60% 50% at 50% 0%, rgba(178,102,255,0.16), transparent 60%),
-      radial-gradient(ellipse 40% 30% at 80% 100%, rgba(255,70,85,0.10), transparent 60%);
+      radial-gradient(ellipse 40% 30% at 85% 90%, rgba(255,70,85,0.10), transparent 60%);
     pointer-events:none;
+  }
+
+  .hero-inner{
+    position:relative;
+    max-width:1080px; margin:0 auto;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    align-items:center;
+    gap:40px;
   }
 
   .float-field{
@@ -103,14 +142,17 @@
   }
   .float-num.crit{ color:var(--accent-crit); font-size:30px; }
   .float-num.violet{ color:var(--accent-violet); }
+  .float-num.heal{ color:var(--accent-heal); font-size:17px; }
   .float-num.dim{ color:#6E6480; font-size:15px; }
 
   @keyframes floatUp{
     0%{ transform:translateY(0) scale(0.85); opacity:0; }
     12%{ opacity:0.9; }
-    75%{ opacity:0.55; }
+    75%{ opacity:0.5; }
     100%{ transform:translateY(-140px) scale(1.05); opacity:0; }
   }
+
+  .hero-copy{ position:relative; text-align:left; }
 
   .eyebrow{
     position:relative;
@@ -121,7 +163,7 @@
     background:rgba(178,102,255,0.08);
     border:1px solid var(--border-soft);
     padding:6px 14px; border-radius:999px;
-    margin-bottom:28px;
+    margin-bottom:26px;
   }
   .eyebrow .pulse{
     width:6px; height:6px; border-radius:50%;
@@ -135,10 +177,10 @@
     position:relative;
     font-family:'Anton', sans-serif;
     font-weight:400;
-    font-size:clamp(48px, 9vw, 96px);
+    font-size:clamp(44px, 6.4vw, 78px);
     line-height:0.95;
     letter-spacing:0.01em;
-    margin:0 0 22px;
+    margin:0 0 20px;
     background:linear-gradient(180deg, #FFFFFF 0%, #E8DCFF 55%, var(--accent-violet) 100%);
     -webkit-background-clip:text;
     background-clip:text;
@@ -147,16 +189,17 @@
 
   .subtitle{
     position:relative;
-    max-width:560px; margin:0 auto 40px;
+    max-width:460px;
     color:var(--text-muted);
-    font-size:17px; line-height:1.6;
+    font-size:16.5px; line-height:1.6;
+    margin:0 0 36px;
   }
   .subtitle b{ color:var(--text-primary); font-weight:700; }
 
   .cta-row{
     position:relative;
-    display:flex; gap:14px; justify-content:center; flex-wrap:wrap;
-    margin-bottom:20px;
+    display:flex; gap:14px; flex-wrap:wrap;
+    margin-bottom:26px;
   }
 
   .btn{
@@ -187,8 +230,7 @@
 
   .req-badges{
     position:relative;
-    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
-    margin-top:34px;
+    display:flex; gap:10px; flex-wrap:wrap;
   }
   .req-badge{
     font-family:'JetBrains Mono', monospace;
@@ -200,6 +242,87 @@
     background:rgba(255,255,255,0.02);
   }
   .req-badge b{ color:var(--text-primary); }
+
+  /* ---------- signature: live HUD preview ---------- */
+  .hud-preview{
+    position:relative;
+    justify-self:center;
+    width:100%;
+    max-width:320px;
+  }
+  .hud-preview-label{
+    display:flex; align-items:center; gap:7px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:10px;
+    padding-left:2px;
+  }
+  .hud-preview-label .live-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent-crit);
+    box-shadow:0 0 8px var(--accent-crit);
+    animation:pulse 1.3s ease-in-out infinite;
+  }
+  .hud-card{
+    background:linear-gradient(180deg, rgba(34,26,46,0.92), rgba(26,20,32,0.92));
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    padding:18px 20px 20px;
+    box-shadow:0 24px 60px -20px rgba(178,102,255,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    backdrop-filter:blur(6px);
+  }
+  .hud-row-top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .hud-name{ font-weight:800; font-size:15px; }
+  .hud-hp{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:15px;
+    color:var(--accent-heal);
+    transition:color .3s ease;
+  }
+  .hud-hp.low{ color:var(--accent-crit); }
+  .hud-bar-track{
+    height:9px; border-radius:5px;
+    background:rgba(255,255,255,0.06);
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .hud-bar-fill{
+    height:100%; width:100%;
+    border-radius:5px;
+    background:linear-gradient(90deg, var(--accent-heal), #3ED89A);
+    transition:width .5s ease, background .4s ease;
+  }
+  .hud-bar-fill.low{ background:linear-gradient(90deg, var(--accent-crit), #C22F3C); }
+  .hud-meta-row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px; color:var(--text-muted);
+  }
+  .armor-ticks{ display:flex; gap:3px; }
+  .armor-tick{
+    width:6px; height:11px; border-radius:2px;
+    background:var(--accent-violet);
+    opacity:0.85;
+  }
+  .armor-tick.empty{ background:rgba(255,255,255,0.08); }
+  .hud-preview-caption{
+    margin-top:12px;
+    font-size:12px; color:var(--text-muted);
+    text-align:center;
+  }
+
+  @media (max-width:860px){
+    .hero-inner{ grid-template-columns:1fr; }
+    .hero-copy{ text-align:center; }
+    .subtitle{ margin-left:auto; margin-right:auto; }
+    .cta-row{ justify-content:center; }
+    .req-badges{ justify-content:center; }
+    .hud-preview{ margin-top:8px; }
+  }
 
   /* ---------- sections generic ---------- */
   section{ padding:88px 0; }
@@ -232,19 +355,106 @@
   }
   .feature-card{
     background:var(--bg-surface);
-    padding:28px 24px;
+    padding:22px 22px 26px;
     transition:background .15s;
   }
   .feature-card:hover{ background:var(--bg-surface-2); }
-  .feature-icon{
-    width:38px; height:38px;
-    border-radius:9px;
-    display:flex; align-items:center; justify-content:center;
-    margin-bottom:16px;
-    font-size:18px;
+
+  .feature-visual{
+    height:52px;
+    margin-bottom:18px;
+    position:relative;
+    display:flex; align-items:center;
   }
-  .icon-violet{ background:rgba(178,102,255,0.14); color:var(--accent-violet); }
-  .icon-crit{ background:rgba(255,70,85,0.14); color:var(--accent-crit); }
+
+  /* Combat FX mini: stacked crit numbers drifting */
+  .viz-combat{ overflow:hidden; }
+  .viz-combat span{
+    position:absolute;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:13px;
+    color:var(--accent-crit);
+    animation:vizFloat 2.4s ease-in infinite;
+    opacity:0;
+  }
+  .viz-combat span:nth-child(1){ left:6%; animation-delay:0s; }
+  .viz-combat span:nth-child(2){ left:38%; color:var(--accent-violet); animation-delay:.8s; }
+  .viz-combat span:nth-child(3){ left:70%; animation-delay:1.6s; }
+  @keyframes vizFloat{
+    0%{ transform:translateY(14px); opacity:0; }
+    20%{ opacity:1; }
+    100%{ transform:translateY(-24px); opacity:0; }
+  }
+
+  /* Target HUD mini: reticle + a tiny bar that breathes */
+  .viz-hud{ width:100%; display:flex; align-items:center; gap:12px; }
+  .viz-hud-icon{
+    flex:0 0 auto;
+    width:34px; height:34px; border-radius:50%;
+    border:2px solid var(--accent-violet);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 14px rgba(178,102,255,0.35);
+  }
+  .viz-hud-icon::before{
+    content:"";
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent-violet);
+    box-shadow:0 0 8px var(--accent-violet);
+  }
+  .viz-hud-track{ flex:1 1 auto; height:7px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .viz-hud-fill{
+    height:100%; width:70%; border-radius:4px;
+    background:linear-gradient(90deg, var(--accent-heal), #3ED89A);
+    animation:vizHud 3.6s ease-in-out infinite;
+  }
+  @keyframes vizHud{
+    0%,100%{ width:78%; }
+    50%{ width:34%; background:linear-gradient(90deg, var(--accent-crit), #C22F3C); }
+  }
+
+  /* Build Helper mini: dashed hologram outline */
+  .viz-build{
+    width:44px; height:44px;
+    border:2px dashed rgba(178,102,255,0.55);
+    border-radius:6px;
+    transform:rotate(45deg);
+    animation:vizSpin 6s linear infinite;
+  }
+  @keyframes vizSpin{ 100%{ transform:rotate(405deg); } }
+
+  /* Skins & Capes mini: swatch row */
+  .viz-skins{ display:flex; gap:6px; }
+  .viz-skins span{ width:16px; height:16px; border-radius:4px; display:block; }
+  .viz-skins span:nth-child(1){ background:var(--accent-violet); }
+  .viz-skins span:nth-child(2){ background:var(--accent-crit); }
+  .viz-skins span:nth-child(3){ background:var(--accent-heal); }
+  .viz-skins span:nth-child(4){ background:#6E6480; }
+
+  /* Jump Ring mini: pulsing ellipse */
+  .viz-ring{
+    width:40px; height:14px;
+    border:2px solid var(--accent-violet);
+    border-radius:50%;
+    box-shadow:0 0 16px rgba(178,102,255,0.5);
+    animation:vizRing 1.8s ease-in-out infinite;
+  }
+  @keyframes vizRing{
+    0%,100%{ transform:scale(1); opacity:0.9; }
+    50%{ transform:scale(1.25); opacity:0.4; }
+  }
+
+  /* Keybinds mini: a keycap */
+  .viz-key{
+    width:34px; height:34px; border-radius:8px;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:13px;
+    color:var(--accent-violet);
+    box-shadow:0 3px 0 rgba(178,102,255,0.25);
+  }
+
   .feature-card h3{
     font-size:16px; margin:0 0 8px; font-weight:800;
   }
@@ -254,6 +464,11 @@
 
   @media (max-width:760px){
     .feature-grid{ grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .viz-combat span, .viz-hud-fill, .viz-build, .viz-ring, .eyebrow .pulse, .hud-preview-label .live-dot{
+      animation:none !important;
+    }
   }
 
   /* ---------- install ---------- */
@@ -306,6 +521,12 @@
   }
   .note p{ margin:0; color:var(--text-muted); font-size:13.5px; line-height:1.6; }
   .note strong{ color:var(--text-primary); }
+  .note code{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    padding:2px 7px; border-radius:6px;
+  }
 
   /* ---------- footer ---------- */
   footer{
@@ -330,6 +551,7 @@
       <a href="#features">Функции</a>
       <a href="#install">Установка</a>
       <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
+      <span class="nav-version mono">v1.0.0</span>
     </div>
   </div>
 </nav>
@@ -337,29 +559,49 @@
 <header class="hero">
   <div class="float-field" id="floatField"></div>
 
-  <div class="eyebrow"><span class="pulse"></span>Fabric &middot; Minecraft 1.21.4</div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="pulse"></span>Fabric &middot; Minecraft 1.21.4</div>
 
-  <h1 class="title">IMPACT<br>VISUALS</h1>
+      <h1 class="title">IMPACT<br>VISUALS</h1>
 
-  <p class="subtitle">
-    Клиентский косметический мод для Minecraft: <b>HUD, крит-эффекты, партиклы, кастомные скины и капы</b>.
-    Ничего не читерит — только то, что видно на скрине.
-  </p>
+      <p class="subtitle">
+        Клиентский косметический мод для Minecraft: <b>HUD, крит-эффекты, партиклы, кастомные скины и капы</b>.
+        Ничего не читерит — только то, что видно на скрине.
+      </p>
 
-  <div class="cta-row">
-    <a class="btn btn-primary" href="impactvisuals-1_0_0.jar" download="impactvisuals-1_0_0.jar">
-      ⬇ Скачать последнюю версию
-    </a>
-    <a class="btn btn-ghost" href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">
-      Исходный код на GitHub
-    </a>
-  </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="impactvisuals-1_0_0.jar" download="impactvisuals-1_0_0.jar">
+          ⬇ Скачать последнюю версию
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">
+          Исходный код на GitHub
+        </a>
+      </div>
 
-  <div class="req-badges">
-    <span class="req-badge">Loader: <b>Fabric</b></span>
-    <span class="req-badge">MC: <b>1.21.4</b></span>
-    <span class="req-badge">Требует: <b>Fabric API</b></span>
-    <span class="req-badge">Сторона: <b>только клиент</b></span>
+      <div class="req-badges">
+        <span class="req-badge">Loader: <b>Fabric</b></span>
+        <span class="req-badge">MC: <b>1.21.4</b></span>
+        <span class="req-badge">Требует: <b>Fabric API</b></span>
+        <span class="req-badge">Сторона: <b>только клиент</b></span>
+      </div>
+    </div>
+
+    <div class="hud-preview">
+      <div class="hud-preview-label"><span class="live-dot"></span>Live preview &middot; Target HUD</div>
+      <div class="hud-card">
+        <div class="hud-row-top">
+          <span class="hud-name">Notch</span>
+          <span class="hud-hp mono" id="hudHp">20.0</span>
+        </div>
+        <div class="hud-bar-track"><div class="hud-bar-fill" id="hudBarFill"></div></div>
+        <div class="hud-meta-row">
+          <span>ARMOR</span>
+          <div class="armor-ticks" id="armorTicks"></div>
+        </div>
+      </div>
+      <p class="hud-preview-caption">Так карточка цели выглядит прямо в игре</p>
+    </div>
   </div>
 </header>
 
@@ -373,32 +615,32 @@
 
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feature-icon icon-crit">⚔</div>
+        <div class="feature-visual viz-combat"><span>-12</span><span>CRIT</span><span>-7</span></div>
         <h3>Combat FX</h3>
         <p>Всплывающие цифры урона, вспышка на крите, килл-стрики, лазер на добивании.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-violet">◎</div>
+        <div class="feature-visual viz-hud"><div class="viz-hud-icon"></div><div class="viz-hud-track"><div class="viz-hud-fill"></div></div></div>
         <h3>Target HUD</h3>
         <p>Карточка цели под прицелом: ник, ХП в реальном времени, броня с прочностью.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-crit">⛏</div>
+        <div class="feature-visual"><div class="viz-build"></div></div>
         <h3>Build Helper</h3>
         <p>Голограмма блока перед установкой — с правильной ориентацией лестниц и шалкеров.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-violet">✦</div>
+        <div class="feature-visual viz-skins"><span></span><span></span><span></span><span></span></div>
         <h3>Skins &amp; Capes</h3>
         <p>Локальные пресеты скина и плаща — видно только тебе, ни на что не влияет.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-crit">◐</div>
+        <div class="feature-visual"><div class="viz-ring"></div></div>
         <h3>Jump Ring</h3>
         <p>Светящееся кольцо под ногами при прыжке — своё, и видно другим IV-игрокам онлайн.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon icon-violet">▤</div>
+        <div class="feature-visual"><div class="viz-key">V</div></div>
         <h3>Кастомные бинды</h3>
         <p>Любой тумблер можно повесить на свою клавишу прямо в меню настроек.</p>
       </div>
@@ -442,7 +684,7 @@
     <div class="note">
       <div class="mark">i</div>
       <p>
-        <strong>Текущая версия: v1.0.0</strong> — файл <code style="font-family:'JetBrains Mono',monospace;background:var(--bg-surface-2);border:1px solid var(--border-soft);padding:2px 7px;border-radius:6px;">impactvisuals-1_0_0.jar</code>
+        <strong>Текущая версия: v1.0.0</strong> — файл <code>impactvisuals-1_0_0.jar</code>
         лежит прямо рядом со страницей. При обновлении мода просто замени файл в репозитории на новую версию с тем же именем ссылки — или поменяй имя файла и в кнопке выше.
       </p>
     </div>
@@ -461,13 +703,14 @@
 </footer>
 
 <script>
-  // Signature moment: the hero background floats the same kind of combat
-  // numbers the mod itself renders in-game (damage numbers / crit markers),
-  // so the page's first impression IS a live preview of the product.
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Ambient hero background: the same kind of combat numbers the mod
+  // itself renders in-game, so the page's first impression IS a live preview.
   (function(){
     var field = document.getElementById('floatField');
-    var words = ['-7', '-12', 'CRIT', '-4', '+HIT', '-19', '-3', 'x2', '-8', '-15'];
-    var classes = ['crit', 'violet', 'dim'];
+    var words = ['-7', '-12', 'CRIT', '-4', '+3', '-19', '-3', 'x2', '-8', '-15'];
+    var classes = ['crit', 'violet', 'dim', 'heal'];
 
     function spawn(){
       var el = document.createElement('span');
@@ -478,14 +721,63 @@
       var duration = 3.2 + Math.random()*2.2;
       el.style.animationDuration = duration + 's';
       field.appendChild(el);
-      setTimeout(function(){ field.removeChild(el); }, duration*1000 + 100);
+      setTimeout(function(){ if(field.contains(el)) field.removeChild(el); }, duration*1000 + 100);
     }
 
-    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if(!prefersReduced){
       for(var i=0;i<6;i++){ setTimeout(spawn, i*350); }
       setInterval(spawn, 650);
     }
+  })();
+
+  // Signature: the hero's Target HUD card is a live, looping mock of the
+  // actual in-game overlay — HP drains under fire, regenerates, armor ticks fall away.
+  (function(){
+    var hpEl = document.getElementById('hudHp');
+    var fillEl = document.getElementById('hudBarFill');
+    var armorEl = document.getElementById('armorTicks');
+    if(!hpEl || !fillEl || !armorEl) return;
+
+    var ticks = [];
+    for(var i=0;i<10;i++){
+      var t = document.createElement('span');
+      t.className = 'armor-tick';
+      armorEl.appendChild(t);
+      ticks.push(t);
+    }
+
+    function render(hp, armor){
+      var pct = Math.max(0, Math.min(100, (hp/20)*100));
+      hpEl.textContent = hp.toFixed(1);
+      fillEl.style.width = pct + '%';
+      var low = hp <= 8;
+      hpEl.classList.toggle('low', low);
+      fillEl.classList.toggle('low', low);
+      ticks.forEach(function(t, idx){ t.classList.toggle('empty', idx >= armor); });
+    }
+
+    var script = [
+      {hp:20.0, armor:10, hold:1400},
+      {hp:15.0, armor:10, hold:900},
+      {hp:9.0,  armor:8,  hold:900},
+      {hp:5.5,  armor:6,  hold:1300},
+      {hp:11.0, armor:6,  hold:1100},
+      {hp:17.5, armor:6,  hold:1600}
+    ];
+
+    if(prefersReduced){
+      render(script[0].hp, script[0].armor);
+      return;
+    }
+
+    var i = 0;
+    function step(){
+      var s = script[i % script.length];
+      render(s.hp, s.armor);
+      i++;
+      setTimeout(step, s.hold);
+    }
+    step();
   })();
 </script>
 
