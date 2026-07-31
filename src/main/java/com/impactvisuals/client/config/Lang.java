@@ -37,6 +37,7 @@ public class Lang {
         RU.put("Target HUD", "ХАД цели");
         RU.put("Build Helper", "Помощник стройки");
         RU.put("Jump Ring", "Кольцо при прыжке");
+        RU.put("Emir Config (enable all)", "Emir Config (включить всё)");
         RU.put("Focus Target Highlight", "Подсветка цели по нику");
         RU.put("Focus Target Name", "Ник цели");
         RU.put("Target HUD Debug", "Отладка ХАД цели");
@@ -154,6 +155,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Target HUD", "Info card for the entity under your crosshair", "Карточка с инфо о цели под прицелом");
         put(DESC_EN, DESC_RU, "Build Helper", "Preview outline + distance/coords for block placement", "Превью блока + расстояние/координаты при постройке");
         put(DESC_EN, DESC_RU, "Jump Ring", "Glowing particle ring under you when you jump (local only)", "Светящееся кольцо под ногами при прыжке (только у себя)");
+        put(DESC_EN, DESC_RU, "Emir Config (enable all)", "Turns on every feature toggle in the mod at once", "Включает разом все настройки мода");
         put(DESC_EN, DESC_RU, "Focus Target Highlight", "Outlines the named player when they're actually visible", "Обводит рамкой указанного игрока, когда он реально виден");
         put(DESC_EN, DESC_RU, "Target HUD Debug", "Dumps nearby entities/nametags to chat for diagnosing wrong HP", "Выводит в чат сущности рядом с целью для диагностики ХП");
         put(DESC_EN, DESC_RU, "Info HUD", "Top-right badge: name, FPS, frame time", "Плашка в углу: ник, FPS, время кадра");
