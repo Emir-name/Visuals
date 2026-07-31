@@ -38,7 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS", "CONFIGS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -294,6 +294,8 @@ public class ConfigScreen extends Screen {
             }
             FriendsNetwork.refreshFriends();
             lastFriendsRefreshNanos = System.nanoTime();
+        } else if (currentCategory == 12) {
+            addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
         }
 
         if (addFriendField != null) {
@@ -820,6 +822,75 @@ public class ConfigScreen extends Screen {
         buildCategoryContent();
     }
 
+    /**
+     * "Emir Config" preset - flips on every feature toggle in the mod at once,
+     * including the jump ring. Debug-only toggles and non-feature settings
+     * (language, per-target name text) are left untouched.
+     */
+    private void enableAllFeatures() {
+        cfg.hitParticlesEnabled = true;
+        cfg.targetHudEnabled = true;
+        cfg.buildHelperEnabled = true;
+        cfg.jumpRingEnabled = true;
+        cfg.focusTargetEnabled = true;
+        cfg.damageNumbersEnabled = true;
+        cfg.criticalFlashEnabled = true;
+        cfg.trajectoryPredictionEnabled = true;
+        cfg.purpleSkyEnabled = true;
+        cfg.infoHudEnabled = true;
+        cfg.hitmarkerEnabled = true;
+        cfg.coordinatesHudEnabled = true;
+        cfg.compassHudEnabled = true;
+        cfg.sessionTimerEnabled = true;
+        cfg.lowHealthVignetteEnabled = true;
+        cfg.durabilityHudEnabled = true;
+        cfg.killDeathCounterEnabled = true;
+        cfg.hitSoundEnabled = true;
+        cfg.cooldownIndicatorEnabled = true;
+        cfg.sprintIndicatorEnabled = true;
+        cfg.healthPercentEnabled = true;
+        cfg.hungerPercentEnabled = true;
+        cfg.xpPercentEnabled = true;
+        cfg.armorHudEnabled = true;
+        cfg.biomeHudEnabled = true;
+        cfg.crosshairDotEnabled = true;
+        cfg.killFeedEnabled = true;
+        cfg.lightLevelHudEnabled = true;
+        cfg.heldItemNameEnabled = true;
+        cfg.offhandItemNameEnabled = true;
+        cfg.totalPlaytimeEnabled = true;
+        cfg.zoomEnabled = true;
+        cfg.autoJumpEnabled = true;
+        cfg.realClockEnabled = true;
+        cfg.critSoundEnabled = true;
+        cfg.smallFireEnabled = true;
+        cfg.customHandleEnabled = true;
+        cfg.damageFlashEnabled = true;
+        cfg.hitImpactPunchEnabled = true;
+        cfg.killStreakEnabled = true;
+        cfg.bigKillBurstEnabled = true;
+        cfg.killLaserEnabled = true;
+        cfg.pulsingVignetteEnabled = true;
+        cfg.sweepTrailEnabled = true;
+        cfg.rainbowThemeEnabled = true;
+        cfg.sprintTrailEnabled = true;
+        cfg.footstepDustEnabled = true;
+        cfg.killSoundEnabled = true;
+        cfg.heartbeatSoundEnabled = true;
+        cfg.streakSoundEnabled = true;
+        cfg.menuSoundEnabled = true;
+        cfg.footstepSoundEnabled = true;
+        cfg.healFlashEnabled = true;
+        cfg.coloredTrailsEnabled = true;
+        cfg.handGlowEnabled = true;
+        cfg.activeEffectsHudEnabled = true;
+        cfg.friendsFeatureEnabled = true;
+        cfg.betterNearEnabled = true;
+        cfg.save();
+        buildCategoryContent();
+        com.impactvisuals.client.visual.UiSoundPlayer.play();
+    }
+
     @Override
     public void close() {
         cfg.save();
@@ -1075,4 +1146,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                                 }
+                                }
