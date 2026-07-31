@@ -41,7 +41,7 @@ public class TargetHud {
         int screenHeight = context.getScaledWindowHeight();
 
         int cardW = 130;
-        int cardH = 46;
+        int cardH = 70;
         int cardX = screenWidth / 2 - cardW / 2;
         int cardY = screenHeight / 2 - 70;
 
@@ -49,7 +49,7 @@ public class TargetHud {
 
         int iconSize = 28;
         int iconX = cardX + 6;
-        int iconY = cardY + (cardH - iconSize) / 2;
+        int iconY = cardY + 6;
 
         if (target instanceof AbstractClientPlayerEntity player) {
             net.minecraft.client.gui.PlayerSkinDrawer.draw(context, player.getSkinTextures(), iconX, iconY, iconSize);
@@ -101,6 +101,8 @@ public class TargetHud {
         if (cfg.targetHudDebugEnabled) {
             dumpNearbyEntities(client, target);
         }
+
+        renderArmorRow(context, client, target, cardX, cardY + 38, cardW);
 
         int barX = cardX + 6;
         int barY = cardY + cardH - 8;
@@ -213,6 +215,50 @@ public class TargetHud {
             String line = String.format("[TargetHUD debug] \"%s\" type=%s offset=(%.2f, %.2f, %.2f)",
                     e.getCustomName().getString(), e.getType().toString(), dx, dy, dz);
             client.player.sendMessage(Text.literal(line), false);
+        }
+    }
+
+    private static final net.minecraft.entity.EquipmentSlot[] ARMOR_SLOTS = {
+            net.minecraft.entity.EquipmentSlot.HEAD,
+            net.minecraft.entity.EquipmentSlot.CHEST,
+            net.minecraft.entity.EquipmentSlot.LEGS,
+            net.minecraft.entity.EquipmentSlot.FEET
+    };
+
+    /** Draws the target's 4 armor pieces as icons with a small durability bar under each. */
+    private static void renderArmorRow(DrawContext context, MinecraftClient client, LivingEntity target,
+                                        int cardX, int rowY, int cardW) {
+        int slotSize = 18;
+        int gap = 4;
+        int totalW = ARMOR_SLOTS.length * slotSize + (ARMOR_SLOTS.length - 1) * gap;
+        int startX = cardX + (cardW - totalW) / 2;
+
+        for (int i = 0; i < ARMOR_SLOTS.length; i++) {
+            net.minecraft.item.ItemStack stack = target.getEquippedStack(ARMOR_SLOTS[i]);
+            int x = startX + i * (slotSize + gap);
+
+            context.fill(x, rowY, x + slotSize, rowY + slotSize, 0x40000000);
+            if (stack.isEmpty()) continue;
+
+            context.drawItem(stack, x + 1, rowY + 1);
+
+            if (stack.isDamageable()) {
+                int maxDamage = stack.getMaxDamage();
+                int damage = stack.getDamage();
+                float remainingPct = maxDamage > 0 ? 1f - ((float) damage / maxDamage) : 1f;
+                remainingPct = Math.max(0f, Math.min(1f, remainingPct));
+
+                int barY = rowY + slotSize + 1;
+                int barW = slotSize;
+                int filled = Math.round(barW * remainingPct);
+
+                int color = remainingPct > 0.5f ? 0xFF6FCF4A
+                        : remainingPct > 0.2f ? 0xFFE0C13C
+                        : 0xFFE0483C;
+
+                context.fill(x, barY, x + barW, barY + 2, 0x66000000);
+                context.fill(x, barY, x + filled, barY + 2, color);
+            }
         }
     }
 
