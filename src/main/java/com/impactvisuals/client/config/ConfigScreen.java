@@ -89,6 +89,7 @@ public class ConfigScreen extends Screen {
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
     private String rebindingLabel = null;
+    private int navScrollOffset = 0;
     private float skinMouseX;
     private float skinMouseY;
     private int previousBlurriness = 0;
@@ -386,8 +387,16 @@ public class ConfigScreen extends Screen {
 
         int navStartY = 8 + logoSize + 14;
         int navItemH = 24;
+
+        int navAvailableH = this.height - navStartY - 8;
+        int navContentH = CATEGORY_NAMES.length * navItemH;
+        int navMaxScroll = Math.max(0, navContentH - navAvailableH);
+        if (navScrollOffset > navMaxScroll) navScrollOffset = navMaxScroll;
+        if (navScrollOffset < 0) navScrollOffset = 0;
+
+        context.enableScissor(0, navStartY, sidebarW, this.height);
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = navStartY + i * navItemH;
+            int itemY = navStartY + i * navItemH - navScrollOffset;
             boolean active = i == currentCategory;
             boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
 
@@ -403,6 +412,16 @@ public class ConfigScreen extends Screen {
 
             int color = active ? TEXT_MAIN : TEXT_DIM;
             context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
+        }
+        context.disableScissor();
+
+        if (navMaxScroll > 0) {
+            int trackX = sidebarW - 4;
+            int trackH = navAvailableH;
+            int thumbH = Math.max(16, trackH * navAvailableH / navContentH);
+            int thumbY = navStartY + (int) ((trackH - thumbH) * (navScrollOffset / (float) navMaxScroll));
+            context.fill(trackX, navStartY, trackX + 2, navStartY + trackH, 0x30FFFFFF);
+            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, accentColor);
         }
 
         // header
@@ -589,7 +608,7 @@ public class ConfigScreen extends Screen {
         int navStartY = 8 + 26 + 14;
         int navItemH = 24;
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = navStartY + i * navItemH;
+            int itemY = navStartY + i * navItemH - navScrollOffset;
             if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY) && currentCategory != i) {
                 currentCategory = i;
                 scrollOffset = 0;
@@ -684,6 +703,18 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (mouseX < sidebarW) {
+            int navStartY = 8 + 26 + 14;
+            int navItemH = 24;
+            int navAvailableH = this.height - navStartY - 8;
+            int navContentH = CATEGORY_NAMES.length * navItemH;
+            int navMaxScroll = Math.max(0, navContentH - navAvailableH);
+
+            navScrollOffset -= (int) (verticalAmount * 18);
+            if (navScrollOffset < 0) navScrollOffset = 0;
+            if (navScrollOffset > navMaxScroll) navScrollOffset = navMaxScroll;
+            return true;
+        }
         if (mouseX >= contentX && mouseY >= effContentTop && mouseY <= contentBottom) {
             scrollOffset -= (int) (verticalAmount * 18);
             if (scrollOffset < 0) scrollOffset = 0;
@@ -1146,4 +1177,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                                             }
+    }
