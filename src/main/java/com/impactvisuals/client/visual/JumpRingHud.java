@@ -1,101 +1,146 @@
-package com.impactvisuals.client.visual;
+package com.impactvisuals.client.config;
 
-import com.impactvisuals.client.config.ModConfig;
-import com.impactvisuals.client.network.FirebaseJumpSync;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.particle.ParticleTypes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-/**
- * Spawns a flat ring of particles under a player's feet when they jump.
- * Local jumps always show the ring. If a Firebase relay is configured (see
- * FirebaseJumpSync), jumps are also broadcast, and rings are shown for other
- * players who are in the IV registry - see chat history for why this needs
- * an external relay and can't work through the Minecraft server alone.
- */
-public class JumpRingHud {
+public class ModConfig {
 
-    private static boolean wasOnGround = true;
-    private static String listeningServerKey = null;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Path CONFIG_PATH = FabricLoader.getInstance()
+            .getConfigDir()
+            .resolve("impactvisuals.json");
 
-    // Jump events from other players, queued by the background network thread
-    // and drained on the client thread so particles are only ever spawned there.
-    private static final ConcurrentLinkedQueue<FirebaseJumpSync.JumpEvent> incoming = new ConcurrentLinkedQueue<>();
+    public boolean hitParticlesEnabled = true;
+    public boolean targetHudEnabled = true;
+    public boolean buildHelperEnabled = false;
+    public boolean jumpRingEnabled = false;
+    public boolean jumpRingWhite = false;
+    public boolean focusTargetEnabled = false;
+    public String focusTargetName = "";
+    public boolean targetHudDebugEnabled = false;
+    public boolean damageNumbersEnabled = true;
+    public boolean criticalFlashEnabled = true;
+    public boolean trajectoryPredictionEnabled = true;
+    public boolean purpleSkyEnabled = false;
+    public boolean infoHudEnabled = true;
+    public boolean hitmarkerEnabled = true;
+    public boolean coordinatesHudEnabled = false;
+    public boolean compassHudEnabled = false;
+    public boolean sessionTimerEnabled = false;
+    public boolean lowHealthVignetteEnabled = true;
+    public boolean durabilityHudEnabled = false;
+    public boolean killDeathCounterEnabled = false;
+    public boolean hitSoundEnabled = true;
+    public boolean cooldownIndicatorEnabled = true;
+    public boolean sprintIndicatorEnabled = false;
+    public boolean healthPercentEnabled = false;
+    public boolean hungerPercentEnabled = false;
+    public boolean xpPercentEnabled = false;
+    public boolean armorHudEnabled = false;
+    public boolean biomeHudEnabled = false;
+    public boolean crosshairDotEnabled = false;
+    public boolean killFeedEnabled = true;
+    public boolean lightLevelHudEnabled = false;
+    public boolean heldItemNameEnabled = false;
+    public boolean offhandItemNameEnabled = false;
+    public boolean totalPlaytimeEnabled = false;
+    public boolean zoomEnabled = true;
+    public boolean autoJumpEnabled = false;
+    public boolean realClockEnabled = false;
+    public long totalPlaytimeMillis = 0L;
 
-    public static void tick() {
-        ModConfig cfg = ModConfig.get();
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientPlayerEntity player = client.player;
-        if (player == null || client.world == null) {
-            wasOnGround = true;
-            return;
+    public int accentColorIndex = 0;
+    public boolean critSoundEnabled = true;
+    public boolean smallFireEnabled = false;
+    public boolean customHandleEnabled = false;
+    public int customHandleScalePercent = 100;
+    public int customHandleRotX = 0;
+    public int customHandleRotY = 0;
+    public int customHandleRotZ = 0;
+
+    public boolean damageFlashEnabled = true;
+    public boolean hitImpactPunchEnabled = true;
+    public boolean killStreakEnabled = true;
+    public boolean bigKillBurstEnabled = true;
+    public boolean killLaserEnabled = true;
+    public boolean pulsingVignetteEnabled = false;
+    public boolean sweepTrailEnabled = false;
+
+    public boolean rainbowThemeEnabled = false;
+    public boolean sprintTrailEnabled = false;
+    public boolean footstepDustEnabled = false;
+    public int crosshairStyleIndex = 0;
+    public int hitmarkerStyleIndex = 0;
+    public int hitParticleColorIndex = 0;
+
+    public boolean killSoundEnabled = true;
+    public boolean heartbeatSoundEnabled = false;
+    public boolean streakSoundEnabled = true;
+    public boolean menuSoundEnabled = true;
+    public boolean footstepSoundEnabled = false;
+
+    public boolean healFlashEnabled = true;
+
+    public boolean coloredTrailsEnabled = false;
+    public boolean handGlowEnabled = false;
+
+    public int selectedSkinIndex = 0;
+    public int selectedCapeIndex = 0;
+
+    public boolean friendsFeatureEnabled = false;
+    public boolean activeEffectsHudEnabled = true;
+    public boolean russianLanguage = false;
+    public boolean betterNearEnabled = true;
+    public String firebaseUrl = "";
+    public java.util.List<String> friendsList = new java.util.ArrayList<>();
+    /** Maps a feature's label (e.g. "Auto Jump") to a bound key's translation key (e.g. "key.keyboard.j"). */
+    public java.util.Map<String, String> featureKeybinds = new java.util.HashMap<>();
+
+    public float hitParticleLifetimeSeconds = 0.5f;
+    public float damageNumberLifetimeSeconds = 0.8f;
+    public int targetHudRangeBlocks = 6;
+
+    private static ModConfig instance;
+
+    public static ModConfig get() {
+        if (instance == null) {
+            instance = load();
         }
+        return instance;
+    }
 
-        if (!cfg.jumpRingEnabled) {
-            wasOnGround = player.isOnGround();
-            return;
-        }
-
-        ensureListening(client);
-        drainIncomingRings(client);
-
-        boolean onGround = player.isOnGround();
-
-        // Trigger exactly on the tick the player leaves the ground while moving
-        // upward (a real jump, not just walking off a ledge).
-        if (wasOnGround && !onGround && player.getVelocity().y > 0.05) {
-            spawnRing(client, player.getX(), player.getY() + 0.05, player.getZ());
-
-            String serverKey = currentServerKey(client);
-            if (serverKey != null) {
-                FirebaseJumpSync.sendJump(serverKey, player.getGameProfile().getName(),
-                        player.getX(), player.getY(), player.getZ());
+    private static ModConfig load() {
+        if (Files.exists(CONFIG_PATH)) {
+            try (Reader reader = Files.newBufferedReader(CONFIG_PATH, StandardCharsets.UTF_8)) {
+                ModConfig loaded = GSON.fromJson(reader, ModConfig.class);
+                if (loaded != null) {
+                    return loaded;
+                }
+            } catch (IOException e) {
+                System.err.println("[ImpactVisuals] Failed to read config, using defaults: " + e.getMessage());
             }
         }
-
-        wasOnGround = onGround;
+        ModConfig fresh = new ModConfig();
+        fresh.save();
+        return fresh;
     }
 
-    private static void ensureListening(MinecraftClient client) {
-        String serverKey = currentServerKey(client);
-        if (serverKey == null || serverKey.equals(listeningServerKey)) return;
-        listeningServerKey = serverKey;
-
-        FirebaseJumpSync.listen(serverKey, event -> {
-            MinecraftClient c = MinecraftClient.getInstance();
-            if (c.player == null) return;
-            if (event.name.equalsIgnoreCase(c.player.getGameProfile().getName())) return; // ignore our own echo
-            // No manual allow-list needed: only someone running this mod's code could
-            // ever produce a valid event on this Firebase path in the first place.
-            incoming.add(event);
-        });
-    }
-
-    private static void drainIncomingRings(MinecraftClient client) {
-        FirebaseJumpSync.JumpEvent event;
-        while ((event = incoming.poll()) != null) {
-            spawnRing(client, event.x, event.y + 0.05, event.z);
-        }
-    }
-
-    private static String currentServerKey(MinecraftClient client) {
-        var entry = client.getCurrentServerEntry();
-        return entry != null ? entry.address : null;
-    }
-
-    private static void spawnRing(MinecraftClient client, double cx, double cy, double cz) {
-        if (client.world == null) return;
-
-        double radius = 0.6;
-        int points = 24;
-
-        for (int i = 0; i < points; i++) {
-            double angle = (2 * Math.PI * i) / points;
-            double x = cx + radius * Math.cos(angle);
-            double z = cz + radius * Math.sin(angle);
-            client.world.addParticle(ParticleTypes.END_ROD, x, cy, z, 0.0, 0.0, 0.0);
+    public void save() {
+        try {
+            Files.createDirectories(CONFIG_PATH.getParent());
+            try (Writer writer = Files.newBufferedWriter(CONFIG_PATH, StandardCharsets.UTF_8)) {
+                GSON.toJson(this, writer);
+            }
+        } catch (IOException e) {
+            System.err.println("[ImpactVisuals] Failed to save config: " + e.getMessage());
         }
     }
 }
