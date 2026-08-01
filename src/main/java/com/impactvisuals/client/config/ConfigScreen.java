@@ -90,6 +90,9 @@ public class ConfigScreen extends Screen {
     private boolean draggingSkin = false;
     private String rebindingLabel = null;
     private int navScrollOffset = 0;
+    private boolean draggingNav = false;
+    private double navDragTotal = 0;
+    private int pendingNavClickIndex = -1;
     private float skinMouseX;
     private float skinMouseY;
     private int previousBlurriness = 0;
@@ -609,13 +612,10 @@ public class ConfigScreen extends Screen {
         int navItemH = 24;
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = navStartY + i * navItemH - navScrollOffset;
-            if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY) && currentCategory != i) {
-                currentCategory = i;
-                scrollOffset = 0;
-                categoryStartNanos = System.nanoTime();
-                searchField.setText("");
-                searchQuery = "";
-                buildCategoryContent();
+            if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY)) {
+                draggingNav = true;
+                navDragTotal = 0;
+                pendingNavClickIndex = i;
                 return true;
             }
         }
@@ -726,6 +726,23 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (draggingNav) {
+            int navStartY = 8 + 26 + 14;
+            int navItemH = 24;
+            int navAvailableH = this.height - navStartY - 8;
+            int navContentH = CATEGORY_NAMES.length * navItemH;
+            int navMaxScroll = Math.max(0, navContentH - navAvailableH);
+
+            navScrollOffset -= (int) deltaY;
+            if (navScrollOffset < 0) navScrollOffset = 0;
+            if (navScrollOffset > navMaxScroll) navScrollOffset = navMaxScroll;
+
+            navDragTotal += Math.abs(deltaY);
+            if (navDragTotal > 6) {
+                pendingNavClickIndex = -1; // moved enough to count as a swipe, not a tap
+            }
+            return true;
+        }
         if (draggingSkin) {
             skinMouseX += (float) deltaX;
             skinMouseY += (float) deltaY;
@@ -747,6 +764,20 @@ public class ConfigScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         draggingSlider = null;
         draggingSkin = false;
+
+        if (draggingNav) {
+            draggingNav = false;
+            if (pendingNavClickIndex >= 0 && pendingNavClickIndex != currentCategory) {
+                currentCategory = pendingNavClickIndex;
+                scrollOffset = 0;
+                categoryStartNanos = System.nanoTime();
+                searchField.setText("");
+                searchQuery = "";
+                buildCategoryContent();
+            }
+            pendingNavClickIndex = -1;
+        }
+
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -1178,3 +1209,4 @@ public class ConfigScreen extends Screen {
         }
     }
     }
+
