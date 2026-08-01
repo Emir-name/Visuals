@@ -39,6 +39,10 @@ public class ConfigScreen extends Screen {
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
     private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS", "CONFIGS"};
+    // Display order in the sidebar - CONFIGS (real index 12) is pinned first so it's
+    // visible without scrolling, while every "currentCategory == N" check elsewhere
+    // in this file keeps using the original indices above unchanged.
+    private static final int[] NAV_ORDER = {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -54,6 +58,7 @@ public class ConfigScreen extends Screen {
     private int skinPanelW, skinPanelH, skinPanelX, skinPanelY;
     private int closeX, closeY, closeW, closeH;
     private int resetX, resetY, resetW, resetH;
+    private int emirX, emirY, emirW, emirH;
     private int langX, langY, langW, langH;
 
     private int currentCategory = 0;
@@ -146,9 +151,14 @@ public class ConfigScreen extends Screen {
         resetX = langX - resetW - 8;
         resetY = headerY;
 
+        emirW = 46;
+        emirH = headerButtonH;
+        emirX = resetX - emirW - 8;
+        emirY = headerY;
+
         closeW = 20;
         closeH = headerButtonH;
-        closeX = resetX - closeW - 8;
+        closeX = emirX - closeW - 8;
         closeY = headerY;
 
         int searchW = Math.max(90, closeX - contentX - 16);
@@ -398,8 +408,9 @@ public class ConfigScreen extends Screen {
         if (navScrollOffset < 0) navScrollOffset = 0;
 
         context.enableScissor(0, navStartY, sidebarW, this.height);
-        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = navStartY + i * navItemH - navScrollOffset;
+        for (int slot = 0; slot < NAV_ORDER.length; slot++) {
+            int i = NAV_ORDER[slot];
+            int itemY = navStartY + slot * navItemH - navScrollOffset;
             boolean active = i == currentCategory;
             boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
 
@@ -436,6 +447,7 @@ public class ConfigScreen extends Screen {
         context.getMatrices().pop();
 
         drawHeaderButton(context, closeX, closeY, closeW, closeH, "x", mouseX, mouseY);
+        drawHeaderButton(context, emirX, emirY, emirW, emirH, "EMIR", mouseX, mouseY);
         drawHeaderButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
         drawHeaderButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
 
@@ -610,8 +622,9 @@ public class ConfigScreen extends Screen {
 
         int navStartY = 8 + 26 + 14;
         int navItemH = 24;
-        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
-            int itemY = navStartY + i * navItemH - navScrollOffset;
+        for (int slot = 0; slot < NAV_ORDER.length; slot++) {
+            int i = NAV_ORDER[slot];
+            int itemY = navStartY + slot * navItemH - navScrollOffset;
             if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY)) {
                 draggingNav = true;
                 navDragTotal = 0;
@@ -627,6 +640,10 @@ public class ConfigScreen extends Screen {
 
         if (inside(closeX, closeY, closeW, closeH, mouseX, mouseY)) {
             close();
+            return true;
+        }
+        if (inside(emirX, emirY, emirW, emirH, mouseX, mouseY)) {
+            enableAllFeatures();
             return true;
         }
         if (inside(resetX, resetY, resetW, resetH, mouseX, mouseY)) {
@@ -1209,4 +1226,3 @@ public class ConfigScreen extends Screen {
         }
     }
     }
-
