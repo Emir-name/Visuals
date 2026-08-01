@@ -219,4 +219,4 @@ public class Lang {
         if (!ModConfig.get().russianLanguage) return key;
         return RU.getOrDefault(key, key);
     }
-}
+            }
