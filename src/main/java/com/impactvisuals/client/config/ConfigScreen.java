@@ -58,7 +58,6 @@ public class ConfigScreen extends Screen {
     private int skinPanelW, skinPanelH, skinPanelX, skinPanelY;
     private int closeX, closeY, closeW, closeH;
     private int resetX, resetY, resetW, resetH;
-    private int emirX, emirY, emirW, emirH;
     private int langX, langY, langW, langH;
 
     private int currentCategory = 0;
@@ -151,14 +150,9 @@ public class ConfigScreen extends Screen {
         resetX = langX - resetW - 8;
         resetY = headerY;
 
-        emirW = 46;
-        emirH = headerButtonH;
-        emirX = resetX - emirW - 8;
-        emirY = headerY;
-
         closeW = 20;
         closeH = headerButtonH;
-        closeX = emirX - closeW - 8;
+        closeX = resetX - closeW - 8;
         closeY = headerY;
 
         int searchW = Math.max(90, closeX - contentX - 16);
@@ -447,7 +441,6 @@ public class ConfigScreen extends Screen {
         context.getMatrices().pop();
 
         drawHeaderButton(context, closeX, closeY, closeW, closeH, "x", mouseX, mouseY);
-        drawHeaderButton(context, emirX, emirY, emirW, emirH, "EMIR", mouseX, mouseY);
         drawHeaderButton(context, resetX, resetY, resetW, resetH, "RESET", mouseX, mouseY);
         drawHeaderButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
 
@@ -642,10 +635,6 @@ public class ConfigScreen extends Screen {
             close();
             return true;
         }
-        if (inside(emirX, emirY, emirW, emirH, mouseX, mouseY)) {
-            enableAllFeatures();
-            return true;
-        }
         if (inside(resetX, resetY, resetW, resetH, mouseX, mouseY)) {
             resetToDefaults();
             return true;
@@ -831,6 +820,7 @@ public class ConfigScreen extends Screen {
         cfg.targetHudEnabled = true;
         cfg.buildHelperEnabled = false;
         cfg.jumpRingEnabled = false;
+        cfg.jumpRingWhite = false;
         cfg.focusTargetEnabled = false;
         cfg.focusTargetName = "";
         cfg.targetHudDebugEnabled = false;
@@ -902,69 +892,82 @@ public class ConfigScreen extends Screen {
     }
 
     /**
-     * "Emir Config" preset - flips on every feature toggle in the mod at once,
-     * including the jump ring. Debug-only toggles and non-feature settings
-     * (language, per-target name text) are left untouched.
+     * "Emir Config" preset - applies the same defaults as the RESET button,
+     * plus turns on the Jump Ring (in white instead of its usual color).
+     * Doesn't touch the language setting.
      */
     private void enableAllFeatures() {
         cfg.hitParticlesEnabled = true;
         cfg.targetHudEnabled = true;
-        cfg.buildHelperEnabled = true;
+        cfg.buildHelperEnabled = false;
         cfg.jumpRingEnabled = true;
-        cfg.focusTargetEnabled = true;
+        cfg.jumpRingWhite = true;
+        cfg.accentColorIndex = 0;
+        cfg.crosshairStyleIndex = 0;
+        cfg.hitmarkerStyleIndex = 0;
+        cfg.hitParticleColorIndex = 0;
+        cfg.customHandleScalePercent = 100;
+        cfg.customHandleRotX = 0;
+        cfg.customHandleRotY = 0;
+        cfg.customHandleRotZ = 0;
+        cfg.selectedSkinIndex = 0;
+        cfg.selectedCapeIndex = 0;
+        cfg.targetHudRangeBlocks = 6;
+        cfg.focusTargetEnabled = false;
+        cfg.focusTargetName = "";
+        cfg.targetHudDebugEnabled = false;
         cfg.damageNumbersEnabled = true;
         cfg.criticalFlashEnabled = true;
         cfg.trajectoryPredictionEnabled = true;
-        cfg.purpleSkyEnabled = true;
+        cfg.purpleSkyEnabled = false;
         cfg.infoHudEnabled = true;
         cfg.hitmarkerEnabled = true;
-        cfg.coordinatesHudEnabled = true;
-        cfg.compassHudEnabled = true;
-        cfg.sessionTimerEnabled = true;
+        cfg.coordinatesHudEnabled = false;
+        cfg.compassHudEnabled = false;
+        cfg.sessionTimerEnabled = false;
         cfg.lowHealthVignetteEnabled = true;
-        cfg.durabilityHudEnabled = true;
-        cfg.killDeathCounterEnabled = true;
+        cfg.durabilityHudEnabled = false;
+        cfg.killDeathCounterEnabled = false;
         cfg.hitSoundEnabled = true;
         cfg.cooldownIndicatorEnabled = true;
-        cfg.sprintIndicatorEnabled = true;
-        cfg.healthPercentEnabled = true;
-        cfg.hungerPercentEnabled = true;
-        cfg.xpPercentEnabled = true;
-        cfg.armorHudEnabled = true;
-        cfg.biomeHudEnabled = true;
-        cfg.crosshairDotEnabled = true;
+        cfg.sprintIndicatorEnabled = false;
+        cfg.healthPercentEnabled = false;
+        cfg.hungerPercentEnabled = false;
+        cfg.xpPercentEnabled = false;
+        cfg.armorHudEnabled = false;
+        cfg.biomeHudEnabled = false;
+        cfg.crosshairDotEnabled = false;
         cfg.killFeedEnabled = true;
-        cfg.lightLevelHudEnabled = true;
-        cfg.heldItemNameEnabled = true;
-        cfg.offhandItemNameEnabled = true;
-        cfg.totalPlaytimeEnabled = true;
+        cfg.lightLevelHudEnabled = false;
+        cfg.heldItemNameEnabled = false;
+        cfg.offhandItemNameEnabled = false;
+        cfg.totalPlaytimeEnabled = false;
         cfg.zoomEnabled = true;
-        cfg.autoJumpEnabled = true;
-        cfg.realClockEnabled = true;
+        cfg.autoJumpEnabled = false;
+        cfg.realClockEnabled = false;
         cfg.critSoundEnabled = true;
-        cfg.smallFireEnabled = true;
-        cfg.customHandleEnabled = true;
+        cfg.smallFireEnabled = false;
+        cfg.customHandleEnabled = false;
         cfg.damageFlashEnabled = true;
         cfg.hitImpactPunchEnabled = true;
         cfg.killStreakEnabled = true;
         cfg.bigKillBurstEnabled = true;
         cfg.killLaserEnabled = true;
-        cfg.pulsingVignetteEnabled = true;
-        cfg.sweepTrailEnabled = true;
-        cfg.rainbowThemeEnabled = true;
-        cfg.sprintTrailEnabled = true;
-        cfg.footstepDustEnabled = true;
+        cfg.pulsingVignetteEnabled = false;
+        cfg.sweepTrailEnabled = false;
+        cfg.rainbowThemeEnabled = false;
+        cfg.sprintTrailEnabled = false;
+        cfg.footstepDustEnabled = false;
         cfg.killSoundEnabled = true;
-        cfg.heartbeatSoundEnabled = true;
+        cfg.heartbeatSoundEnabled = false;
         cfg.streakSoundEnabled = true;
         cfg.menuSoundEnabled = true;
-        cfg.footstepSoundEnabled = true;
+        cfg.footstepSoundEnabled = false;
         cfg.healFlashEnabled = true;
-        cfg.coloredTrailsEnabled = true;
-        cfg.handGlowEnabled = true;
+        cfg.coloredTrailsEnabled = false;
+        cfg.handGlowEnabled = false;
         cfg.activeEffectsHudEnabled = true;
-        cfg.friendsFeatureEnabled = true;
-        cfg.betterNearEnabled = true;
+        cfg.friendsFeatureEnabled = false;
         cfg.save();
         buildCategoryContent();
         com.impactvisuals.client.visual.UiSoundPlayer.play();
@@ -1225,4 +1228,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
+            }
