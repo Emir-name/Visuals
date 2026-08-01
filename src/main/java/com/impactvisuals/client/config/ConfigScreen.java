@@ -38,11 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS", "CONFIGS"};
-    // Display order in the sidebar - CONFIGS (real index 12) is pinned first so it's
-    // visible without scrolling, while every "currentCategory == N" check elsewhere
-    // in this file keeps using the original indices above unchanged.
-    private static final int[] NAV_ORDER = {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -207,6 +203,7 @@ public class ConfigScreen extends Screen {
         cycles.clear();
 
         if (currentCategory == 0) {
+            addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
             addToggle("Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
             addToggle("Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
             addToggle("Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
@@ -302,8 +299,6 @@ public class ConfigScreen extends Screen {
             }
             FriendsNetwork.refreshFriends();
             lastFriendsRefreshNanos = System.nanoTime();
-        } else if (currentCategory == 12) {
-            addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
         }
 
         if (addFriendField != null) {
@@ -402,9 +397,8 @@ public class ConfigScreen extends Screen {
         if (navScrollOffset < 0) navScrollOffset = 0;
 
         context.enableScissor(0, navStartY, sidebarW, this.height);
-        for (int slot = 0; slot < NAV_ORDER.length; slot++) {
-            int i = NAV_ORDER[slot];
-            int itemY = navStartY + slot * navItemH - navScrollOffset;
+        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
+            int itemY = navStartY + i * navItemH - navScrollOffset;
             boolean active = i == currentCategory;
             boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
 
@@ -615,9 +609,8 @@ public class ConfigScreen extends Screen {
 
         int navStartY = 8 + 26 + 14;
         int navItemH = 24;
-        for (int slot = 0; slot < NAV_ORDER.length; slot++) {
-            int i = NAV_ORDER[slot];
-            int itemY = navStartY + slot * navItemH - navScrollOffset;
+        for (int i = 0; i < CATEGORY_NAMES.length; i++) {
+            int itemY = navStartY + i * navItemH - navScrollOffset;
             if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY)) {
                 draggingNav = true;
                 navDragTotal = 0;
@@ -1228,4 +1221,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-            }
+                }
