@@ -291,6 +291,12 @@ public class ConfigScreen extends Screen {
 
             String[] capeNames = {"None/Default", "Red", "Blue", "Gold", "Rainbow"};
             cycles.add(new CycleRow("Cape (self-view only)", capeNames, () -> cfg.selectedCapeIndex, v -> cfg.selectedCapeIndex = v));
+
+            String[] elytraNames = {"None/Default", "Violet", "Crimson", "Gold"};
+            cycles.add(new CycleRow("Elytra (self-view only)", elytraNames, () -> cfg.selectedElytraIndex, v -> cfg.selectedElytraIndex = v));
+
+            String[] armModelNames = {"Default", "Slim (Alex)", "Classic (Steve)"};
+            cycles.add(new CycleRow("Arm Model (self-view only)", armModelNames, () -> cfg.armModelIndex, v -> cfg.armModelIndex = v));
         } else if (currentCategory == 11) {
             addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
             friendEntries.clear();
@@ -877,6 +883,8 @@ public class ConfigScreen extends Screen {
         cfg.handGlowEnabled = false;
         cfg.selectedSkinIndex = 0;
         cfg.selectedCapeIndex = 0;
+        cfg.selectedElytraIndex = 0;
+        cfg.armModelIndex = 0;
         cfg.activeEffectsHudEnabled = true;
         cfg.russianLanguage = false;
         cfg.targetHudRangeBlocks = 6;
@@ -905,6 +913,8 @@ public class ConfigScreen extends Screen {
         cfg.customHandleRotZ = 0;
         cfg.selectedSkinIndex = 0;
         cfg.selectedCapeIndex = 0;
+        cfg.selectedElytraIndex = 0;
+        cfg.armModelIndex = 0;
         cfg.targetHudRangeBlocks = 6;
         cfg.focusTargetEnabled = false;
         cfg.focusTargetName = "";
