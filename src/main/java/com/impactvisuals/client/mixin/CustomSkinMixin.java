@@ -32,6 +32,13 @@ public class CustomSkinMixin {
             "textures/entity/cape/rainbow.png"
     };
 
+    // Accessory: elytra presets, same self-view-only convention as skin/cape above.
+    private static final String[] ELYTRA_PATHS = {
+            "textures/entity/elytra/violet.png",
+            "textures/entity/elytra/crimson.png",
+            "textures/entity/elytra/gold.png"
+    };
+
     @Inject(method = "getSkinTextures", at = @At("RETURN"), cancellable = true)
     private void impactvisuals$overrideSkin(CallbackInfoReturnable<SkinTextures> cir) {
         ModConfig cfg = ModConfig.get();
@@ -54,12 +61,26 @@ public class CustomSkinMixin {
             capeTexture = Identifier.of("impactvisuals", CAPE_PATHS[capeIndex - 1]);
         }
 
-        if (skinTexture == original.texture() && capeTexture == original.capeTexture()) {
+        Identifier elytraTexture = original.elytraTexture();
+        int elytraIndex = cfg.selectedElytraIndex;
+        if (elytraIndex >= 1 && elytraIndex <= ELYTRA_PATHS.length) {
+            elytraTexture = Identifier.of("impactvisuals", ELYTRA_PATHS[elytraIndex - 1]);
+        }
+
+        SkinTextures.Model model = original.model();
+        if (cfg.armModelIndex == 1) {
+            model = SkinTextures.Model.SLIM;
+        } else if (cfg.armModelIndex == 2) {
+            model = SkinTextures.Model.WIDE;
+        }
+
+        if (skinTexture == original.texture() && capeTexture == original.capeTexture()
+                && elytraTexture == original.elytraTexture() && model == original.model()) {
             return; // nothing overridden, leave vanilla result alone
         }
 
         SkinTextures replaced = new SkinTextures(skinTexture, null, capeTexture,
-                original.elytraTexture(), original.model(), original.secure());
+                elytraTexture, model, original.secure());
         cir.setReturnValue(replaced);
     }
 }
