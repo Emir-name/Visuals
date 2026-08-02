@@ -94,6 +94,8 @@ public class ModConfig {
 
     public int selectedSkinIndex = 0;
     public int selectedCapeIndex = 0;
+    public int selectedElytraIndex = 0;
+    public int armModelIndex = 0;
 
     public boolean friendsFeatureEnabled = false;
     public boolean activeEffectsHudEnabled = true;
