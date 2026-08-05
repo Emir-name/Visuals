@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impact Visuals — клиентский мод для Minecraft</title>
+<meta name="description" content="Клиентский косметический мод для Minecraft на Fabric: Target HUD, крит-эффекты, Build Helper, кастомные скины и капы. Никаких читов — только визуал.">
+<meta property="og:title" content="Impact Visuals — клиентский мод для Minecraft">
+<meta property="og:description" content="HUD, крит-эффекты, партиклы, кастомные скины и капы для Fabric 1.21.4. Ничего не читерит — только то, что видно на скрине.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0D0A12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -533,6 +538,48 @@
     .reveal{ opacity:1; transform:none; transition:none; }
   }
 
+  /* ---------- FAQ ---------- */
+  .faq{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:10px; }
+  .faq-item{
+    background:var(--bg-surface);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .faq-item summary{
+    list-style:none;
+    cursor:pointer;
+    padding:17px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    font-weight:700; font-size:14.5px;
+    color:var(--text-primary);
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-plus{
+    flex:0 0 auto;
+    width:22px; height:22px; border-radius:6px;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--accent-violet);
+    font-size:15px; font-weight:700;
+    transition:transform .2s ease;
+  }
+  .faq-item[open] .faq-plus{ transform:rotate(45deg); }
+  .faq-item[open] summary{ border-bottom:1px solid var(--border-soft); }
+  .faq-body{
+    padding:2px 20px 18px;
+    color:var(--text-muted);
+    font-size:13.5px; line-height:1.65;
+  }
+  .faq-body code{
+    font-family:'JetBrains Mono', monospace;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border-soft);
+    padding:2px 6px; border-radius:5px;
+    color:var(--accent-violet);
+  }
+
   /* ---------- honesty note ---------- */
   .note{
     border:1px solid var(--border-soft);
@@ -581,6 +628,7 @@
     <div class="nav-links">
       <a href="#features" class="hide-xs">Функции</a>
       <a href="#install" class="hide-xs">Установка</a>
+      <a href="#faq" class="hide-xs">Вопросы</a>
       <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
       <span class="nav-version mono">v1.0.0</span>
     </div>
@@ -723,6 +771,39 @@
         <strong>Текущая версия: v1.0.0</strong> — файл <code>impactvisuals-1_0_0.jar</code>
         лежит прямо рядом со страницей. При обновлении мода просто замени файл в репозитории на новую версию с тем же именем ссылки — или поменяй имя файла и в кнопке выше.
       </p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-label">Вопросы</div>
+      <h2>Перед установкой</h2>
+      <p class="section-sub">То, что чаще всего спрашивают в issues и в комментариях.</p>
+    </div>
+
+    <div class="faq">
+      <details class="faq-item reveal">
+        <summary>Забанят ли меня на сервере с античитом?<span class="faq-plus">+</span></summary>
+        <div class="faq-body">Мод не даёт игровых преимуществ — он ничего не меняет в логике игры, только в отрисовке на твоём экране. Большинство серверов такое не банят, но решение всегда за администрацией конкретного сервера, особенно если там есть жёсткий список разрешённых модов.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Нужен ли этот мод остальным игрокам на сервере?<span class="faq-plus">+</span></summary>
+        <div class="faq-body">Нет. Target HUD, Combat FX и Build Helper — чисто клиентские, работают независимо от того, что стоит у других. Исключение — Jump Ring: его увидят только те, у кого тоже установлен Impact Visuals.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Совместим с OptiFine или Sodium?<span class="faq-plus">+</span></summary>
+        <div class="faq-body">Официально тестировался только в связке Fabric + Fabric API без дополнительных рендер-модов. С Sodium может работать, но совместимость не гарантирована — сообщи в issues, если словишь конфликт.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Будет ли версия для Forge или NeoForge?<span class="faq-plus">+</span></summary>
+        <div class="faq-body">Пока нет — сейчас весь код завязан на Fabric API. Возможно появится позже, если будет спрос.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Нашёл баг — куда писать?<span class="faq-plus">+</span></summary>
+        <div class="faq-body">В Issues репозитория на GitHub — ссылка внизу страницы. Чем точнее шаги воспроизведения и версия Minecraft, тем быстрее разберёмся.</div>
+      </details>
     </div>
   </div>
 </section>
