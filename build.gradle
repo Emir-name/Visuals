@@ -1,49 +1,34 @@
-plugins {
-    id 'fabric-loom' version '1.9-SNAPSHOT'
-    id 'maven-publish'
-}
+package com.impactvisuals.client.mixin;
 
-version = project.mod_version
-group = project.maven_group
+import com.impactvisuals.client.config.ModConfig;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.Vec3d;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-base { archivesName = project.archives_base_name }
+@Mixin(ClientWorld.class)
+public class SkyColorMixin {
 
-repositories {
-    mavenCentral()
-    maven { name = "Fabric"; url = "https://maven.fabricmc.net/" }
-    maven { name = "TerraformersMC"; url = "https://maven.terraformersmc.com/releases/" }
-}
+    @Inject(method = "getSkyColor", at = @At("RETURN"), cancellable = true)
+    private void impactvisuals$tintSky(Vec3d cameraPos, float tickDelta, CallbackInfoReturnable<Integer> cir) {
+        ModConfig cfg = ModConfig.get();
+        if (!cfg.purpleSkyEnabled) return;
 
-loom {
-    splitEnvironmentSourceSets()
-}
+        int original = cir.getReturnValue();
+        int alpha = original & 0xFF000000;
+        int r = (original >> 16) & 0xFF;
+        int g = (original >> 8) & 0xFF;
+        int b = original & 0xFF;
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
-    modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
-}
+        int targetR = 102, targetG = 0, targetB = 153;
+        float blend = 0.55f;
+        r = (int) (r * (1 - blend) + targetR * blend);
+        g = (int) (g * (1 - blend) + targetG * blend);
+        b = (int) (b * (1 - blend) + targetB * blend);
 
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") { expand "version": project.version }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
-}
-
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.base.archivesName.get()}" }
+        int tinted = alpha | (r << 16) | (g << 8) | b;
+        cir.setReturnValue(tinted);
     }
 }
