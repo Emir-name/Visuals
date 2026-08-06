@@ -1,10 +1,6 @@
 package com.impactvisuals.client.visual;
 
-import com.impactvisuals.client.api.HealthSnapshot;
 import com.impactvisuals.client.config.ModConfig;
-import com.impactvisuals.client.network.FirebasePresence;
-import com.impactvisuals.client.util.CacheUtils;
-import com.impactvisuals.client.visual.health.HealthResolver;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -15,32 +11,46 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TargetHud {
 
-    private static final HealthResolver HEALTH_RESOLVER = new HealthResolver();
-    private static final long[] CACHE_TIME = {0};
-    private static final LivingEntity[] CACHE_TARGET = {null};
+    // "current/max" style HP embedded directly in a nametag, e.g. "123/456".
+    private static final Pattern HP_RATIO_PATTERN =
+            Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*/\\s*(\\d+(?:[.,]\\d+)?)");
+
+    // A bare number (optionally with a heart symbol / decoration around it), used by
+    // servers that float a separate live HP readout above a player's head instead of
+    // putting it in the player's own nametag or vanilla health attribute.
+    private static final Pattern HP_NUMBER_PATTERN =
+            Pattern.compile("(\\d+(?:[.,]\\d+)?)");
 
     public static void render(DrawContext context) {
         ModConfig cfg = ModConfig.get();
-        if (!cfg.hud.targetHudEnabled) return;
+        if (!cfg.targetHudEnabled) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) return;
 
-        LivingEntity target = CacheUtils.getTimed(200, CACHE_TIME, CACHE_TARGET,
-                () -> findLookedAtLivingEntity(client, cfg.hud.targetHudRangeBlocks));
+        LivingEntity target = findLookedAtLivingEntity(client, cfg.targetHudRangeBlocks);
         if (target == null) return;
 
-        int sw = context.getScaledWindowWidth();
-        int sh = context.getScaledWindowHeight();
-        int cardW = 130, cardH = 70;
-        int cardX = sw / 2 - cardW / 2;
-        int cardY = sh / 2 - 70;
+        int screenWidth = context.getScaledWindowWidth();
+        int screenHeight = context.getScaledWindowHeight();
+
+        int cardW = 130;
+        int cardH = 70;
+        int cardX = screenWidth / 2 - cardW / 2;
+        int cardY = screenHeight / 2 - 70;
 
         HudCard.draw(context, cardX, cardY, cardW, cardH);
 
-        int iconSize = 28, iconX = cardX + 6, iconY = cardY + 6;
+        int iconSize = 28;
+        int iconX = cardX + 6;
+        int iconY = cardY + 6;
+
         if (target instanceof AbstractClientPlayerEntity player) {
             net.minecraft.client.gui.PlayerSkinDrawer.draw(context, player.getSkinTextures(), iconX, iconY, iconSize);
         } else {
@@ -48,98 +58,235 @@ public class TargetHud {
         }
 
         int textX = iconX + iconSize + 8;
-        String nameStr = target.getDisplayName() != null
-                ? target.getDisplayName().getString()
-                : target.getName().getString();
+
+        Text name = target.getDisplayName() != null ? target.getDisplayName() : Text.literal(target.getName().getString());
+        String nameStr = name.getString();
         context.drawText(client.textRenderer, nameStr, textX, cardY + 8, 0xFFFFFFFF, false);
 
-        if (FirebasePresence.isOnline(target.getName().getString())) {
+        if (com.impactvisuals.client.network.FirebasePresence.isOnline(target.getName().getString())) {
             int nameW = client.textRenderer.getWidth(nameStr);
             context.drawText(client.textRenderer, "IV", textX + nameW + 4, cardY + 8, 0xFFB266FF, false);
         }
 
-        HealthSnapshot hp = HEALTH_RESOLVER.resolve(target, client);
-        float health = hp != null ? hp.current() : target.getHealth();
-        float maxHealth = hp != null ? hp.max() : target.getMaxHealth();
+        // Vanilla numbers as the baseline.
+        float health = target.getHealth();
+        float maxHealth = target.getMaxHealth();
 
-        String hpText = "HP • " + formatNumber(health) + "/" + formatNumber(maxHealth);
+        // 1) A "current/max" pattern directly in the target's own nametag.
+        float[] ratio = parseRatioFromText(target.getCustomName() != null ? target.getCustomName().getString() : null);
+        if (ratio != null) {
+            health = ratio[0];
+            maxHealth = ratio[1];
+        } else {
+            // 2) Vanilla's own "below name" scoreboard slot - the same mechanism the
+            // client uses natively to draw a live number under a nametag. This is
+            // exactly what most RPG servers use for HP that goes past 20, and it's
+            // not tied to any entity attribute or extra entity, which is why the
+            // entity-attribute value and the entity search both missed it.
+            Integer belowNameScore = findBelowNameScore(client, target);
+            if (belowNameScore != null) {
+                health = belowNameScore;
+            } else {
+                // 3) Fallback: a separate floating marker entity above the target's head.
+                Float liveCurrent = findFloatingHealthNumber(client, target);
+                if (liveCurrent != null) {
+                    health = liveCurrent;
+                }
+            }
+        }
+
+        String hpText = "HP \u2022 " + formatNumber(health) + "/" + formatNumber(maxHealth);
         context.drawText(client.textRenderer, hpText, textX, cardY + 19, 0xFFAAAAAA, false);
 
-        if (cfg.hud.targetHudDebugEnabled) {
+        if (cfg.targetHudDebugEnabled) {
             dumpNearbyEntities(client, target);
         }
 
         renderArmorRow(context, client, target, cardX, cardY + 38, cardW);
 
-        int barX = cardX + 6, barY = cardY + cardH - 8;
-        int barW = cardW - 12, barH = 4;
+        int barX = cardX + 6;
+        int barY = cardY + cardH - 8;
+        int barWidth = cardW - 12;
+        int barHeight = 4;
         float pct = maxHealth > 0 ? Math.max(0f, Math.min(1f, health / maxHealth)) : 0f;
 
-        context.fill(barX, barY, barX + barW, barY + barH, 0x66000000);
-        context.fill(barX, barY, barX + Math.round(barW * pct), barY + barH, 0xFFB266FF);
+        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x66000000);
+        context.fill(barX, barY, barX + Math.round(barWidth * pct), barY + barHeight, 0xFFB266FF);
     }
 
+    private static float[] parseRatioFromText(String raw) {
+        if (raw == null) return null;
+        Matcher matcher = HP_RATIO_PATTERN.matcher(raw);
+        if (!matcher.find()) return null;
+        try {
+            float current = Float.parseFloat(matcher.group(1).replace(',', '.'));
+            float max = Float.parseFloat(matcher.group(2).replace(',', '.'));
+            if (max <= 0) return null;
+            return new float[]{current, max};
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Looks for a small marker entity (armor stand, text display, etc.) floating just
+     * above the target's head whose custom name is basically just a number - the kind
+     * of live "HP readout" some servers spawn instead of updating the real player
+     * entity's health attribute. Returns the parsed number, or null if none found.
+     */
+    /**
+     * Reads the live number vanilla itself would render under the target's nametag,
+     * via the server-controlled "below name" scoreboard slot. This is how most
+     * servers show HP that goes past the vanilla 20-heart cap, and it updates in
+     * real time because it's literally the same data vanilla uses.
+     */
+    private static Integer findBelowNameScore(MinecraftClient client, LivingEntity target) {
+        if (client.world == null) return null;
+        net.minecraft.scoreboard.Scoreboard scoreboard = client.world.getScoreboard();
+        net.minecraft.scoreboard.ScoreboardObjective objective =
+                scoreboard.getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.BELOW_NAME);
+        if (objective == null) return null;
+
+        net.minecraft.scoreboard.ReadableScoreboardScore score = scoreboard.getScore(target, objective);
+        return score != null ? score.getScore() : null;
+    }
+
+    private static Float findFloatingHealthNumber(MinecraftClient client, LivingEntity target) {
+        if (client.world == null) return null;
+
+        Box searchBox = new Box(
+                target.getX() - 1.0, target.getEyeY(), target.getZ() - 1.0,
+                target.getX() + 1.0, target.getEyeY() + 3.0, target.getZ() + 1.0
+        );
+
+        List<Entity> nearby = client.world.getOtherEntities(target, searchBox,
+                e -> e.getCustomName() != null && e != target);
+
+        for (Entity marker : nearby) {
+            String text = marker.getCustomName().getString();
+            Matcher matcher = HP_NUMBER_PATTERN.matcher(text);
+            if (!matcher.find()) continue;
+            // Skip if it doesn't look like a standalone number (avoids grabbing part of
+            // an unrelated custom name that just happens to contain digits).
+            String stripped = text.replaceAll("[^0-9.,]", "");
+            if (stripped.isEmpty() || stripped.length() > 8) continue;
+            try {
+                return Float.parseFloat(matcher.group(1).replace(',', '.'));
+            } catch (NumberFormatException ignored) {
+                // try next entity
+            }
+        }
+        return null;
+    }
+
+    private static long lastDumpNanos = 0;
+
+    /**
+     * Debug helper: prints every entity within a few blocks of the target (with a
+     * custom name) to the player's own chat, along with its offset from the target's
+     * feet, so we can pinpoint which entity is the live HP readout. Client-side only,
+     * throttled to avoid spam, nothing is sent to the server.
+     */
+    private static void dumpNearbyEntities(MinecraftClient client, LivingEntity target) {
+        long now = System.nanoTime();
+        if (now - lastDumpNanos < 1_000_000_000L) return;
+        lastDumpNanos = now;
+        if (client.world == null || client.player == null) return;
+
+        Box searchBox = target.getBoundingBox().expand(4.0);
+        List<Entity> nearby = client.world.getOtherEntities(target, searchBox,
+                e -> e.getCustomName() != null && e != target);
+
+        client.player.sendMessage(Text.literal("[TargetHUD debug] target=" + target.getName().getString()
+                + " health=" + target.getHealth() + "/" + target.getMaxHealth()), false);
+
+        Integer belowName = findBelowNameScore(client, target);
+        client.player.sendMessage(Text.literal("[TargetHUD debug] belowNameScore=" + belowName), false);
+
+        if (nearby.isEmpty()) {
+            client.player.sendMessage(Text.literal("[TargetHUD debug] no other named entities within 4 blocks"), false);
+            return;
+        }
+
+        for (Entity e : nearby) {
+            double dx = e.getX() - target.getX();
+            double dy = e.getY() - target.getY();
+            double dz = e.getZ() - target.getZ();
+            String line = String.format("[TargetHUD debug] \"%s\" type=%s offset=(%.2f, %.2f, %.2f)",
+                    e.getCustomName().getString(), e.getType().toString(), dx, dy, dz);
+            client.player.sendMessage(Text.literal(line), false);
+        }
+    }
+
+    private static final net.minecraft.entity.EquipmentSlot[] ARMOR_SLOTS = {
+            net.minecraft.entity.EquipmentSlot.HEAD,
+            net.minecraft.entity.EquipmentSlot.CHEST,
+            net.minecraft.entity.EquipmentSlot.LEGS,
+            net.minecraft.entity.EquipmentSlot.FEET
+    };
+
+    /** Draws the target's 4 armor pieces as icons with a small durability bar under each. */
     private static void renderArmorRow(DrawContext context, MinecraftClient client, LivingEntity target,
-                                       int cardX, int rowY, int cardW) {
-        var slots = new net.minecraft.entity.EquipmentSlot[]{
-                net.minecraft.entity.EquipmentSlot.HEAD,
-                net.minecraft.entity.EquipmentSlot.CHEST,
-                net.minecraft.entity.EquipmentSlot.LEGS,
-                net.minecraft.entity.EquipmentSlot.FEET
-        };
-        int slotSize = 18, gap = 4;
-        int totalW = slots.length * slotSize + (slots.length - 1) * gap;
+                                        int cardX, int rowY, int cardW) {
+        int slotSize = 18;
+        int gap = 4;
+        int totalW = ARMOR_SLOTS.length * slotSize + (ARMOR_SLOTS.length - 1) * gap;
         int startX = cardX + (cardW - totalW) / 2;
 
-        for (int i = 0; i < slots.length; i++) {
-            var stack = target.getEquippedStack(slots[i]);
+        for (int i = 0; i < ARMOR_SLOTS.length; i++) {
+            net.minecraft.item.ItemStack stack = target.getEquippedStack(ARMOR_SLOTS[i]);
             int x = startX + i * (slotSize + gap);
+
             context.fill(x, rowY, x + slotSize, rowY + slotSize, 0x40000000);
             if (stack.isEmpty()) continue;
+
             context.drawItem(stack, x + 1, rowY + 1);
+
             if (stack.isDamageable()) {
-                float pct = 1f - ((float) stack.getDamage() / stack.getMaxDamage());
-                pct = Math.max(0f, Math.min(1f, pct));
-                int barY = rowY + slotSize + 1, barW = slotSize, filled = Math.round(barW * pct);
-                int color = pct > 0.5f ? 0xFF6FCF4A : pct > 0.2f ? 0xFFE0C13C : 0xFFE0483C;
+                int maxDamage = stack.getMaxDamage();
+                int damage = stack.getDamage();
+                float remainingPct = maxDamage > 0 ? 1f - ((float) damage / maxDamage) : 1f;
+                remainingPct = Math.max(0f, Math.min(1f, remainingPct));
+
+                int barY = rowY + slotSize + 1;
+                int barW = slotSize;
+                int filled = Math.round(barW * remainingPct);
+
+                int color = remainingPct > 0.5f ? 0xFF6FCF4A
+                        : remainingPct > 0.2f ? 0xFFE0C13C
+                        : 0xFFE0483C;
+
                 context.fill(x, barY, x + barW, barY + 2, 0x66000000);
                 context.fill(x, barY, x + filled, barY + 2, color);
             }
         }
     }
 
-    private static String formatNumber(float v) {
-        return v == Math.round(v) ? String.valueOf(Math.round(v)) : String.format("%.1f", v);
+    private static String formatNumber(float value) {
+        return value == Math.round(value) ? String.valueOf(Math.round(value)) : String.format("%.1f", value);
     }
 
     private static LivingEntity findLookedAtLivingEntity(MinecraftClient client, double range) {
-        Entity cam = client.cameraEntity;
-        if (cam == null) return null;
-        Vec3d start = cam.getCameraPosVec(1.0f);
-        Vec3d look = cam.getRotationVec(1.0f);
-        Box box = cam.getBoundingBox().stretch(look.multiply(range)).expand(1.0);
-        EntityHitResult res = net.minecraft.entity.projectile.ProjectileUtil.raycast(
-                cam, start, start.add(look.multiply(range)), box,
-                e -> e instanceof LivingEntity && !e.isSpectator() && e.canHit() && e != client.player,
-                range * range);
-        return res != null && res.getEntity() instanceof LivingEntity le ? le : null;
-    }
+        Entity cameraEntity = client.cameraEntity;
+        if (cameraEntity == null) return null;
 
-    private static long lastDump = 0;
-    private static void dumpNearbyEntities(MinecraftClient client, LivingEntity target) {
-        long now = System.nanoTime();
-        if (now - lastDump < 1_000_000_000L) return;
-        lastDump = now;
-        if (client.world == null || client.player == null) return;
-        Box box = target.getBoundingBox().expand(4.0);
-        var nearby = client.world.getOtherEntities(target, box, e -> e.getCustomName() != null && e != target);
-        client.player.sendMessage(Text.literal("[TargetHUD] target=" + target.getName().getString()
-                + " health=" + target.getHealth() + "/" + target.getMaxHealth()), false);
-        for (Entity e : nearby) {
-            String line = String.format("[TargetHUD] \"%s\" type=%s offset=(%.2f, %.2f, %.2f)",
-                    e.getCustomName().getString(), e.getType().toString(),
-                    e.getX() - target.getX(), e.getY() - target.getY(), e.getZ() - target.getZ());
-            client.player.sendMessage(Text.literal(line), false);
-        }
+        Vec3d start = cameraEntity.getCameraPosVec(1.0f);
+        Vec3d look = cameraEntity.getRotationVec(1.0f);
+        Vec3d end = start.add(look.multiply(range));
+
+        Box searchBox = cameraEntity.getBoundingBox().stretch(look.multiply(range)).expand(1.0);
+
+        EntityHitResult result = net.minecraft.entity.projectile.ProjectileUtil.raycast(
+                cameraEntity,
+                start,
+                end,
+                searchBox,
+                e -> e instanceof LivingEntity && !e.isSpectator() && e.canHit() && e != client.player,
+                range * range
+        );
+
+        if (result == null) return null;
+        Entity hit = result.getEntity();
+        return hit instanceof LivingEntity living ? living : null;
     }
 }
