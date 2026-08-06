@@ -1,8 +1,27 @@
+# Gradle
 .gradle/
 build/
-out/
+!gradle-wrapper.jar
+
+# IDE
 .idea/
 *.iml
+*.ipr
+*.iws
 .vscode/
-.DS_Store
+*.class
+
+# Fabric
 run/
+remappedSrc/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Data / secrets
+iv_users.json
