@@ -38,7 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS"};
+    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS", "MARKERS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -79,6 +79,7 @@ public class ConfigScreen extends Screen {
 
     private TextFieldWidget addFriendField;
     private TextFieldWidget focusTargetField;
+    private TextFieldWidget markerCoordsField;
     private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
     private static final int FRIENDS_HEADER_H = 32;
     private static final int FOCUS_TARGET_HEADER_H = 30;
@@ -183,6 +184,23 @@ public class ConfigScreen extends Screen {
         });
         addDrawableChild(focusTargetField);
         focusTargetField.setVisible(currentCategory == 2);
+
+        int markerFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
+        markerCoordsField = new TextFieldWidget(this.textRenderer, contentX, markerFieldY, contentW, 18, Text.literal(""));
+        markerCoordsField.setMaxLength(40);
+        markerCoordsField.setPlaceholder(Text.literal(Lang.t("X Y Z")));
+        markerCoordsField.setText(cfg.markerX + " " + cfg.markerY + " " + cfg.markerZ);
+        markerCoordsField.setChangedListener(text -> {
+            int[] parsed = parseCoords(text);
+            if (parsed != null) {
+                cfg.markerX = parsed[0];
+                cfg.markerY = parsed[1];
+                cfg.markerZ = parsed[2];
+                cfg.save();
+            }
+        });
+        addDrawableChild(markerCoordsField);
+        markerCoordsField.setVisible(currentCategory == 12);
 
         scrollOffset = 0;
         categoryStartNanos = System.nanoTime();
@@ -305,6 +323,8 @@ public class ConfigScreen extends Screen {
             }
             FriendsNetwork.refreshFriends();
             lastFriendsRefreshNanos = System.nanoTime();
+        } else if (currentCategory == 12) {
+            addToggle("Marker Enabled", () -> cfg.markerEnabled, v -> cfg.markerEnabled = v);
         }
 
         if (addFriendField != null) {
@@ -315,6 +335,9 @@ public class ConfigScreen extends Screen {
             if (!focusTargetField.getText().equals(cfg.focusTargetName)) {
                 focusTargetField.setText(cfg.focusTargetName);
             }
+        }
+        if (markerCoordsField != null) {
+            markerCoordsField.setVisible(currentCategory == 12);
         }
     }
 
@@ -454,6 +477,8 @@ public class ConfigScreen extends Screen {
                 lastFriendsRefreshNanos = nowNanos;
             }
         } else if (currentCategory == 2) {
+            effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
+        } else if (currentCategory == 12) {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
         }
 
@@ -814,6 +839,21 @@ public class ConfigScreen extends Screen {
         return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
     }
 
+    /** Parses "x y z" (any whitespace-separated integers) into a 3-element array, or null if malformed. */
+    private static int[] parseCoords(String text) {
+        String[] parts = text.trim().split("\\s+");
+        if (parts.length != 3) return null;
+        try {
+            return new int[]{
+                    Integer.parseInt(parts[0]),
+                    Integer.parseInt(parts[1]),
+                    Integer.parseInt(parts[2])
+            };
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private void resetToDefaults() {
         cfg.hitParticlesEnabled = true;
         cfg.targetHudEnabled = true;
@@ -889,6 +929,11 @@ public class ConfigScreen extends Screen {
         cfg.russianLanguage = false;
         cfg.targetHudRangeBlocks = 6;
         cfg.friendsFeatureEnabled = false;
+        cfg.markerEnabled = false;
+        cfg.markerX = 0;
+        cfg.markerY = 64;
+        cfg.markerZ = 0;
+        cfg.markerName = "";
         buildCategoryContent();
     }
 
@@ -971,6 +1016,11 @@ public class ConfigScreen extends Screen {
         cfg.handGlowEnabled = false;
         cfg.activeEffectsHudEnabled = true;
         cfg.friendsFeatureEnabled = false;
+        cfg.markerEnabled = false;
+        cfg.markerX = 0;
+        cfg.markerY = 64;
+        cfg.markerZ = 0;
+        cfg.markerName = "";
         cfg.save();
         buildCategoryContent();
         com.impactvisuals.client.visual.UiSoundPlayer.play();
@@ -1231,4 +1281,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                }
+    }
