@@ -80,6 +80,7 @@ public final class ClientEventHandler {
             DamageNumberRenderer.render(context);
             com.impactvisuals.client.visual.BuildHelperHud.renderWorld(context);
             com.impactvisuals.client.visual.FocusTargetHighlight.render(context);
+            com.impactvisuals.client.visual.MarkerHud.renderWorld(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
@@ -95,6 +96,7 @@ public final class ClientEventHandler {
             DamageFlash.render(drawContext);
             ImpactPunch.render(drawContext);
             ActiveEffectsHud.render(drawContext);
+            com.impactvisuals.client.visual.MarkerHud.renderHud(drawContext);
             com.impactvisuals.client.visual.BuildHelperHud.renderHud(drawContext);
             BetterNearHud.render(drawContext);
         });
