@@ -20,6 +20,11 @@ public class ModConfig {
 
     public boolean hitParticlesEnabled = true;
     public boolean targetHudEnabled = true;
+    public boolean markerEnabled = false;
+    public int markerX = 0;
+    public int markerY = 64;
+    public int markerZ = 0;
+    public String markerName = "";
     public boolean buildHelperEnabled = false;
     public boolean jumpRingEnabled = false;
     public boolean jumpRingWhite = false;
