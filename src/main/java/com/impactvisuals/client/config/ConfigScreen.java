@@ -80,6 +80,7 @@ public class ConfigScreen extends Screen {
     private TextFieldWidget addFriendField;
     private TextFieldWidget focusTargetField;
     private TextFieldWidget markerCoordsField;
+    private TextFieldWidget rebindKeyboardTrigger;
     private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
     private static final int FRIENDS_HEADER_H = 32;
     private static final int FOCUS_TARGET_HEADER_H = 30;
@@ -201,6 +202,14 @@ public class ConfigScreen extends Screen {
         });
         addDrawableChild(markerCoordsField);
         markerCoordsField.setVisible(currentCategory == 12);
+
+        // Invisible 0-size field used only to summon the on-screen/mobile keyboard when
+        // rebinding a feature's keybind - focusing any text field is what triggers the IME
+        // on mobile Minecraft clients, and there's no other reliable way to request it.
+        rebindKeyboardTrigger = new TextFieldWidget(this.textRenderer, -100, -100, 1, 1, Text.literal(""));
+        rebindKeyboardTrigger.setMaxLength(1);
+        rebindKeyboardTrigger.setVisible(false);
+        addDrawableChild(rebindKeyboardTrigger);
 
         scrollOffset = 0;
         categoryStartNanos = System.nanoTime();
@@ -679,6 +688,9 @@ public class ConfigScreen extends Screen {
                     int keyboxY = p.y + (p.h - KEYBOX_W) / 2;
                     if (inside(p.x + 6, keyboxY, KEYBOX_W, KEYBOX_W, mouseX, mouseY)) {
                         rebindingLabel = p.item.label;
+                        rebindKeyboardTrigger.setFocused(true);
+                        rebindKeyboardTrigger.mouseClicked(-100, -100, button);
+                        setFocused(rebindKeyboardTrigger);
                         return true;
                     }
                     p.item.toggle();
@@ -816,6 +828,7 @@ public class ConfigScreen extends Screen {
         if (rebindingLabel != null) {
             if (keyCode == 256) { // ESC cancels without changing anything
                 rebindingLabel = null;
+                rebindKeyboardTrigger.setFocused(false);
                 return true;
             }
             if (keyCode == 259) { // Backspace clears the binding
@@ -824,6 +837,7 @@ public class ConfigScreen extends Screen {
                 FeatureKeybindManager.setKey(rebindingLabel, keyCode);
             }
             rebindingLabel = null;
+            rebindKeyboardTrigger.setFocused(false);
             return true;
         }
 
