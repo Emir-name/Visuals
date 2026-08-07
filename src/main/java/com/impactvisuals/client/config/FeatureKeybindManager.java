@@ -87,7 +87,9 @@ public final class FeatureKeybindManager {
             if (pressed) {
                 stillHeld.add(label);
                 if (!heldLastTick.contains(label)) {
-                    target.setter.accept(!target.getter.getAsBoolean());
+                    boolean newValue = !target.getter.getAsBoolean();
+                    target.setter.accept(newValue);
+                    notifyToggle(client, label, newValue);
                 }
             }
         }
@@ -95,5 +97,15 @@ public final class FeatureKeybindManager {
         heldLastTick.clear();
         heldLastTick.addAll(stillHeld);
     }
-}
 
+    /** Small local chat message so a keybind toggle is never silent/invisible. */
+    private static void notifyToggle(MinecraftClient client, String label, boolean newValue) {
+        if (client.player == null) return;
+        String stateText = newValue ? "\u00A7aON" : "\u00A7cOFF";
+        String displayLabel = com.impactvisuals.client.config.Lang.t(label);
+        client.player.sendMessage(
+                net.minecraft.text.Text.literal("\u00A7d[Impact Visuals] \u00A7f" + displayLabel + " \u00A77\u2192 " + stateText),
+                false
+        );
+    }
+}
