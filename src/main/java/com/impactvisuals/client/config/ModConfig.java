@@ -21,6 +21,7 @@ public class ModConfig {
     public boolean hitParticlesEnabled = true;
     public boolean targetHudEnabled = true;
     public boolean markerEnabled = false;
+    public boolean chinaHatEnabled = false;
     public int markerX = 0;
     public int markerY = 64;
     public int markerZ = 0;
