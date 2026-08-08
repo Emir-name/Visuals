@@ -578,10 +578,6 @@ public class ConfigScreen extends Screen {
         for (Placed<FriendEntry> p : placedFriends) {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
         }
-        if (currentCategory == 2 && friendEntries.isEmpty()) {
-            String hint = Lang.t("No friends added yet");
-            context.drawText(this.textRenderer, hint, contentX, effContentTop + 6, TEXT_DIM, false);
-        }
 
         long fadeElapsed = nowNanos - categoryStartNanos;
         if (fadeElapsed < FADE_DURATION_NANOS) {
@@ -1316,4 +1312,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-            }
+    }
