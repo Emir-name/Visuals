@@ -41,6 +41,7 @@ public final class FirebasePresence {
             .build();
 
     private static final Map<String, Long> onlineByName = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> hatByName = new ConcurrentHashMap<>();
 
     private static ScheduledExecutorService scheduler;
     private static String activeServerKey;
@@ -84,6 +85,13 @@ public final class FirebasePresence {
         return System.currentTimeMillis() - ts < STALE_AFTER.toMillis();
     }
 
+    /** Whether the given player has broadcast that their China Hat cosmetic is on, and is still online. */
+    public static boolean hasChinaHat(String name) {
+        if (!isOnline(name)) return false;
+        Boolean hat = hatByName.get(name.toLowerCase());
+        return hat != null && hat;
+    }
+
     private static void sendHeartbeat() {
         String serverKey = activeServerKey;
         String playerName = activePlayerName;
@@ -92,6 +100,7 @@ public final class FirebasePresence {
         JsonObject body = new JsonObject();
         body.addProperty("name", playerName);
         body.addProperty("ts", System.currentTimeMillis());
+        body.addProperty("hat", com.impactvisuals.client.config.ModConfig.get().chinaHatEnabled);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(nodeUrl(serverKey, playerName)))
@@ -120,6 +129,7 @@ public final class FirebasePresence {
             if (root == null) return;
 
             Map<String, Long> fresh = new ConcurrentHashMap<>();
+            Map<String, Boolean> freshHats = new ConcurrentHashMap<>();
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
                 JsonElement value = entry.getValue();
                 if (value == null || !value.isJsonObject()) continue;
@@ -129,10 +139,13 @@ public final class FirebasePresence {
                 String name = obj.get("name").getAsString();
                 long ts = obj.get("ts").getAsLong();
                 fresh.put(name.toLowerCase(), ts);
+                freshHats.put(name.toLowerCase(), obj.has("hat") && obj.get("hat").getAsBoolean());
             }
 
             onlineByName.clear();
             onlineByName.putAll(fresh);
+            hatByName.clear();
+            hatByName.putAll(freshHats);
         } catch (Exception ignored) {
             // network hiccup - keep the last known snapshot, try again next poll
         }
@@ -150,4 +163,3 @@ public final class FirebasePresence {
         return key.replaceAll("[^a-zA-Z0-9_-]", "_");
     }
 }
-
