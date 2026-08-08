@@ -251,7 +251,10 @@ public class ConfigScreen extends Screen {
             addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
             addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
             addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
-            addToggle("China Hat", () -> cfg.chinaHatEnabled, v -> cfg.chinaHatEnabled = v);
+            addToggle("China Hat", () -> cfg.chinaHatEnabled, v -> {
+                cfg.chinaHatEnabled = v;
+                com.impactvisuals.client.network.FirebasePresence.forceHeartbeat();
+            });
             addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
             addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
             addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
@@ -598,7 +601,7 @@ public class ConfigScreen extends Screen {
 
         renderSkinPanel(context);
 
-        scrollDownX = contentX + contentW - scrollArrowSize;
+        scrollDownX = skinPanelX - scrollArrowSize - 8;
         scrollDownY = contentBottom - scrollArrowSize;
         scrollUpX = scrollDownX;
         scrollUpY = scrollDownY - scrollArrowSize - 6;
