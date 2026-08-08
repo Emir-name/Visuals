@@ -250,6 +250,7 @@ public class ConfigScreen extends Screen {
             addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
             addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
             addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
+            addToggle("China Hat", () -> cfg.chinaHatEnabled, v -> cfg.chinaHatEnabled = v);
             addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
             addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
             addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
@@ -940,6 +941,7 @@ public class ConfigScreen extends Screen {
         cfg.targetHudRangeBlocks = 6;
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
+        cfg.chinaHatEnabled = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1027,6 +1029,7 @@ public class ConfigScreen extends Screen {
         cfg.activeEffectsHudEnabled = true;
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
+        cfg.chinaHatEnabled = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1291,4 +1294,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
+                          }
