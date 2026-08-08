@@ -50,6 +50,7 @@ public class ConfigScreen extends Screen {
     private int sidebarW;
     private int headerH;
     private int contentX, contentTop, contentBottom, contentW;
+    private int scrollUpX, scrollUpY, scrollDownX, scrollDownY, scrollArrowSize = 22;
     private int cardW, cardH, colGap, rowGap;
     private int skinPanelW, skinPanelH, skinPanelX, skinPanelY;
     private int closeX, closeY, closeW, closeH;
@@ -597,6 +598,16 @@ public class ConfigScreen extends Screen {
 
         renderSkinPanel(context);
 
+        scrollDownX = contentX + contentW - scrollArrowSize;
+        scrollDownY = contentBottom - scrollArrowSize;
+        scrollUpX = scrollDownX;
+        scrollUpY = scrollDownY - scrollArrowSize - 6;
+
+        if (maxScroll > 0) {
+            drawHeaderButton(context, scrollUpX, scrollUpY, scrollArrowSize, scrollArrowSize, "\u25B2", mouseX, mouseY);
+            drawHeaderButton(context, scrollDownX, scrollDownY, scrollArrowSize, scrollArrowSize, "\u25BC", mouseX, mouseY);
+        }
+
         super.render(context, mouseX, mouseY, delta);
     }
 
@@ -672,6 +683,14 @@ public class ConfigScreen extends Screen {
         if (inside(langX, langY, langW, langH, mouseX, mouseY)) {
             cfg.russianLanguage = !cfg.russianLanguage;
             cfg.save();
+            return true;
+        }
+        if (maxScroll > 0 && inside(scrollUpX, scrollUpY, scrollArrowSize, scrollArrowSize, mouseX, mouseY)) {
+            scrollOffset = Math.max(0, scrollOffset - 60);
+            return true;
+        }
+        if (maxScroll > 0 && inside(scrollDownX, scrollDownY, scrollArrowSize, scrollArrowSize, mouseX, mouseY)) {
+            scrollOffset = Math.min(maxScroll, scrollOffset + 60);
             return true;
         }
         if (currentCategory == 2 && inside(addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, mouseX, mouseY)) {
@@ -1294,4 +1313,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                          }
+            }
