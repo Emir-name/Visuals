@@ -38,7 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"COMBAT FX", "COMBAT+", "HUD INFO", "HUD STATS", "HUD EXTRA", "ENVIRONMENT", "COSMETIC", "STYLE", "SOUND", "THEME", "SKINS", "FRIENDS", "MARKERS"};
+    private static final String[] CATEGORY_NAMES = {"VISUALS", "HUD", "UTILITIES", "MARKERS", "CONFIGS", "SKINS"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -172,7 +172,7 @@ public class ConfigScreen extends Screen {
         addFriendField.setMaxLength(16);
         addFriendField.setPlaceholder(Text.literal(Lang.t("Nickname")));
         addDrawableChild(addFriendField);
-        addFriendField.setVisible(currentCategory == 11);
+        addFriendField.setVisible(currentCategory == 2);
 
         int focusFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
         focusTargetField = new TextFieldWidget(this.textRenderer, contentX, focusFieldY, contentW, 18, Text.literal(""));
@@ -184,7 +184,7 @@ public class ConfigScreen extends Screen {
             cfg.save();
         });
         addDrawableChild(focusTargetField);
-        focusTargetField.setVisible(currentCategory == 2);
+        focusTargetField.setVisible(currentCategory == 1);
 
         int markerFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
         markerCoordsField = new TextFieldWidget(this.textRenderer, contentX, markerFieldY, contentW, 18, Text.literal(""));
@@ -201,7 +201,7 @@ public class ConfigScreen extends Screen {
             }
         });
         addDrawableChild(markerCoordsField);
-        markerCoordsField.setVisible(currentCategory == 12);
+        markerCoordsField.setVisible(currentCategory == 3);
 
         // Invisible 0-size field used only to summon the on-screen/mobile keyboard when
         // rebinding a feature's keybind - focusing any text field is what triggers the IME
@@ -230,14 +230,13 @@ public class ConfigScreen extends Screen {
         cycles.clear();
 
         if (currentCategory == 0) {
-            addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
+            // VISUALS: combat FX + combat+ + cosmetic + environment
             addToggle("Hit Particles", () -> cfg.hitParticlesEnabled, v -> cfg.hitParticlesEnabled = v);
             addToggle("Damage Numbers", () -> cfg.damageNumbersEnabled, v -> cfg.damageNumbersEnabled = v);
             addToggle("Critical Flash", () -> cfg.criticalFlashEnabled, v -> cfg.criticalFlashEnabled = v);
             addToggle("Hitmarker Flash", () -> cfg.hitmarkerEnabled, v -> cfg.hitmarkerEnabled = v);
             addToggle("Damage Flash", () -> cfg.damageFlashEnabled, v -> cfg.damageFlashEnabled = v);
             addToggle("Impact Punch", () -> cfg.hitImpactPunchEnabled, v -> cfg.hitImpactPunchEnabled = v);
-        } else if (currentCategory == 1) {
             addToggle("Trajectory Predict", () -> cfg.trajectoryPredictionEnabled, v -> cfg.trajectoryPredictionEnabled = v);
             addToggle("Kill Streak", () -> cfg.killStreakEnabled, v -> cfg.killStreakEnabled = v);
             addToggle("Big Kill Burst", () -> cfg.bigKillBurstEnabled, v -> cfg.bigKillBurstEnabled = v);
@@ -245,7 +244,27 @@ public class ConfigScreen extends Screen {
             addToggle("Pulsing Vignette", () -> cfg.pulsingVignetteEnabled, v -> cfg.pulsingVignetteEnabled = v);
             addToggle("Sweep Trail", () -> cfg.sweepTrailEnabled, v -> cfg.sweepTrailEnabled = v);
             addToggle("Heal Flash", () -> cfg.healFlashEnabled, v -> cfg.healFlashEnabled = v);
-        } else if (currentCategory == 2) {
+            addToggle("Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
+            addToggle("Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
+            addToggle("Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
+            addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
+            addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
+            addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
+            addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
+            addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
+            addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
+            addToggle("Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
+            addToggle("Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
+            addToggle("Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
+
+            if (cfg.customHandleEnabled) {
+                sliders.add(new SliderRow("Scale %", 30, 200, cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
+                sliders.add(new SliderRow("Rotate X", 0, 360, cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
+                sliders.add(new SliderRow("Rotate Y", 0, 360, cfg.customHandleRotY, v -> cfg.customHandleRotY = v));
+                sliders.add(new SliderRow("Rotate Z", 0, 360, cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
+            }
+        } else if (currentCategory == 1) {
+            // HUD: hud info + hud stats + hud extra
             addToggle("Target HUD", () -> cfg.targetHudEnabled, v -> cfg.targetHudEnabled = v);
             addToggle("Build Helper", () -> cfg.buildHelperEnabled, v -> cfg.buildHelperEnabled = v);
             addToggle("Jump Ring", () -> cfg.jumpRingEnabled, v -> cfg.jumpRingEnabled = v);
@@ -257,7 +276,6 @@ public class ConfigScreen extends Screen {
             addToggle("Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
             addToggle("K/D Counter", () -> cfg.killDeathCounterEnabled, v -> cfg.killDeathCounterEnabled = v);
             sliders.add(new SliderRow("Target HUD Range", 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
-        } else if (currentCategory == 3) {
             addToggle("Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
             addToggle("Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
             addToggle("Hunger %", () -> cfg.hungerPercentEnabled, v -> cfg.hungerPercentEnabled = v);
@@ -265,7 +283,6 @@ public class ConfigScreen extends Screen {
             addToggle("Armor HUD", () -> cfg.armorHudEnabled, v -> cfg.armorHudEnabled = v);
             addToggle("Biome", () -> cfg.biomeHudEnabled, v -> cfg.biomeHudEnabled = v);
             addToggle("Active Effects", () -> cfg.activeEffectsHudEnabled, v -> cfg.activeEffectsHudEnabled = v);
-        } else if (currentCategory == 4) {
             addToggle("Light Level", () -> cfg.lightLevelHudEnabled, v -> cfg.lightLevelHudEnabled = v);
             addToggle("Held Item Name", () -> cfg.heldItemNameEnabled, v -> cfg.heldItemNameEnabled = v);
             addToggle("Offhand Item Name", () -> cfg.offhandItemNameEnabled, v -> cfg.offhandItemNameEnabled = v);
@@ -273,33 +290,12 @@ public class ConfigScreen extends Screen {
             addToggle("Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
             addToggle("Auto Jump", () -> cfg.autoJumpEnabled, v -> cfg.autoJumpEnabled = v);
             addToggle("Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
-        } else if (currentCategory == 5) {
-            addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
-            addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
-            addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
-            addToggle("Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
-            addToggle("Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
-            addToggle("Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
-        } else if (currentCategory == 6) {
-            addToggle("Custom Handle", () -> cfg.customHandleEnabled, v -> cfg.customHandleEnabled = v);
-            addToggle("Rainbow Theme", () -> cfg.rainbowThemeEnabled, v -> cfg.rainbowThemeEnabled = v);
-            addToggle("Sprint Trail", () -> cfg.sprintTrailEnabled, v -> cfg.sprintTrailEnabled = v);
-            addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
-            addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
-            addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
-
-            if (cfg.customHandleEnabled) {
-                sliders.add(new SliderRow("Scale %", 30, 200, cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
-                sliders.add(new SliderRow("Rotate X", 0, 360, cfg.customHandleRotX, v -> cfg.customHandleRotX = v));
-                sliders.add(new SliderRow("Rotate Y", 0, 360, cfg.customHandleRotY, v -> cfg.customHandleRotY = v));
-                sliders.add(new SliderRow("Rotate Z", 0, 360, cfg.customHandleRotZ, v -> cfg.customHandleRotZ = v));
-            }
-        } else if (currentCategory == 7) {
+        } else if (currentCategory == 2) {
+            // UTILITIES: style + sound + theme + friends
             String[] crosshairNames = {"Off", "Dot", "Cross", "Ring"};
             String[] colorNames = {"Vanilla", "Orange", "Purple", "Blue", "Green", "Red", "Cyan"};
             cycles.add(new CycleRow("Crosshair Style", crosshairNames, () -> cfg.crosshairStyleIndex, v -> cfg.crosshairStyleIndex = v));
             cycles.add(new CycleRow("Hit Particle Color", colorNames, () -> cfg.hitParticleColorIndex, v -> cfg.hitParticleColorIndex = v));
-        } else if (currentCategory == 8) {
             addToggle("Hit Sound", () -> cfg.hitSoundEnabled, v -> cfg.hitSoundEnabled = v);
             addToggle("Crit Sound", () -> cfg.critSoundEnabled, v -> cfg.critSoundEnabled = v);
             addToggle("Kill Sound", () -> cfg.killSoundEnabled, v -> cfg.killSoundEnabled = v);
@@ -307,11 +303,21 @@ public class ConfigScreen extends Screen {
             addToggle("Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
             addToggle("Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
             addToggle("Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
-        } else if (currentCategory == 9) {
             for (int i = 0; i < PALETTE.length; i++) {
                 swatches.add(new SwatchButton(i));
             }
-        } else if (currentCategory == 10) {
+            addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
+            friendEntries.clear();
+            for (String name : cfg.friendsList) {
+                friendEntries.add(new FriendEntry(name));
+            }
+            FriendsNetwork.refreshFriends();
+            lastFriendsRefreshNanos = System.nanoTime();
+        } else if (currentCategory == 3) {
+            addToggle("Marker Enabled", () -> cfg.markerEnabled, v -> cfg.markerEnabled = v);
+        } else if (currentCategory == 4) {
+            addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
+        } else if (currentCategory == 5) {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
             cycles.add(new CycleRow("Skin (self-view only)", skinNames, () -> cfg.selectedSkinIndex, v -> cfg.selectedSkinIndex = v));
@@ -324,29 +330,19 @@ public class ConfigScreen extends Screen {
 
             String[] armModelNames = {"Default", "Slim (Alex)", "Classic (Steve)"};
             cycles.add(new CycleRow("Arm Model (self-view only)", armModelNames, () -> cfg.armModelIndex, v -> cfg.armModelIndex = v));
-        } else if (currentCategory == 11) {
-            addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
-            friendEntries.clear();
-            for (String name : cfg.friendsList) {
-                friendEntries.add(new FriendEntry(name));
-            }
-            FriendsNetwork.refreshFriends();
-            lastFriendsRefreshNanos = System.nanoTime();
-        } else if (currentCategory == 12) {
-            addToggle("Marker Enabled", () -> cfg.markerEnabled, v -> cfg.markerEnabled = v);
         }
 
         if (addFriendField != null) {
-            addFriendField.setVisible(currentCategory == 11);
+            addFriendField.setVisible(currentCategory == 2);
         }
         if (focusTargetField != null) {
-            focusTargetField.setVisible(currentCategory == 2);
+            focusTargetField.setVisible(currentCategory == 1);
             if (!focusTargetField.getText().equals(cfg.focusTargetName)) {
                 focusTargetField.setText(cfg.focusTargetName);
             }
         }
         if (markerCoordsField != null) {
-            markerCoordsField.setVisible(currentCategory == 12);
+            markerCoordsField.setVisible(currentCategory == 3);
         }
     }
 
@@ -477,7 +473,7 @@ public class ConfigScreen extends Screen {
         drawHeaderButton(context, langX, langY, langW, langH, cfg.russianLanguage ? "RU" : "EN", mouseX, mouseY);
 
         effContentTop = contentTop;
-        if (currentCategory == 11) {
+        if (currentCategory == 2) {
             effContentTop = contentTop + FRIENDS_HEADER_H;
             drawHeaderButton(context, addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, "Add", mouseX, mouseY);
 
@@ -485,9 +481,9 @@ public class ConfigScreen extends Screen {
                 FriendsNetwork.refreshFriends();
                 lastFriendsRefreshNanos = nowNanos;
             }
-        } else if (currentCategory == 2) {
+        } else if (currentCategory == 1) {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
-        } else if (currentCategory == 12) {
+        } else if (currentCategory == 3) {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
         }
 
@@ -541,7 +537,7 @@ public class ConfigScreen extends Screen {
         }
 
         placedFriends.clear();
-        if (currentCategory == 11) {
+        if (currentCategory == 2) {
             for (FriendEntry fe : friendEntries) {
                 placedFriends.add(new Placed<>(fe, contentX, y, contentW, FRIEND_ROW_H));
                 y += FRIEND_ROW_H + 6;
@@ -577,7 +573,7 @@ public class ConfigScreen extends Screen {
         for (Placed<FriendEntry> p : placedFriends) {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
         }
-        if (currentCategory == 11 && friendEntries.isEmpty()) {
+        if (currentCategory == 2 && friendEntries.isEmpty()) {
             String hint = Lang.t("No friends added yet");
             context.drawText(this.textRenderer, hint, contentX, effContentTop + 6, TEXT_DIM, false);
         }
@@ -677,7 +673,7 @@ public class ConfigScreen extends Screen {
             cfg.save();
             return true;
         }
-        if (currentCategory == 11 && inside(addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, mouseX, mouseY)) {
+        if (currentCategory == 2 && inside(addFriendBtnX, addFriendBtnY, addFriendBtnW, addFriendBtnH, mouseX, mouseY)) {
             addFriend();
             return true;
         }
@@ -841,7 +837,7 @@ public class ConfigScreen extends Screen {
             return true;
         }
 
-        if (currentCategory == 11 && addFriendField.isFocused()
+        if (currentCategory == 2 && addFriendField.isFocused()
                 && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
             addFriend();
             return true;
