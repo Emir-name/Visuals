@@ -21,6 +21,7 @@ public class ChinaHatRenderer {
     private static final int SEGMENTS = 14;
     private static final float RADIUS = 0.38f;
     private static final float HEIGHT = 0.42f;
+    private static final java.util.Set<String> notifiedHats = new java.util.HashSet<>();
 
     public static void render(WorldRenderContext context) {
         MinecraftClient client = MinecraftClient.getInstance();
@@ -35,7 +36,15 @@ public class ChinaHatRenderer {
 
         for (AbstractClientPlayerEntity player : client.world.getPlayers()) {
             String name = player.getGameProfile().getName();
-            if (!FirebasePresence.hasChinaHat(name)) continue;
+            if (!FirebasePresence.hasChinaHat(name)) {
+                notifiedHats.remove(name.toLowerCase());
+                continue;
+            }
+
+            if (notifiedHats.add(name.toLowerCase())) {
+                client.player.sendMessage(net.minecraft.text.Text.literal(
+                        "\u00A7d[Impact Visuals] \u00A7fChina Hat visible on \u00A7e" + name), false);
+            }
 
             double baseX = player.getX();
             double baseZ = player.getZ();
@@ -95,4 +104,3 @@ public class ChinaHatRenderer {
         buffer.vertex(entry.getPositionMatrix(), x2, y2, z2).color(r, g, b, a).normal(entry, dx, dy, dz);
     }
 }
-
