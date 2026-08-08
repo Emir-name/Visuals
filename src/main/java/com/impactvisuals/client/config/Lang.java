@@ -41,6 +41,7 @@ public class Lang {
         RU.put("Focus Target Highlight", "Подсветка цели по нику");
         RU.put("Focus Target Name", "Ник цели");
         RU.put("Marker Enabled", "Метка включена");
+        RU.put("China Hat", "Китайская шляпа");
         RU.put("X Y Z", "X Y Z");
         RU.put("Target HUD Debug", "Отладка ХАД цели");
         RU.put("Info HUD", "Инфо ХАД");
