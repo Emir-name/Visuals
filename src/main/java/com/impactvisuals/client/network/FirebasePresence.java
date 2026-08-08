@@ -31,9 +31,9 @@ public final class FirebasePresence {
     // Same project as FirebaseJumpSync - keep both in sync if you change one.
     private static final String DATABASE_URL = "https://impact-visual-724a7-default-rtdb.firebaseio.com";
 
-    private static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(20);
-    private static final Duration POLL_INTERVAL = Duration.ofSeconds(15);
-    private static final Duration STALE_AFTER = Duration.ofSeconds(60);
+    private static final Duration HEARTBEAT_INTERVAL = Duration.ofSeconds(8);
+    private static final Duration POLL_INTERVAL = Duration.ofSeconds(6);
+    private static final Duration STALE_AFTER = Duration.ofSeconds(30);
 
     private static final Gson GSON = new Gson();
     private static final HttpClient HTTP = HttpClient.newBuilder()
@@ -76,6 +76,13 @@ public final class FirebasePresence {
         }
         activeServerKey = null;
         activePlayerName = null;
+    }
+
+    /** Sends a heartbeat right now instead of waiting for the next scheduled tick - used when a broadcast cosmetic like the China Hat gets toggled, so it shows up faster. */
+    public static void forceHeartbeat() {
+        if (activeServerKey != null && activePlayerName != null) {
+            sendHeartbeat();
+        }
     }
 
     public static boolean isOnline(String name) {
