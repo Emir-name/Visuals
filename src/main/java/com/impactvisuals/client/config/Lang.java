@@ -42,6 +42,7 @@ public class Lang {
         RU.put("Focus Target Name", "Ник цели");
         RU.put("Marker Enabled", "Метка включена");
         RU.put("China Hat", "Китайская шляпа");
+        RU.put("Screenshot Tool", "Редактор HUD");
         RU.put("X Y Z", "X Y Z");
         RU.put("Target HUD Debug", "Отладка ХАД цели");
         RU.put("Info HUD", "Инфо ХАД");
@@ -160,6 +161,7 @@ public class Lang {
         put(DESC_EN, DESC_RU, "Target HUD", "Info card for the entity under your crosshair", "Карточка с инфо о цели под прицелом");
         put(DESC_EN, DESC_RU, "Build Helper", "Preview outline + distance/coords for block placement", "Превью блока + расстояние/координаты при постройке");
         put(DESC_EN, DESC_RU, "Jump Ring", "Glowing particle ring under you when you jump (local only)", "Светящееся кольцо под ногами при прыжке (только у себя)");
+        put(DESC_EN, DESC_RU, "Screenshot Tool", "Drag HUD cards to reposition them, then Save", "Перетаскивай карточки HUD, потом нажми Save");
         put(DESC_EN, DESC_RU, "Emir Config (enable all)", "Turns on every feature toggle in the mod at once", "Включает разом все настройки мода");
         put(DESC_EN, DESC_RU, "Focus Target Highlight", "Outlines the named player when they're actually visible", "Обводит рамкой указанного игрока, когда он реально виден");
         put(DESC_EN, DESC_RU, "Target HUD Debug", "Dumps nearby entities/nametags to chat for diagnosing wrong HP", "Выводит в чат сущности рядом с целью для диагностики ХП");
