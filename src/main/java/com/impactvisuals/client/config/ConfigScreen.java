@@ -312,6 +312,7 @@ public class ConfigScreen extends Screen {
                 swatches.add(new SwatchButton(i));
             }
             addToggle("Friends Feature", () -> cfg.friendsFeatureEnabled, v -> cfg.friendsFeatureEnabled = v);
+            addToggle("Screenshot Tool", () -> false, v -> MinecraftClient.getInstance().setScreen(new HudEditorScreen(this)));
             friendEntries.clear();
             for (String name : cfg.friendsList) {
                 friendEntries.add(new FriendEntry(name));
