@@ -20,8 +20,8 @@ public class ActiveEffectsHud {
         int lineH = 12;
         int cardW = 160;
         int cardH = 20 + effects.size() * lineH;
-        int x = 6;
-        int y = 60;
+        int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("active_effects");
+        int y = 60 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("active_effects");
 
         HudCard.draw(context, x, y, cardW, cardH);
 
