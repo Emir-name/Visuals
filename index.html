@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impact Visuals — клиентский мод для Minecraft</title>
-<meta name="description" content="Клиентский косметический мод для Minecraft на Fabric: Target HUD, крит-эффекты, Build Helper, кастомные скины и капы. Никаких читов — только визуал.">
-<meta property="og:title" content="Impact Visuals — клиентский мод для Minecraft">
-<meta property="og:description" content="HUD, крит-эффекты, партиклы, кастомные скины и капы для Fabric 1.21.4. Ничего не читерит — только то, что видно на скрине.">
-<meta property="og:type" content="website">
-<meta name="theme-color" content="#0D0A12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D0A12'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23B266FF' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg-void:#0D0A12;
@@ -353,6 +349,35 @@
 
   /* ---------- features ---------- */
   .features{ border-bottom:1px solid var(--border-soft); }
+
+  .live-callout{
+    display:flex; align-items:flex-start; gap:12px;
+    background:linear-gradient(135deg, rgba(178,102,255,0.12), rgba(255,70,85,0.06));
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    padding:16px 20px;
+    margin-bottom:32px;
+  }
+  .live-callout .live-dot{
+    flex:0 0 auto;
+    width:8px; height:8px; border-radius:50%;
+    margin-top:6px;
+    background:var(--accent-crit);
+    box-shadow:0 0 10px var(--accent-crit);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .live-callout p{
+    margin:0; font-size:14px; line-height:1.6; color:var(--text-muted);
+  }
+  .live-callout b{ color:var(--text-primary); }
+
+  .feature-footnote{
+    text-align:center;
+    color:var(--text-muted);
+    font-size:13.5px;
+    margin:28px 0 0;
+  }
+
   .feature-grid{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
@@ -464,6 +489,36 @@
     box-shadow:0 3px 0 rgba(178,102,255,0.25);
   }
 
+  /* Focus Target mini: pulsing corner-bracket reticle */
+  .viz-focus{ width:40px; height:40px; position:relative; }
+  .viz-focus span{
+    position:absolute; width:12px; height:12px;
+    border-color:var(--accent-crit);
+    animation:vizFocusPulse 1.8s ease-in-out infinite;
+  }
+  .viz-focus span:nth-child(1){ top:0; left:0; border-top:2px solid; border-left:2px solid; }
+  .viz-focus span:nth-child(2){ top:0; right:0; border-top:2px solid; border-right:2px solid; }
+  .viz-focus span:nth-child(3){ bottom:0; left:0; border-bottom:2px solid; border-left:2px solid; }
+  .viz-focus span:nth-child(4){ bottom:0; right:0; border-bottom:2px solid; border-right:2px solid; }
+  @keyframes vizFocusPulse{ 0%,100%{ opacity:0.45; } 50%{ opacity:1; } }
+
+  /* Emir Config mini: preset switches lighting up one after another */
+  .viz-preset{ display:flex; gap:6px; align-items:center; }
+  .viz-preset span{
+    width:16px; height:16px; border-radius:5px;
+    background:rgba(255,255,255,0.08);
+    animation:vizPresetOn 2.2s ease-in-out infinite;
+  }
+  .viz-preset span:nth-child(1){ animation-delay:0s; }
+  .viz-preset span:nth-child(2){ animation-delay:.18s; }
+  .viz-preset span:nth-child(3){ animation-delay:.36s; }
+  .viz-preset span:nth-child(4){ animation-delay:.54s; }
+  @keyframes vizPresetOn{
+    0%, 10%{ background:rgba(255,255,255,0.08); box-shadow:none; }
+    25%, 65%{ background:var(--accent-violet); box-shadow:0 0 10px rgba(178,102,255,0.5); }
+    85%,100%{ background:rgba(255,255,255,0.08); box-shadow:none; }
+  }
+
   .feature-card h3{
     font-size:16px; margin:0 0 8px; font-weight:800;
   }
@@ -475,7 +530,7 @@
     .feature-grid{ grid-template-columns:1fr; }
   }
   @media (prefers-reduced-motion: reduce){
-    .viz-combat span, .viz-hud-fill, .viz-build, .viz-ring, .eyebrow .pulse, .hud-preview-label .live-dot{
+    .viz-combat span, .viz-hud-fill, .viz-build, .viz-ring, .viz-focus span, .viz-preset span, .eyebrow .pulse, .hud-preview-label .live-dot, .live-callout .live-dot{
       animation:none !important;
     }
   }
@@ -538,48 +593,6 @@
     .reveal{ opacity:1; transform:none; transition:none; }
   }
 
-  /* ---------- FAQ ---------- */
-  .faq{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:10px; }
-  .faq-item{
-    background:var(--bg-surface);
-    border:1px solid var(--border-soft);
-    border-radius:12px;
-    overflow:hidden;
-  }
-  .faq-item summary{
-    list-style:none;
-    cursor:pointer;
-    padding:17px 20px;
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-    font-weight:700; font-size:14.5px;
-    color:var(--text-primary);
-  }
-  .faq-item summary::-webkit-details-marker{ display:none; }
-  .faq-plus{
-    flex:0 0 auto;
-    width:22px; height:22px; border-radius:6px;
-    background:var(--bg-surface-2);
-    border:1px solid var(--border-soft);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--accent-violet);
-    font-size:15px; font-weight:700;
-    transition:transform .2s ease;
-  }
-  .faq-item[open] .faq-plus{ transform:rotate(45deg); }
-  .faq-item[open] summary{ border-bottom:1px solid var(--border-soft); }
-  .faq-body{
-    padding:2px 20px 18px;
-    color:var(--text-muted);
-    font-size:13.5px; line-height:1.65;
-  }
-  .faq-body code{
-    font-family:'JetBrains Mono', monospace;
-    background:var(--bg-surface-2);
-    border:1px solid var(--border-soft);
-    padding:2px 6px; border-radius:5px;
-    color:var(--accent-violet);
-  }
-
   /* ---------- honesty note ---------- */
   .note{
     border:1px solid var(--border-soft);
@@ -628,7 +641,6 @@
     <div class="nav-links">
       <a href="#features" class="hide-xs">Функции</a>
       <a href="#install" class="hide-xs">Установка</a>
-      <a href="#faq" class="hide-xs">Вопросы</a>
       <a href="https://github.com/Emir-name/Visuals" target="_blank" rel="noopener">GitHub</a>
       <span class="nav-version mono">v1.0.0</span>
     </div>
@@ -645,8 +657,9 @@
       <h1 class="title">IMPACT<br>VISUALS</h1>
 
       <p class="subtitle">
-        Клиентский косметический мод для Minecraft: <b>HUD, крит-эффекты, партиклы, кастомные скины и капы</b>.
-        Ничего не читерит — только то, что видно на скрине.
+        Клиентский мод для Minecraft, который вырос из HUD-эффектов в целый пульт управления твоей игрой:
+        <b>боевой HUD, координатные метки, пресеты настроек, кастомные скины</b> — и пара косметик,
+        которые видят другие игроки с этим же модом.
       </p>
 
       <div class="cta-row">
@@ -692,38 +705,45 @@
       <p class="section-sub">Всё, что делает мод, видно только на экране — никаких преимуществ в игре, никаких пакетов чужим клиентам.</p>
     </div>
 
+    <div class="live-callout reveal">
+      <span class="live-dot"></span>
+      <p><b>Jump Ring</b> и <b>China Hat</b> — единственные две фичи, которые реально видны <b>другим</b> игрокам с Impact Visuals рядом. Всё остальное — только у тебя на экране.</p>
+    </div>
+
     <div class="feature-grid">
       <div class="feature-card reveal">
         <div class="feature-visual viz-combat"><span>-12</span><span>CRIT</span><span>-7</span></div>
-        <h3>Combat FX</h3>
-        <p>Всплывающие цифры урона, вспышка на крите, килл-стрики, лазер на добивании.</p>
+        <h3>Visuals</h3>
+        <p>Цифры урона, крит-вспышка, килл-стрики и лазер на добивании, голограмма блока перед постройкой, Jump Ring и China Hat — видны другим IV-игрокам.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-visual viz-hud"><div class="viz-hud-icon"></div><div class="viz-hud-track"><div class="viz-hud-fill"></div></div></div>
-        <h3>Target HUD</h3>
-        <p>Карточка цели под прицелом: ник, ХП в реальном времени, броня с прочностью.</p>
+        <h3>HUD</h3>
+        <p>Карточка цели под прицелом с ХП и бронёй в реальном времени, компас, координаты, счётчик K/D и подсветка выбранного игрока по нику.</p>
       </div>
       <div class="feature-card reveal">
-        <div class="feature-visual"><div class="viz-build"></div></div>
-        <h3>Build Helper</h3>
-        <p>Голограмма блока перед установкой — с правильной ориентацией лестниц и шалкеров.</p>
+        <div class="feature-visual viz-key">V</div>
+        <h3>Utilities</h3>
+        <p>Стиль прицела, звуки на крит/килл/удар, цветовые темы и список друзей — всё, что настраивает ощущение игры под себя.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-visual viz-focus"><span></span><span></span><span></span><span></span></div>
+        <h3>Markers</h3>
+        <p>Ставишь координаты — на точке появляется рамка в мире и расстояние до неё на HUD. Свой личный вейпоинт, без сервера.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-visual viz-preset"><span></span><span></span><span></span><span></span></div>
+        <h3>Configs</h3>
+        <p>Пресет "Emir Config" включает разом всё нужное — не нужно щёлкать каждый тумблер вручную после переустановки.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-visual viz-skins"><span></span><span></span><span></span><span></span></div>
-        <h3>Skins &amp; Capes</h3>
-        <p>Локальные пресеты скина и плаща — видно только тебе, ни на что не влияет.</p>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-visual"><div class="viz-ring"></div></div>
-        <h3>Jump Ring</h3>
-        <p>Светящееся кольцо под ногами при прыжке — своё, и видно другим IV-игрокам онлайн.</p>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-visual"><div class="viz-key">V</div></div>
-        <h3>Кастомные бинды</h3>
-        <p>Любой тумблер можно повесить на свою клавишу прямо в меню настроек.</p>
+        <h3>Skins</h3>
+        <p>Локальные пресеты скина, плаща, элитр и модели рук (Alex/Steve) — видно только тебе, ни на что не влияет.</p>
       </div>
     </div>
+
+    <p class="feature-footnote reveal">Плюс — любой тумблер в настройках можно повесить на свою клавишу и переключать прямо в игре, без открытия меню.</p>
   </div>
 </section>
 
@@ -771,39 +791,6 @@
         <strong>Текущая версия: v1.0.0</strong> — файл <code>impactvisuals-1_0_0.jar</code>
         лежит прямо рядом со страницей. При обновлении мода просто замени файл в репозитории на новую версию с тем же именем ссылки — или поменяй имя файла и в кнопке выше.
       </p>
-    </div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <div class="section-label">Вопросы</div>
-      <h2>Перед установкой</h2>
-      <p class="section-sub">То, что чаще всего спрашивают в issues и в комментариях.</p>
-    </div>
-
-    <div class="faq">
-      <details class="faq-item reveal">
-        <summary>Забанят ли меня на сервере с античитом?<span class="faq-plus">+</span></summary>
-        <div class="faq-body">Мод не даёт игровых преимуществ — он ничего не меняет в логике игры, только в отрисовке на твоём экране. Большинство серверов такое не банят, но решение всегда за администрацией конкретного сервера, особенно если там есть жёсткий список разрешённых модов.</div>
-      </details>
-      <details class="faq-item reveal">
-        <summary>Нужен ли этот мод остальным игрокам на сервере?<span class="faq-plus">+</span></summary>
-        <div class="faq-body">Нет. Target HUD, Combat FX и Build Helper — чисто клиентские, работают независимо от того, что стоит у других. Исключение — Jump Ring: его увидят только те, у кого тоже установлен Impact Visuals.</div>
-      </details>
-      <details class="faq-item reveal">
-        <summary>Совместим с OptiFine или Sodium?<span class="faq-plus">+</span></summary>
-        <div class="faq-body">Официально тестировался только в связке Fabric + Fabric API без дополнительных рендер-модов. С Sodium может работать, но совместимость не гарантирована — сообщи в issues, если словишь конфликт.</div>
-      </details>
-      <details class="faq-item reveal">
-        <summary>Будет ли версия для Forge или NeoForge?<span class="faq-plus">+</span></summary>
-        <div class="faq-body">Пока нет — сейчас весь код завязан на Fabric API. Возможно появится позже, если будет спрос.</div>
-      </details>
-      <details class="faq-item reveal">
-        <summary>Нашёл баг — куда писать?<span class="faq-plus">+</span></summary>
-        <div class="faq-body">В Issues репозитория на GitHub — ссылка внизу страницы. Чем точнее шаги воспроизведения и версия Minecraft, тем быстрее разберёмся.</div>
-      </details>
     </div>
   </div>
 </section>
