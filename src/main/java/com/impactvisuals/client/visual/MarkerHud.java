@@ -64,8 +64,8 @@ public class MarkerHud {
 
         int cardW = 130;
         int cardH = 34;
-        int x = screenW / 2 - cardW / 2;
-        int y = 10;
+        int x = screenW / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("marker_hud");
+        int y = 10 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("marker_hud");
 
         HudCard.draw(context, x, y, cardW, cardH);
         context.drawCenteredTextWithShadow(client.textRenderer, line1, x + cardW / 2, y + 6, 0xFFFFD633);
@@ -98,4 +98,3 @@ public class MarkerHud {
         }
     }
 }
-
