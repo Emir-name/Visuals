@@ -61,6 +61,13 @@ public class HudEditorScreen extends Screen {
             case "target_hud" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 - 70};
             case "marker_hud" -> new int[]{this.width / 2 - boxW / 2, 10};
             case "active_effects" -> new int[]{6, 60};
+            case "info_hud" -> new int[]{this.width - boxW - 6, 6};
+            case "stats_hud" -> new int[]{6, 6};
+            case "durability_hud" -> new int[]{this.width / 2 - boxW / 2, this.height - 58};
+            case "extra_hud" -> new int[]{6, this.height - 30};
+            case "better_near" -> new int[]{this.width - boxW - 6, this.height - boxH - 30};
+            case "cooldown_indicator" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 + 12};
+            case "build_helper_hud" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 + 20};
             default -> new int[]{this.width / 2 - boxW / 2, this.height / 2 - boxH / 2};
         };
     }
@@ -105,6 +112,13 @@ public class HudEditorScreen extends Screen {
             case "target_hud" -> "Target HUD";
             case "marker_hud" -> "Marker HUD";
             case "active_effects" -> "Active Effects";
+            case "info_hud" -> "Info HUD";
+            case "stats_hud" -> "Coords/Compass/Timer";
+            case "durability_hud" -> "Durability %";
+            case "extra_hud" -> "Extra HUD";
+            case "better_near" -> "Better Near";
+            case "cooldown_indicator" -> "Cooldown";
+            case "build_helper_hud" -> "Build Helper";
             default -> id;
         };
     }
