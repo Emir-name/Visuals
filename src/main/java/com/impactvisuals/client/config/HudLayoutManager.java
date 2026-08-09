@@ -39,7 +39,7 @@ public final class HudLayoutManager {
     /** Registered HUD elements the editor screen knows how to show/drag, with a human label and default box size for the editor preview. */
     public static final Map<String, int[]> EDITABLE_HUDS = Map.of(
             "target_hud", new int[]{130, 70},
-            "marker_hud", new int[]{130, 34}
+            "marker_hud", new int[]{130, 34},
+            "active_effects", new int[]{160, 40}
     );
 }
-
