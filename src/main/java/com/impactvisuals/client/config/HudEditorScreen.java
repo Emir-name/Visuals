@@ -60,6 +60,7 @@ public class HudEditorScreen extends Screen {
         return switch (id) {
             case "target_hud" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 - 70};
             case "marker_hud" -> new int[]{this.width / 2 - boxW / 2, 10};
+            case "active_effects" -> new int[]{6, 60};
             default -> new int[]{this.width / 2 - boxW / 2, this.height / 2 - boxH / 2};
         };
     }
@@ -103,6 +104,7 @@ public class HudEditorScreen extends Screen {
         return switch (id) {
             case "target_hud" -> "Target HUD";
             case "marker_hud" -> "Marker HUD";
+            case "active_effects" -> "Active Effects";
             default -> id;
         };
     }
@@ -154,4 +156,3 @@ public class HudEditorScreen extends Screen {
         return false;
     }
 }
-
