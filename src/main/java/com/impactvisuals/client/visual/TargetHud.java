@@ -42,8 +42,8 @@ public class TargetHud {
 
         int cardW = 130;
         int cardH = 70;
-        int cardX = screenWidth / 2 - cardW / 2;
-        int cardY = screenHeight / 2 - 70;
+        int cardX = screenWidth / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("target_hud");
+        int cardY = screenHeight / 2 - 70 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("target_hud");
 
         HudCard.draw(context, cardX, cardY, cardW, cardH);
 
