@@ -61,8 +61,8 @@ public class InfoHud {
         int boxH = textRenderer.fontHeight + padY * 2;
 
         int screenWidth = context.getScaledWindowWidth();
-        int x = screenWidth - boxW - 6;
-        int y = 6;
+        int x = screenWidth - boxW - 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("info_hud");
+        int y = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("info_hud");
 
         lastX = x;
         lastY = y;
