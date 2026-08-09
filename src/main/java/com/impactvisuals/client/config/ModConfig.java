@@ -22,6 +22,8 @@ public class ModConfig {
     public boolean targetHudEnabled = true;
     public boolean markerEnabled = false;
     public boolean chinaHatEnabled = false;
+    public java.util.Map<String, Integer> hudOffsetX = new java.util.HashMap<>();
+    public java.util.Map<String, Integer> hudOffsetY = new java.util.HashMap<>();
     public int markerX = 0;
     public int markerY = 64;
     public int markerZ = 0;
