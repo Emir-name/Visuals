@@ -40,6 +40,13 @@ public final class HudLayoutManager {
     public static final Map<String, int[]> EDITABLE_HUDS = Map.of(
             "target_hud", new int[]{130, 70},
             "marker_hud", new int[]{130, 34},
-            "active_effects", new int[]{160, 40}
+            "active_effects", new int[]{160, 40},
+            "info_hud", new int[]{110, 30},
+            "stats_hud", new int[]{140, 32},
+            "durability_hud", new int[]{60, 12},
+            "extra_hud", new int[]{160, 24},
+            "better_near", new int[]{150, 90},
+            "cooldown_indicator", new int[]{60, 14},
+            "build_helper_hud", new int[]{90, 40}
     );
 }
