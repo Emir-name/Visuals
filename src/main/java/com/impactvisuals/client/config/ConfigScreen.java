@@ -598,7 +598,7 @@ public class ConfigScreen extends Screen {
 
         renderSkinPanel(context);
 
-        scrollDownX = skinPanelX - scrollArrowSize - 8;
+        scrollDownX = this.width - scrollArrowSize - 10;
         scrollDownY = contentBottom - scrollArrowSize;
         scrollUpX = scrollDownX;
         scrollUpY = scrollDownY - scrollArrowSize - 6;
@@ -1313,4 +1313,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-    }
+                             }
