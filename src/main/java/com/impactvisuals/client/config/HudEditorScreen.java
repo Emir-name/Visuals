@@ -23,6 +23,7 @@ public class HudEditorScreen extends Screen {
     private String draggingId = null;
     private int dragStartMouseX, dragStartMouseY;
     private int dragStartOffsetX, dragStartOffsetY;
+    private int previousBlurriness = 0;
 
     public HudEditorScreen(Screen parent) {
         super(Text.literal("HUD Editor"));
@@ -31,6 +32,10 @@ public class HudEditorScreen extends Screen {
 
     @Override
     protected void init() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        previousBlurriness = client.options.getMenuBackgroundBlurriness().getValue();
+        client.options.getMenuBackgroundBlurriness().setValue(0);
+
         for (String id : HudLayoutManager.EDITABLE_HUDS.keySet()) {
             workingOffsets.put(id, new int[]{HudLayoutManager.getOffsetX(id), HudLayoutManager.getOffsetY(id)});
         }
@@ -42,7 +47,12 @@ public class HudEditorScreen extends Screen {
                 .dimensions(this.width / 2 + 6, this.height - 32, btnW, btnH).build());
     }
 
+    private void restoreBlur() {
+        MinecraftClient.getInstance().options.getMenuBackgroundBlurriness().setValue(previousBlurriness);
+    }
+
     private void onExit() {
+        restoreBlur();
         MinecraftClient.getInstance().setScreen(parent);
     }
 
@@ -51,6 +61,7 @@ public class HudEditorScreen extends Screen {
             HudLayoutManager.setOffset(e.getKey(), e.getValue()[0], e.getValue()[1]);
         }
         HudLayoutManager.save();
+        restoreBlur();
         MinecraftClient.getInstance().setScreen(parent);
     }
 
@@ -74,7 +85,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.fill(0, 0, this.width, this.height, 0xC0000000);
+        context.fill(0, 0, this.width, this.height, 0x70000000);
 
         context.drawCenteredTextWithShadow(this.textRenderer, "Перетащи карточки, потом Save", this.width / 2, 14, 0xFFFFFFFF);
 
