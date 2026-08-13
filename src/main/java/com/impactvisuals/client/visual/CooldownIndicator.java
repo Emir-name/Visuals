@@ -26,14 +26,16 @@ public class CooldownIndicator {
 
         int width = 20;
         int height = 3;
-        int x = cx - width / 2;
-        int y = cy + 12;
+        int x = cx - width / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("cooldown_indicator");
+        int y = cy + 12 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("cooldown_indicator");
 
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "cooldown_indicator", x, y);
         context.fill(x, y, x + width, y + height, 0x99000000);
 
         int filledW = Math.round(width * progress);
         int color = interpolateColor(progress);
         context.fill(x, y, x + filledW, y + height, color);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static int interpolateColor(float progress) {
