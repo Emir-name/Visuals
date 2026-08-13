@@ -66,10 +66,12 @@ public class MarkerHud {
         int cardH = 34;
         int x = screenW / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("marker_hud");
         int y = 10 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("marker_hud");
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "marker_hud", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
         context.drawCenteredTextWithShadow(client.textRenderer, line1, x + cardW / 2, y + 6, 0xFFFFD633);
         context.drawCenteredTextWithShadow(client.textRenderer, line2, x + cardW / 2, y + 18, 0xFFAAAAAA);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static void drawBoxOutline(MatrixStack matrices, VertexConsumer buffer,
