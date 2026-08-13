@@ -163,14 +163,16 @@ public class BuildHelperHud {
 
         int cardW = 90;
         int cardH = 40;
-        int x = screenW / 2 - cardW / 2;
-        int y = screenH / 2 + 20;
+        int x = screenW / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("build_helper_hud");
+        int y = screenH / 2 + 20 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("build_helper_hud");
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "build_helper_hud", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
 
         context.drawCenteredTextWithShadow(client.textRenderer, line1, x + cardW / 2, y + 5, 0xFFB266FF);
         context.drawCenteredTextWithShadow(client.textRenderer, line2, x + cardW / 2, y + 16, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(client.textRenderer, line3, x + cardW / 2, y + 27, 0xFFAAAAAA);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static BlockPos getPlacementPos(BlockHitResult hit, net.minecraft.world.World world) {
