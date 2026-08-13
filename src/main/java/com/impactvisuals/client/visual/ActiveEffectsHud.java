@@ -22,6 +22,7 @@ public class ActiveEffectsHud {
         int cardH = 20 + effects.size() * lineH;
         int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("active_effects");
         int y = 60 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("active_effects");
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "active_effects", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
 
@@ -48,6 +49,7 @@ public class ActiveEffectsHud {
 
             textY += lineH;
         }
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static String formatDuration(int ticks) {
