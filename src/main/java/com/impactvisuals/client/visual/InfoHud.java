@@ -69,6 +69,8 @@ public class InfoHud {
         lastW = boxW;
         lastH = boxH;
 
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "info_hud", x, y);
+
         HudCard.draw(context, x, y, boxW, boxH);
 
         int textY = y + padY;
@@ -90,6 +92,7 @@ public class InfoHud {
         cursorX += sepW;
 
         context.drawText(textRenderer, msText, cursorX, textY, MS_COLOR, false);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static int fpsColor(int fps) {
