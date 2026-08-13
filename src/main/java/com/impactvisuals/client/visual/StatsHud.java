@@ -22,9 +22,14 @@ public class StatsHud {
         if (client.player == null) return;
         ModConfig cfg = ModConfig.get();
 
-        int x = 6;
-        int y = 6;
+        int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("stats_hud");
+        int y = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("stats_hud");
         int lineHeight = 10;
+
+        boolean anyStatsShown = cfg.coordinatesHudEnabled || cfg.compassHudEnabled || cfg.sessionTimerEnabled;
+        if (anyStatsShown) {
+            com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "stats_hud", x, y);
+        }
 
         if (cfg.coordinatesHudEnabled) {
             var pos = client.player.getPos();
@@ -50,6 +55,10 @@ public class StatsHud {
             context.drawText(client.textRenderer, text, x, y, 0xFFFFFFFF, true);
         }
 
+        if (anyStatsShown) {
+            com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
+        }
+
         if (cfg.durabilityHudEnabled) {
             renderDurability(context, client);
         }
@@ -71,7 +80,12 @@ public class StatsHud {
         int screenHeight = context.getScaledWindowHeight();
         int textWidth = client.textRenderer.getWidth(text);
 
-        context.drawText(client.textRenderer, text, (screenWidth - textWidth) / 2, screenHeight - 58, color, true);
+        int dx = (screenWidth - textWidth) / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("durability_hud");
+        int dy = screenHeight - 58 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("durability_hud");
+
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "durability_hud", dx, dy);
+        context.drawText(client.textRenderer, text, dx, dy, color, true);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static String cardinalDirection(float yaw) {
