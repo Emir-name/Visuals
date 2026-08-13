@@ -44,6 +44,7 @@ public class TargetHud {
         int cardH = 70;
         int cardX = screenWidth / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("target_hud");
         int cardY = screenHeight / 2 - 70 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("target_hud");
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "target_hud", cardX, cardY);
 
         HudCard.draw(context, cardX, cardY, cardW, cardH);
 
@@ -112,6 +113,7 @@ public class TargetHud {
 
         context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x66000000);
         context.fill(barX, barY, barX + Math.round(barWidth * pct), barY + barHeight, 0xFFB266FF);
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static float[] parseRatioFromText(String raw) {
