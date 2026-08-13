@@ -38,8 +38,9 @@ public class BetterNearHud {
 
         int screenW = context.getScaledWindowWidth();
         int screenH = context.getScaledWindowHeight();
-        int x = screenW - cardW - 6;
-        int y = screenH - cardH - 30;
+        int x = screenW - cardW - 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("better_near");
+        int y = screenH - cardH - 30 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("better_near");
+        com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "better_near", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
 
@@ -72,6 +73,7 @@ public class BetterNearHud {
 
             textY += lineH;
         }
+        com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 
     private static String getRelativeArrow(PlayerEntity self, PlayerEntity other) {
