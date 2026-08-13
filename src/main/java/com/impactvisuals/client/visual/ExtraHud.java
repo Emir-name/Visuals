@@ -27,8 +27,14 @@ public class ExtraHud {
         int screenH = context.getScaledWindowHeight();
         int line = 10;
 
-        int y = screenH - 30;
-        int x = 6;
+        int y = screenH - 30 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("extra_hud");
+        int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("extra_hud");
+
+        boolean anyLeftShown = cfg.sprintIndicatorEnabled || cfg.healthPercentEnabled || cfg.hungerPercentEnabled
+                || cfg.xpPercentEnabled || cfg.armorHudEnabled || cfg.biomeHudEnabled;
+        if (anyLeftShown) {
+            com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "extra_hud", x, y);
+        }
 
         if (cfg.sprintIndicatorEnabled) {
             String text = client.player.isSprinting() ? "Sprinting" : "Walking";
@@ -61,6 +67,10 @@ public class ExtraHud {
             String biomeName = biomeEntry.getKey().map(k -> k.getValue().getPath()).orElse("unknown");
             context.drawText(client.textRenderer, "Biome: " + biomeName, x, y, 0xFFFFFFFF, true);
             y -= line;
+        }
+
+        if (anyLeftShown) {
+            com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
         }
 
         int yr = screenH - 30;
