@@ -26,6 +26,36 @@ public final class HudLayoutManager {
         cfg.hudOffsetY.put(id, y);
     }
 
+    public static float getScale(String id) {
+        return ModConfig.get().hudScale.getOrDefault(id, 1.0f);
+    }
+
+    public static void setScale(String id, float scale) {
+        ModConfig.get().hudScale.put(id, scale);
+    }
+
+    public static void resetAll() {
+        ModConfig cfg = ModConfig.get();
+        cfg.hudOffsetX.clear();
+        cfg.hudOffsetY.clear();
+        cfg.hudScale.clear();
+    }
+
+    /** Wraps a HUD's draw calls so its saved position offset AND scale apply, scaled around (anchorX, anchorY). Always pair with popTransform. */
+    public static void pushTransform(net.minecraft.client.gui.DrawContext context, String id, int anchorX, int anchorY) {
+        float scale = getScale(id);
+        context.getMatrices().push();
+        if (scale != 1.0f) {
+            context.getMatrices().translate(anchorX, anchorY, 0);
+            context.getMatrices().scale(scale, scale, 1f);
+            context.getMatrices().translate(-anchorX, -anchorY, 0);
+        }
+    }
+
+    public static void popTransform(net.minecraft.client.gui.DrawContext context) {
+        context.getMatrices().pop();
+    }
+
     public static void resetOffset(String id) {
         ModConfig cfg = ModConfig.get();
         cfg.hudOffsetX.remove(id);
