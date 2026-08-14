@@ -21,7 +21,7 @@ public class ModConfig {
     public boolean hitParticlesEnabled = true;
     public boolean targetHudEnabled = true;
     public boolean markerEnabled = false;
-    public boolean chinaHatEnabled = false;
+    public int hatIndex = 0;
     public java.util.Map<String, Integer> hudOffsetX = new java.util.HashMap<>();
     public java.util.Map<String, Integer> hudOffsetY = new java.util.HashMap<>();
     public java.util.Map<String, Float> hudScale = new java.util.HashMap<>();
