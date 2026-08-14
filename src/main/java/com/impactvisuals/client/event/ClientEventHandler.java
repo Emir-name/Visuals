@@ -81,7 +81,7 @@ public final class ClientEventHandler {
             com.impactvisuals.client.visual.BuildHelperHud.renderWorld(context);
             com.impactvisuals.client.visual.FocusTargetHighlight.render(context);
             com.impactvisuals.client.visual.MarkerHud.renderWorld(context);
-            com.impactvisuals.client.visual.ChinaHatRenderer.render(context);
+            com.impactvisuals.client.visual.HatRenderer.render(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
