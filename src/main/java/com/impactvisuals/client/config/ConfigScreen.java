@@ -251,10 +251,6 @@ public class ConfigScreen extends Screen {
             addToggle("Footstep Dust", () -> cfg.footstepDustEnabled, v -> cfg.footstepDustEnabled = v);
             addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
             addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
-            addToggle("China Hat", () -> cfg.chinaHatEnabled, v -> {
-                cfg.chinaHatEnabled = v;
-                com.impactvisuals.client.network.FirebasePresence.forceHeartbeat();
-            });
             addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
             addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
             addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
@@ -336,6 +332,12 @@ public class ConfigScreen extends Screen {
 
             String[] armModelNames = {"Default", "Slim (Alex)", "Classic (Steve)"};
             cycles.add(new CycleRow("Arm Model (self-view only)", armModelNames, () -> cfg.armModelIndex, v -> cfg.armModelIndex = v));
+
+            String[] hatNames = {"None", "China Hat", "Ushanka", "Cap"};
+            cycles.add(new CycleRow("Hat (visible to other IV players)", hatNames, () -> cfg.hatIndex, v -> {
+                cfg.hatIndex = v;
+                com.impactvisuals.client.network.FirebasePresence.forceHeartbeat();
+            }));
         }
 
         if (addFriendField != null) {
@@ -960,7 +962,7 @@ public class ConfigScreen extends Screen {
         cfg.targetHudRangeBlocks = 6;
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
-        cfg.chinaHatEnabled = false;
+        cfg.hatIndex = 0;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1048,7 +1050,7 @@ public class ConfigScreen extends Screen {
         cfg.activeEffectsHudEnabled = true;
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
-        cfg.chinaHatEnabled = false;
+        cfg.hatIndex = 0;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1313,4 +1315,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                             }
+                         }
