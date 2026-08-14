@@ -338,6 +338,13 @@ public class ConfigScreen extends Screen {
                 cfg.hatIndex = v;
                 com.impactvisuals.client.network.FirebasePresence.forceHeartbeat();
             }));
+
+            String[] hatColorNames = {"White", "Orange", "Magenta", "Light Blue", "Yellow", "Lime", "Pink",
+                    "Gray", "Light Gray", "Cyan", "Purple", "Blue", "Brown", "Green", "Red", "Black"};
+            cycles.add(new CycleRow("Hat Color", hatColorNames, () -> cfg.hatColorIndex, v -> {
+                cfg.hatColorIndex = v;
+                com.impactvisuals.client.network.FirebasePresence.forceHeartbeat();
+            }));
         }
 
         if (addFriendField != null) {
@@ -963,6 +970,7 @@ public class ConfigScreen extends Screen {
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
         cfg.hatIndex = 0;
+        cfg.hatColorIndex = 4;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1051,6 +1059,7 @@ public class ConfigScreen extends Screen {
         cfg.friendsFeatureEnabled = false;
         cfg.markerEnabled = false;
         cfg.hatIndex = 0;
+        cfg.hatColorIndex = 4;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1315,4 +1324,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                         }
+                   }
