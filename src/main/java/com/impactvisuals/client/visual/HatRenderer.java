@@ -1,11 +1,15 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.network.FirebasePresence;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.RotationAxis;
@@ -13,10 +17,12 @@ import net.minecraft.util.math.Vec3d;
 
 /**
  * Draws whichever hat cosmetic each player has selected (Skins tab: None /
- * China Hat / Ushanka / Cap). Not self-view-only like skin/cape/elytra - the
- * chosen hat index is broadcast through Firebase presence (see
- * FirebasePresence) so every other Impact Visuals user nearby actually sees
- * it on you, the same way the Jump Ring works.
+ * China Hat / Ushanka / Cap, plus a colour). Each hat is built out of small
+ * solid coloured blocks (the same technique BuildHelperHud uses for its
+ * hologram) so it's a real filled shape, not a wireframe outline. Not
+ * self-view-only like skin/cape/elytra - the chosen hat + colour are
+ * broadcast through Firebase presence so every other Impact Visuals user
+ * nearby actually sees it on you, the same way the Jump Ring works.
  */
 public class HatRenderer {
 
@@ -24,6 +30,13 @@ public class HatRenderer {
     public static final int CHINA_HAT = 1;
     public static final int USHANKA = 2;
     public static final int CAP = 3;
+
+    private static final Block[] WOOL_BY_COLOR = {
+            Blocks.WHITE_WOOL, Blocks.ORANGE_WOOL, Blocks.MAGENTA_WOOL, Blocks.LIGHT_BLUE_WOOL,
+            Blocks.YELLOW_WOOL, Blocks.LIME_WOOL, Blocks.PINK_WOOL, Blocks.GRAY_WOOL,
+            Blocks.LIGHT_GRAY_WOOL, Blocks.CYAN_WOOL, Blocks.PURPLE_WOOL, Blocks.BLUE_WOOL,
+            Blocks.BROWN_WOOL, Blocks.GREEN_WOOL, Blocks.RED_WOOL, Blocks.BLACK_WOOL
+    };
 
     private static final java.util.Set<String> notifiedHats = new java.util.HashSet<>();
 
@@ -36,7 +49,7 @@ public class HatRenderer {
         if (matrices == null || consumers == null) return;
 
         Vec3d camPos = context.camera().getPos();
-        boolean drewAny = false;
+        int fullBrightLight = LightmapTextureManager.pack(15, 15);
 
         for (AbstractClientPlayerEntity player : client.world.getPlayers()) {
             String name = player.getGameProfile().getName();
@@ -52,27 +65,29 @@ public class HatRenderer {
                         "\u00A7d[Impact Visuals] \u00A7f" + hatName(hat) + " visible on \u00A7e" + name), false);
             }
 
+            int colorIndex = FirebasePresence.getHatColorIndex(name);
+            BlockState blockState = WOOL_BY_COLOR[Math.max(0, Math.min(WOOL_BY_COLOR.length - 1, colorIndex))].getDefaultState();
+
+            // Sink the anchor slightly into the top of the head so the hat reads as worn, not floating.
             double baseX = player.getX();
             double baseZ = player.getZ();
-            double baseY = player.getY() + player.getHeight() + 0.02;
+            double baseY = player.getY() + player.getHeight() - 0.12;
 
             matrices.push();
             matrices.translate(baseX - camPos.x, baseY - camPos.y, baseZ - camPos.z);
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-player.getYaw()));
 
-            VertexConsumer lines = consumers.getBuffer(RenderLayer.getLines());
             switch (hat) {
-                case CHINA_HAT -> drawConeWireframe(matrices, lines, 0.38f, 0.42f, 14, 1.0f, 0.75f, 0.15f, 1.0f);
-                case USHANKA -> drawUshankaWireframe(matrices, lines);
-                case CAP -> drawCapWireframe(matrices, lines);
+                case CHINA_HAT -> renderChinaHat(client, matrices, consumers, blockState, fullBrightLight);
+                case USHANKA -> renderUshanka(client, matrices, consumers, blockState, fullBrightLight);
+                case CAP -> renderCap(client, matrices, consumers, blockState, fullBrightLight);
                 default -> { }
             }
 
             matrices.pop();
-            drewAny = true;
         }
 
-        if (drewAny) consumers.draw();
+        consumers.draw();
     }
 
     private static String hatName(int hat) {
@@ -84,85 +99,44 @@ public class HatRenderer {
         };
     }
 
-    /** Cone: apex straight up, ribs + base circle. */
-    private static void drawConeWireframe(MatrixStack matrices, VertexConsumer buffer,
-                                           float radius, float height, int segments,
-                                           float r, float g, float b, float a) {
-        var entry = matrices.peek();
-        float apexX = 0, apexY = height, apexZ = 0;
-
-        float[][] basePoints = new float[segments][3];
-        for (int i = 0; i < segments; i++) {
-            double angle = (2 * Math.PI * i) / segments;
-            basePoints[i][0] = (float) (Math.cos(angle) * radius);
-            basePoints[i][1] = 0f;
-            basePoints[i][2] = (float) (Math.sin(angle) * radius);
-        }
-
-        for (float[] base : basePoints) {
-            drawLine(buffer, entry, apexX, apexY, apexZ, base[0], base[1], base[2], r, g, b, a);
-        }
-        for (int i = 0; i < segments; i++) {
-            float[] a1 = basePoints[i];
-            float[] a2 = basePoints[(i + 1) % segments];
-            drawLine(buffer, entry, a1[0], a1[1], a1[2], a2[0], a2[1], a2[2], r, g, b, a);
-        }
+    /** Three shrinking stacked blocks approximating a cone silhouette. */
+    private static void renderChinaHat(MinecraftClient client, MatrixStack matrices,
+                                        VertexConsumerProvider.Immediate consumers,
+                                        BlockState state, int light) {
+        drawBlock(client, matrices, consumers, state, light, -0.24f, 0.00f, -0.24f, 0.48f, 0.14f, 0.48f);
+        drawBlock(client, matrices, consumers, state, light, -0.15f, 0.12f, -0.15f, 0.30f, 0.14f, 0.30f);
+        drawBlock(client, matrices, consumers, state, light, -0.06f, 0.24f, -0.06f, 0.12f, 0.14f, 0.12f);
     }
 
-    /** Rounded fur box with two hanging ear flaps on the sides. */
-    private static void drawUshankaWireframe(MatrixStack matrices, VertexConsumer buffer) {
-        var entry = matrices.peek();
-        float r = 0.85f, g = 0.82f, b = 0.75f, a = 1.0f; // off-white fur
-        float w = 0.34f, d = 0.32f, h = 0.24f;
-
-        drawBoxWireframe(buffer, entry, -w, 0, -d, w, h, d, r, g, b, a);
-
-        // Ear flaps: small hanging rectangles on the left/right sides.
-        float flapW = 0.06f, flapH = 0.22f, flapY0 = -0.02f;
-        drawBoxWireframe(buffer, entry, -w - flapW, flapY0 - flapH, -0.08f, -w, flapY0, 0.08f, r, g, b, a);
-        drawBoxWireframe(buffer, entry, w, flapY0 - flapH, -0.08f, w + flapW, flapY0, 0.08f, r, g, b, a);
+    /** Rounded fur box plus two hanging ear flaps. */
+    private static void renderUshanka(MinecraftClient client, MatrixStack matrices,
+                                       VertexConsumerProvider.Immediate consumers,
+                                       BlockState state, int light) {
+        drawBlock(client, matrices, consumers, state, light, -0.30f, 0.00f, -0.28f, 0.60f, 0.22f, 0.56f);
+        drawBlock(client, matrices, consumers, state, light, -0.36f, -0.16f, -0.08f, 0.06f, 0.18f, 0.16f);
+        drawBlock(client, matrices, consumers, state, light, 0.30f, -0.16f, -0.08f, 0.06f, 0.18f, 0.16f);
     }
 
-    /** Low flat crown plus a brim sticking out forward (toward -Z, the way the player faces). */
-    private static void drawCapWireframe(MatrixStack matrices, VertexConsumer buffer) {
-        var entry = matrices.peek();
-        float r = 0.25f, g = 0.45f, b = 0.85f, a = 1.0f; // blue cap
-
-        float w = 0.32f, d = 0.32f, h = 0.16f;
-        drawBoxWireframe(buffer, entry, -w, 0, -d, w, h, d, r, g, b, a);
-
-        // Brim: thin flat rectangle projecting forward from the front-bottom edge.
-        float brimW = 0.30f, brimLen = 0.22f, brimY = 0.01f;
-        float frontZ = -d;
-        drawBoxWireframe(buffer, entry, -brimW, brimY, frontZ - brimLen, brimW, brimY + 0.02f, frontZ, r, g, b, a);
+    /** Low crown plus a brim projecting forward (the direction the player faces). */
+    private static void renderCap(MinecraftClient client, MatrixStack matrices,
+                                   VertexConsumerProvider.Immediate consumers,
+                                   BlockState state, int light) {
+        drawBlock(client, matrices, consumers, state, light, -0.28f, 0.00f, -0.28f, 0.56f, 0.16f, 0.56f);
+        drawBlock(client, matrices, consumers, state, light, -0.26f, 0.00f, -0.48f, 0.52f, 0.03f, 0.22f);
     }
 
-    private static void drawBoxWireframe(VertexConsumer buffer, MatrixStack.Entry entry,
-                                          float minX, float minY, float minZ,
-                                          float maxX, float maxY, float maxZ,
-                                          float r, float g, float b, float a) {
-        float[][] edges = {
-                {minX, minY, minZ, maxX, minY, minZ}, {maxX, minY, minZ, maxX, minY, maxZ},
-                {maxX, minY, maxZ, minX, minY, maxZ}, {minX, minY, maxZ, minX, minY, minZ},
-                {minX, maxY, minZ, maxX, maxY, minZ}, {maxX, maxY, minZ, maxX, maxY, maxZ},
-                {maxX, maxY, maxZ, minX, maxY, maxZ}, {minX, maxY, maxZ, minX, maxY, minZ},
-                {minX, minY, minZ, minX, maxY, minZ}, {maxX, minY, minZ, maxX, maxY, minZ},
-                {maxX, minY, maxZ, maxX, maxY, maxZ}, {minX, minY, maxZ, minX, maxY, maxZ},
-        };
-        for (float[] e : edges) {
-            drawLine(buffer, entry, e[0], e[1], e[2], e[3], e[4], e[5], r, g, b, a);
-        }
-    }
+    /** Draws one solid coloured block, sized/positioned in local hat-space (blocks are normally 1x1x1 so we scale). */
+    private static void drawBlock(MinecraftClient client, MatrixStack matrices,
+                                   VertexConsumerProvider.Immediate consumers,
+                                   BlockState state, int light,
+                                   float x, float y, float z, float w, float h, float d) {
+        matrices.push();
+        matrices.translate(x, y, z);
+        matrices.scale(w, h, d);
 
-    private static void drawLine(VertexConsumer buffer, MatrixStack.Entry entry,
-                                  float x1, float y1, float z1, float x2, float y2, float z2,
-                                  float r, float g, float b, float a) {
-        float dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
-        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (len < 1.0e-6f) return;
-        dx /= len; dy /= len; dz /= len;
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        client.getBlockRenderManager().renderBlockAsEntity(state, matrices, consumers, light, OverlayTexture.DEFAULT_UV);
 
-        buffer.vertex(entry.getPositionMatrix(), x1, y1, z1).color(r, g, b, a).normal(entry, dx, dy, dz);
-        buffer.vertex(entry.getPositionMatrix(), x2, y2, z2).color(r, g, b, a).normal(entry, dx, dy, dz);
+        matrices.pop();
     }
-              }
+}
