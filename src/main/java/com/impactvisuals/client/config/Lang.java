@@ -42,6 +42,9 @@ public class Lang {
         RU.put("Focus Target Name", "Ник цели");
         RU.put("Marker Enabled", "Метка включена");
         RU.put("China Hat", "Китайская шляпа");
+        RU.put("Hat (visible to other IV players)", "Шапка (видна другим IV-игрокам)");
+        RU.put("Ushanka", "Ушанка");
+        RU.put("Cap", "Кепка");
         RU.put("Screenshot Tool", "Редактор HUD");
         RU.put("X Y Z", "X Y Z");
         RU.put("Target HUD Debug", "Отладка ХАД цели");
