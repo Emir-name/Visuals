@@ -42,6 +42,7 @@ public final class FirebasePresence {
 
     private static final Map<String, Long> onlineByName = new ConcurrentHashMap<>();
     private static final Map<String, Integer> hatByName = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> hatColorByName = new ConcurrentHashMap<>();
 
     private static ScheduledExecutorService scheduler;
     private static String activeServerKey;
@@ -99,6 +100,13 @@ public final class FirebasePresence {
         return hat != null ? hat : 0;
     }
 
+    /** Which wool colour (0-15) the given player's hat is broadcasting, or 0 (white) if unknown. */
+    public static int getHatColorIndex(String name) {
+        if (!isOnline(name)) return 0;
+        Integer color = hatColorByName.get(name.toLowerCase());
+        return color != null ? color : 0;
+    }
+
     private static void sendHeartbeat() {
         String serverKey = activeServerKey;
         String playerName = activePlayerName;
@@ -108,6 +116,7 @@ public final class FirebasePresence {
         body.addProperty("name", playerName);
         body.addProperty("ts", System.currentTimeMillis());
         body.addProperty("hat", com.impactvisuals.client.config.ModConfig.get().hatIndex);
+        body.addProperty("hatColor", com.impactvisuals.client.config.ModConfig.get().hatColorIndex);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(nodeUrl(serverKey, playerName)))
@@ -137,6 +146,7 @@ public final class FirebasePresence {
 
             Map<String, Long> fresh = new ConcurrentHashMap<>();
             Map<String, Integer> freshHats = new ConcurrentHashMap<>();
+            Map<String, Integer> freshHatColors = new ConcurrentHashMap<>();
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
                 JsonElement value = entry.getValue();
                 if (value == null || !value.isJsonObject()) continue;
@@ -147,12 +157,15 @@ public final class FirebasePresence {
                 long ts = obj.get("ts").getAsLong();
                 fresh.put(name.toLowerCase(), ts);
                 freshHats.put(name.toLowerCase(), obj.has("hat") ? obj.get("hat").getAsInt() : 0);
+                freshHatColors.put(name.toLowerCase(), obj.has("hatColor") ? obj.get("hatColor").getAsInt() : 0);
             }
 
             onlineByName.clear();
             onlineByName.putAll(fresh);
             hatByName.clear();
             hatByName.putAll(freshHats);
+            hatColorByName.clear();
+            hatColorByName.putAll(freshHatColors);
         } catch (Exception ignored) {
             // network hiccup - keep the last known snapshot, try again next poll
         }
