@@ -38,7 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"VISUALS", "HUD", "UTILITIES", "MARKERS", "CONFIGS", "SKINS"};
+    private static final String[] CATEGORY_NAMES = {"VISUALS", "HUD", "UTILITIES", "MARKERS", "CONFIGS", "SKINS", "BIND"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -79,6 +79,9 @@ public class ConfigScreen extends Screen {
     private int effContentTop;
 
     private TextFieldWidget addFriendField;
+    private TextFieldWidget bindCommandField;
+    private int bindSendBtnX, bindSendBtnY, bindSendBtnW = 60, bindSendBtnH = 18;
+    private static final int BIND_HEADER_H = 32;
     private TextFieldWidget focusTargetField;
     private TextFieldWidget markerCoordsField;
     private TextFieldWidget rebindKeyboardTrigger;
@@ -174,6 +177,16 @@ public class ConfigScreen extends Screen {
         addFriendField.setPlaceholder(Text.literal(Lang.t("Nickname")));
         addDrawableChild(addFriendField);
         addFriendField.setVisible(currentCategory == 2);
+
+        int bindFieldY = contentTop + (BIND_HEADER_H - bindSendBtnH) / 2;
+        bindSendBtnX = contentX + contentW - bindSendBtnW;
+        bindSendBtnY = bindFieldY;
+        int bindFieldW = Math.max(80, contentW - bindSendBtnW - 8);
+        bindCommandField = new TextFieldWidget(this.textRenderer, contentX, bindFieldY, bindFieldW, bindSendBtnH, Text.literal(""));
+        bindCommandField.setMaxLength(256);
+        bindCommandField.setPlaceholder(Text.literal(Lang.t("/home")));
+        addDrawableChild(bindCommandField);
+        bindCommandField.setVisible(currentCategory == 6);
 
         int focusFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
         focusTargetField = new TextFieldWidget(this.textRenderer, contentX, focusFieldY, contentW, 18, Text.literal(""));
@@ -359,6 +372,9 @@ public class ConfigScreen extends Screen {
         if (markerCoordsField != null) {
             markerCoordsField.setVisible(currentCategory == 3);
         }
+        if (bindCommandField != null) {
+            bindCommandField.setVisible(currentCategory == 6);
+        }
     }
 
     private void addToggle(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
@@ -386,6 +402,23 @@ public class ConfigScreen extends Screen {
         com.impactvisuals.client.friends.FriendsNetwork.fetchHead(name);
         addFriendField.setText("");
         buildCategoryContent();
+    }
+
+    /** Sends whatever is typed in the Bind tab's field - as a command if it starts with "/", otherwise as a plain chat message. */
+    private void sendBindCommand() {
+        String text = bindCommandField.getText().trim();
+        if (text.isEmpty()) return;
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.player.networkHandler == null) return;
+
+        if (text.startsWith("/")) {
+            client.player.networkHandler.sendChatCommand(text.substring(1));
+        } else {
+            client.player.networkHandler.sendChatMessage(text);
+        }
+
+        bindCommandField.setText("");
     }
 
     private void removeFriend(String name) {
@@ -500,6 +533,11 @@ public class ConfigScreen extends Screen {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
         } else if (currentCategory == 3) {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
+        } else if (currentCategory == 6) {
+            effContentTop = contentTop + BIND_HEADER_H;
+            boolean hasText = !bindCommandField.getText().isBlank();
+            drawHeaderButton(context, bindSendBtnX, bindSendBtnY, bindSendBtnW, bindSendBtnH,
+                    hasText ? "Send" : "", mouseX, mouseY);
         }
 
         // content (scissored + scrollable)
@@ -706,6 +744,10 @@ public class ConfigScreen extends Screen {
             addFriend();
             return true;
         }
+        if (currentCategory == 6 && inside(bindSendBtnX, bindSendBtnY, bindSendBtnW, bindSendBtnH, mouseX, mouseY)) {
+            sendBindCommand();
+            return true;
+        }
 
         if (mouseY >= effContentTop && mouseY <= contentBottom) {
             for (Placed<ToggleCard> p : placedToggles) {
@@ -869,6 +911,11 @@ public class ConfigScreen extends Screen {
         if (currentCategory == 2 && addFriendField.isFocused()
                 && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
             addFriend();
+            return true;
+        }
+        if (currentCategory == 6 && bindCommandField.isFocused()
+                && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
+            sendBindCommand();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -1324,4 +1371,4 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                   }
+                    }
