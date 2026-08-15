@@ -77,7 +77,7 @@ public class HatRenderer {
             // Use the same interpolated position the player model itself renders at,
             // not the raw tick-quantized position - otherwise the hat lags/desyncs
             // from the head during fast movement (jumping, falling, etc).
-            float tickDelta = context.tickCounter().getTickProgress(true);
+            float tickDelta = context.tickCounter().getTickDelta(true);
             Vec3d lerped = player.getLerpedPos(tickDelta);
 
             double baseX = lerped.x;
