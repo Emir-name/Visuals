@@ -60,9 +60,11 @@ public class HatRenderer {
                 continue;
             }
 
-            // Your own hat is never drawn - it's a cosmetic for others to see on you,
-            // not something that should sit in front of your own camera.
-            if (player == client.player) continue;
+            // Your own hat only gets hidden in first person, where it would
+            // sit right against the camera and get in the way. In third
+            // person (including when testing solo on yourself) it still shows.
+            boolean isSelf = player == client.player;
+            if (isSelf && client.options.getPerspective().isFirstPerson()) continue;
 
             if (notifiedHats.add(name.toLowerCase())) {
                 client.player.sendMessage(net.minecraft.text.Text.literal(
