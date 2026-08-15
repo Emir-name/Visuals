@@ -74,14 +74,19 @@ public class HatRenderer {
             int colorIndex = FirebasePresence.getHatColorIndex(name);
             BlockState blockState = CONCRETE_BY_COLOR[Math.max(0, Math.min(CONCRETE_BY_COLOR.length - 1, colorIndex))].getDefaultState();
 
-            // Sink the anchor slightly into the top of the head so the hat reads as worn, not floating.
-            double baseX = player.getX();
-            double baseZ = player.getZ();
-            double baseY = player.getY() + player.getHeight() - 0.12;
+            // Use the same interpolated position the player model itself renders at,
+            // not the raw tick-quantized position - otherwise the hat lags/desyncs
+            // from the head during fast movement (jumping, falling, etc).
+            float tickDelta = context.tickCounter().getTickProgress(true);
+            Vec3d lerped = player.getLerpedPos(tickDelta);
+
+            double baseX = lerped.x;
+            double baseZ = lerped.z;
+            double baseY = lerped.y + player.getHeight() - 0.12;
 
             matrices.push();
             matrices.translate(baseX - camPos.x, baseY - camPos.y, baseZ - camPos.z);
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-player.getYaw()));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-player.getYaw(tickDelta)));
 
             switch (hat) {
                 case CHINA_HAT -> renderChinaHat(client, matrices, consumers, blockState, fullBrightLight);
