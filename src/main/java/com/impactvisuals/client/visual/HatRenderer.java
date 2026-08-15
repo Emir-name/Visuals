@@ -31,11 +31,11 @@ public class HatRenderer {
     public static final int USHANKA = 2;
     public static final int CAP = 3;
 
-    private static final Block[] WOOL_BY_COLOR = {
-            Blocks.WHITE_WOOL, Blocks.ORANGE_WOOL, Blocks.MAGENTA_WOOL, Blocks.LIGHT_BLUE_WOOL,
-            Blocks.YELLOW_WOOL, Blocks.LIME_WOOL, Blocks.PINK_WOOL, Blocks.GRAY_WOOL,
-            Blocks.LIGHT_GRAY_WOOL, Blocks.CYAN_WOOL, Blocks.PURPLE_WOOL, Blocks.BLUE_WOOL,
-            Blocks.BROWN_WOOL, Blocks.GREEN_WOOL, Blocks.RED_WOOL, Blocks.BLACK_WOOL
+    private static final Block[] CONCRETE_BY_COLOR = {
+            Blocks.WHITE_CONCRETE, Blocks.ORANGE_CONCRETE, Blocks.MAGENTA_CONCRETE, Blocks.LIGHT_BLUE_CONCRETE,
+            Blocks.YELLOW_CONCRETE, Blocks.LIME_CONCRETE, Blocks.PINK_CONCRETE, Blocks.GRAY_CONCRETE,
+            Blocks.LIGHT_GRAY_CONCRETE, Blocks.CYAN_CONCRETE, Blocks.PURPLE_CONCRETE, Blocks.BLUE_CONCRETE,
+            Blocks.BROWN_CONCRETE, Blocks.GREEN_CONCRETE, Blocks.RED_CONCRETE, Blocks.BLACK_CONCRETE
     };
 
     private static final java.util.Set<String> notifiedHats = new java.util.HashSet<>();
@@ -60,18 +60,22 @@ public class HatRenderer {
                 continue;
             }
 
+            // Your own hat is never drawn - it's a cosmetic for others to see on you,
+            // not something that should sit in front of your own camera.
+            if (player == client.player) continue;
+
             if (notifiedHats.add(name.toLowerCase())) {
                 client.player.sendMessage(net.minecraft.text.Text.literal(
                         "\u00A7d[Impact Visuals] \u00A7f" + hatName(hat) + " visible on \u00A7e" + name), false);
             }
 
             int colorIndex = FirebasePresence.getHatColorIndex(name);
-            BlockState blockState = WOOL_BY_COLOR[Math.max(0, Math.min(WOOL_BY_COLOR.length - 1, colorIndex))].getDefaultState();
+            BlockState blockState = CONCRETE_BY_COLOR[Math.max(0, Math.min(CONCRETE_BY_COLOR.length - 1, colorIndex))].getDefaultState();
 
             // Sink the anchor slightly into the top of the head so the hat reads as worn, not floating.
             double baseX = player.getX();
             double baseZ = player.getZ();
-            double baseY = player.getY() + player.getHeight() - 0.06;
+            double baseY = player.getY() + player.getHeight() - 0.12;
 
             matrices.push();
             matrices.translate(baseX - camPos.x, baseY - camPos.y, baseZ - camPos.z);
@@ -103,26 +107,26 @@ public class HatRenderer {
     private static void renderChinaHat(MinecraftClient client, MatrixStack matrices,
                                         VertexConsumerProvider.Immediate consumers,
                                         BlockState state, int light) {
-        drawBlock(client, matrices, consumers, state, light, -0.15f, 0.00f, -0.15f, 0.30f, 0.09f, 0.30f);
-        drawBlock(client, matrices, consumers, state, light, -0.09f, 0.08f, -0.09f, 0.18f, 0.09f, 0.18f);
-        drawBlock(client, matrices, consumers, state, light, -0.04f, 0.16f, -0.04f, 0.08f, 0.09f, 0.08f);
+        drawBlock(client, matrices, consumers, state, light, -0.24f, 0.00f, -0.24f, 0.48f, 0.14f, 0.48f);
+        drawBlock(client, matrices, consumers, state, light, -0.15f, 0.12f, -0.15f, 0.30f, 0.14f, 0.30f);
+        drawBlock(client, matrices, consumers, state, light, -0.06f, 0.24f, -0.06f, 0.12f, 0.14f, 0.12f);
     }
 
     /** Rounded fur box plus two hanging ear flaps. */
     private static void renderUshanka(MinecraftClient client, MatrixStack matrices,
                                        VertexConsumerProvider.Immediate consumers,
                                        BlockState state, int light) {
-        drawBlock(client, matrices, consumers, state, light, -0.18f, 0.00f, -0.17f, 0.36f, 0.14f, 0.34f);
-        drawBlock(client, matrices, consumers, state, light, -0.22f, -0.10f, -0.05f, 0.04f, 0.11f, 0.10f);
-        drawBlock(client, matrices, consumers, state, light, 0.18f, -0.10f, -0.05f, 0.04f, 0.11f, 0.10f);
+        drawBlock(client, matrices, consumers, state, light, -0.30f, 0.00f, -0.28f, 0.60f, 0.22f, 0.56f);
+        drawBlock(client, matrices, consumers, state, light, -0.36f, -0.16f, -0.08f, 0.06f, 0.18f, 0.16f);
+        drawBlock(client, matrices, consumers, state, light, 0.30f, -0.16f, -0.08f, 0.06f, 0.18f, 0.16f);
     }
 
     /** Low crown plus a brim projecting forward (the direction the player faces). */
     private static void renderCap(MinecraftClient client, MatrixStack matrices,
                                    VertexConsumerProvider.Immediate consumers,
                                    BlockState state, int light) {
-        drawBlock(client, matrices, consumers, state, light, -0.17f, 0.00f, -0.17f, 0.34f, 0.10f, 0.34f);
-        drawBlock(client, matrices, consumers, state, light, -0.15f, 0.00f, -0.29f, 0.30f, 0.02f, 0.13f);
+        drawBlock(client, matrices, consumers, state, light, -0.28f, 0.00f, -0.28f, 0.56f, 0.16f, 0.56f);
+        drawBlock(client, matrices, consumers, state, light, -0.26f, 0.00f, -0.48f, 0.52f, 0.03f, 0.22f);
     }
 
     /** Draws one solid coloured block, sized/positioned in local hat-space (blocks are normally 1x1x1 so we scale). */
