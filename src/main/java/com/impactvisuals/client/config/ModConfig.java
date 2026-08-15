@@ -113,6 +113,7 @@ public class ModConfig {
     public boolean betterNearEnabled = true;
     public String firebaseUrl = "";
     public java.util.List<String> friendsList = new java.util.ArrayList<>();
+    public java.util.List<String> boundCommands = new java.util.ArrayList<>();
     /** Maps a feature's label (e.g. "Auto Jump") to a bound key's translation key (e.g. "key.keyboard.j"). */
     public java.util.Map<String, String> featureKeybinds = new java.util.HashMap<>();
 
