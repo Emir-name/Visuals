@@ -75,6 +75,7 @@ public class ConfigScreen extends Screen {
     private final List<Placed<SliderRow>> placedSliders = new ArrayList<>();
     private final List<Placed<CycleRow>> placedCycles = new ArrayList<>();
     private final List<Placed<FriendEntry>> placedFriends = new ArrayList<>();
+    private final List<Placed<BindEntry>> placedBinds = new ArrayList<>();
     private int swatchAreaY;
     private int effContentTop;
 
@@ -89,6 +90,7 @@ public class ConfigScreen extends Screen {
     private static final int FRIENDS_HEADER_H = 32;
     private static final int FOCUS_TARGET_HEADER_H = 30;
     private static final int FRIEND_ROW_H = 30;
+    private static final int BIND_ROW_H = 30;
     private long lastFriendsRefreshNanos = 0;
     private static final long FRIENDS_REFRESH_INTERVAL_NANOS = 5_000_000_000L;
 
@@ -404,11 +406,20 @@ public class ConfigScreen extends Screen {
         buildCategoryContent();
     }
 
-    /** Sends whatever is typed in the Bind tab's field - as a command if it starts with "/", otherwise as a plain chat message. */
+    /** Adds whatever's typed in the Bind tab's field to the saved command list. The field keeps its text - it doesn't clear or disappear. */
     private void sendBindCommand() {
         String text = bindCommandField.getText().trim();
         if (text.isEmpty()) return;
 
+        if (!cfg.boundCommands.contains(text)) {
+            cfg.boundCommands.add(text);
+            cfg.save();
+            buildCategoryContent();
+        }
+    }
+
+    /** Actually sends one saved command - as a real command if it starts with "/", otherwise as a plain chat message. Never removes it from the list. */
+    private void runBoundCommand(String text) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.player.networkHandler == null) return;
 
@@ -417,8 +428,6 @@ public class ConfigScreen extends Screen {
         } else {
             client.player.networkHandler.sendChatMessage(text);
         }
-
-        bindCommandField.setText("");
     }
 
     private void removeFriend(String name) {
@@ -537,7 +546,7 @@ public class ConfigScreen extends Screen {
             effContentTop = contentTop + BIND_HEADER_H;
             boolean hasText = !bindCommandField.getText().isBlank();
             drawHeaderButton(context, bindSendBtnX, bindSendBtnY, bindSendBtnW, bindSendBtnH,
-                    hasText ? "Send" : "", mouseX, mouseY);
+                    hasText ? "Add" : "", mouseX, mouseY);
         }
 
         // content (scissored + scrollable)
@@ -598,6 +607,15 @@ public class ConfigScreen extends Screen {
             contentBottomY = y;
         }
 
+        placedBinds.clear();
+        if (currentCategory == 6) {
+            for (String command : cfg.boundCommands) {
+                placedBinds.add(new Placed<>(new BindEntry(command), contentX, y, contentW, BIND_ROW_H));
+                y += BIND_ROW_H + 6;
+            }
+            contentBottomY = y;
+        }
+
         maxScroll = Math.max(0, (contentBottomY + scrollOffset - effContentTop) - (contentBottom - effContentTop));
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
@@ -624,6 +642,9 @@ public class ConfigScreen extends Screen {
         }
 
         for (Placed<FriendEntry> p : placedFriends) {
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+        }
+        for (Placed<BindEntry> p : placedBinds) {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
         }
 
@@ -777,6 +798,25 @@ public class ConfigScreen extends Screen {
                     int removeY = p.y + (p.h - removeSize) / 2;
                     if (inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY)) {
                         removeFriend(p.item.username);
+                    }
+                    return true;
+                }
+            }
+            for (Placed<BindEntry> p : placedBinds) {
+                if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    int removeSize = 16;
+                    int removeX = p.x + p.w - removeSize - 6;
+                    int removeY = p.y + (p.h - removeSize) / 2;
+                    int sendW = 50, sendH = 18;
+                    int sendX = removeX - sendW - 6;
+                    int sendY = p.y + (p.h - sendH) / 2;
+
+                    if (inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY)) {
+                        cfg.boundCommands.remove(p.item.command);
+                        cfg.save();
+                        buildCategoryContent();
+                    } else if (inside(sendX, sendY, sendW, sendH, mouseX, mouseY)) {
+                        runBoundCommand(p.item.command);
                     }
                     return true;
                 }
@@ -1371,4 +1411,35 @@ public class ConfigScreen extends Screen {
             return server;
         }
     }
-                    }
+
+    private class BindEntry {
+        final String command;
+
+        BindEntry(String command) {
+            this.command = command;
+        }
+
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+            boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
+            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+
+            int textX = x + 8;
+            context.drawText(screen.textRenderer, command, textX, y + (h - 8) / 2, TEXT_MAIN, false);
+
+            int removeSize = 16;
+            int removeX = x + w - removeSize - 6;
+            int removeY = y + (h - removeSize) / 2;
+            boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
+            context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
+            String x_ = "x";
+            int xw = screen.textRenderer.getWidth(x_);
+            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+
+            int sendW = 50, sendH = 18;
+            int sendX = removeX - sendW - 6;
+            int sendY = y + (h - sendH) / 2;
+            screen.drawHeaderButton(context, sendX, sendY, sendW, sendH, "Send", mouseX, mouseY);
+        }
+    }
+            }
