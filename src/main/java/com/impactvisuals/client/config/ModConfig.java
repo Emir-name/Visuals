@@ -23,6 +23,7 @@ public class ModConfig {
     public boolean markerEnabled = false;
     public int hatIndex = 0;
     public int hatColorIndex = 4;
+    public int themePresetIndex = 0;
     public java.util.Map<String, Integer> hudOffsetX = new java.util.HashMap<>();
     public java.util.Map<String, Integer> hudOffsetY = new java.util.HashMap<>();
     public java.util.Map<String, Float> hudScale = new java.util.HashMap<>();
@@ -146,6 +147,8 @@ public class ModConfig {
         return fresh;
     }
 
+    public java.util.Map<String, String> profiles = new java.util.HashMap<>();
+
     public void save() {
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
@@ -156,4 +159,54 @@ public class ModConfig {
             System.err.println("[ImpactVisuals] Failed to save config: " + e.getMessage());
         }
     }
+
+    /** Serializes this config to a compact Base64 "code" string, for sharing with someone else. */
+    public String exportCode() {
+        String json = GSON.toJson(this);
+        return java.util.Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Parses a code produced by exportCode() and copies every field over onto this live config, then saves. Returns false if the code was invalid. */
+    public boolean importCode(String code) {
+        try {
+            String json = new String(java.util.Base64.getDecoder().decode(code.trim()), StandardCharsets.UTF_8);
+            ModConfig parsed = GSON.fromJson(json, ModConfig.class);
+            if (parsed == null) return false;
+            copyFrom(parsed);
+            save();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Saves the current settings as a named profile (overwrites if the name already exists). */
+    public void saveProfile(String name) {
+        profiles.put(name, exportCode());
+        save();
+    }
+
+    /** Loads a previously saved named profile onto the live config, then saves. Returns false if the name isn't found or the stored code is invalid. */
+    public boolean loadProfile(String name) {
+        String code = profiles.get(name);
+        if (code == null) return false;
+        return importCode(code);
+    }
+
+    public void deleteProfile(String name) {
+        profiles.remove(name);
+        save();
+    }
+
+    /** Copies every field from another ModConfig instance onto this one via reflection, so importCode/loadProfile can apply a parsed snapshot without replacing the singleton instance itself. */
+    private void copyFrom(ModConfig other) {
+        for (java.lang.reflect.Field field : ModConfig.class.getFields()) {
+            if (field.getName().equals("profiles")) continue;
+            try {
+                field.set(this, field.get(other));
+            } catch (IllegalAccessException ignored) {
+            }
+        }
+    }
 }
+here
