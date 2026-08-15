@@ -28,8 +28,8 @@ public class ConfigScreen extends Screen {
 
     private static final int BG = 0xFF101012;
     private static final int SIDEBAR_BG = 0xFF17171A;
-    private static final int CARD_BG = 0xFF1D1D21;
-    private static final int CARD_BG_HOVER = 0xFF232328;
+    private int CARD_BG = 0xFF1D1D21;
+    private int CARD_BG_HOVER = 0xFF232328;
     private static final int TRACK_OFF = 0xFF3A3A3E;
     private static final int TEXT_MAIN = 0xFFEFEFEF;
     private static final int TEXT_DIM = 0xFF9A9AA0;
@@ -38,7 +38,7 @@ public class ConfigScreen extends Screen {
     private static final net.minecraft.util.Identifier LOGO_TEXTURE =
             net.minecraft.util.Identifier.of("impactvisuals", "textures/gui/logo.png");
 
-    private static final String[] CATEGORY_NAMES = {"VISUALS", "HUD", "UTILITIES", "MARKERS", "CONFIGS", "SKINS", "BIND"};
+    private static final String[] CATEGORY_NAMES = {"VISUALS", "HUD", "UTILITIES", "MARKERS", "CONFIGS", "SKINS", "BIND", "CHANGELOG"};
 
     private final Screen parent;
     private final ModConfig cfg;
@@ -76,6 +76,7 @@ public class ConfigScreen extends Screen {
     private final List<Placed<CycleRow>> placedCycles = new ArrayList<>();
     private final List<Placed<FriendEntry>> placedFriends = new ArrayList<>();
     private final List<Placed<BindEntry>> placedBinds = new ArrayList<>();
+    private final List<Placed<ProfileEntry>> placedProfiles = new ArrayList<>();
     private int swatchAreaY;
     private int effContentTop;
 
@@ -83,6 +84,9 @@ public class ConfigScreen extends Screen {
     private TextFieldWidget bindCommandField;
     private int bindSendBtnX, bindSendBtnY, bindSendBtnW = 60, bindSendBtnH = 18;
     private static final int BIND_HEADER_H = 32;
+    private TextFieldWidget profileNameField;
+    private int profileSaveBtnX, profileSaveBtnY, profileSaveBtnW = 60, profileSaveBtnH = 18;
+    private static final int PROFILE_HEADER_H = 32;
     private TextFieldWidget focusTargetField;
     private TextFieldWidget markerCoordsField;
     private TextFieldWidget rebindKeyboardTrigger;
@@ -91,6 +95,7 @@ public class ConfigScreen extends Screen {
     private static final int FOCUS_TARGET_HEADER_H = 30;
     private static final int FRIEND_ROW_H = 30;
     private static final int BIND_ROW_H = 30;
+    private static final int PROFILE_ROW_H = 30;
     private long lastFriendsRefreshNanos = 0;
     private static final long FRIENDS_REFRESH_INTERVAL_NANOS = 5_000_000_000L;
 
@@ -189,6 +194,16 @@ public class ConfigScreen extends Screen {
         bindCommandField.setPlaceholder(Text.literal(Lang.t("/home")));
         addDrawableChild(bindCommandField);
         bindCommandField.setVisible(currentCategory == 6);
+
+        int profileFieldY = contentTop + (PROFILE_HEADER_H - profileSaveBtnH) / 2;
+        profileSaveBtnX = contentX + contentW - profileSaveBtnW;
+        profileSaveBtnY = profileFieldY;
+        int profileFieldW = Math.max(80, contentW - profileSaveBtnW - 8);
+        profileNameField = new TextFieldWidget(this.textRenderer, contentX, profileFieldY, profileFieldW, profileSaveBtnH, Text.literal(""));
+        profileNameField.setMaxLength(24);
+        profileNameField.setPlaceholder(Text.literal(Lang.t("Profile name")));
+        addDrawableChild(profileNameField);
+        profileNameField.setVisible(currentCategory == 4);
 
         int focusFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
         focusTargetField = new TextFieldWidget(this.textRenderer, contentX, focusFieldY, contentW, 18, Text.literal(""));
@@ -319,6 +334,13 @@ public class ConfigScreen extends Screen {
             addToggle("Heartbeat Sound", () -> cfg.heartbeatSoundEnabled, v -> cfg.heartbeatSoundEnabled = v);
             addToggle("Menu Sound", () -> cfg.menuSoundEnabled, v -> cfg.menuSoundEnabled = v);
             addToggle("Footstep Sound", () -> cfg.footstepSoundEnabled, v -> cfg.footstepSoundEnabled = v);
+
+            cycles.add(new CycleRow("Theme Preset", THEME_NAMES, () -> cfg.themePresetIndex, v -> {
+                cfg.themePresetIndex = v;
+                cfg.accentColorIndex = -1; // let the theme pick its own accent until a swatch is tapped
+                cfg.save();
+            }));
+
             for (int i = 0; i < PALETTE.length; i++) {
                 swatches.add(new SwatchButton(i));
             }
@@ -334,6 +356,10 @@ public class ConfigScreen extends Screen {
             addToggle("Marker Enabled", () -> cfg.markerEnabled, v -> cfg.markerEnabled = v);
         } else if (currentCategory == 4) {
             addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
+            addToggle("Export Config (copy to clipboard)", () -> false, v -> exportConfigToClipboard());
+            addToggle("Import Config (paste from clipboard)", () -> false, v -> importConfigFromClipboard());
+        } else if (currentCategory == 7) {
+            // Changelog tab has no toggles - static text is drawn directly in render().
         } else if (currentCategory == 5) {
             String[] skinNames = {"Default", "Preset 1", "Preset 2", "Preset 3", "Preset 4",
                     "Preset 5", "Preset 6", "Preset 7", "Preset 8", "Custom"};
@@ -376,6 +402,9 @@ public class ConfigScreen extends Screen {
         }
         if (bindCommandField != null) {
             bindCommandField.setVisible(currentCategory == 6);
+        }
+        if (profileNameField != null) {
+            profileNameField.setVisible(currentCategory == 4);
         }
     }
 
@@ -430,18 +459,73 @@ public class ConfigScreen extends Screen {
         }
     }
 
+    /** Saves the current live settings as a named profile. The name field keeps its text - saving doesn't clear it, so you can re-save under the same name to overwrite. */
+    private void saveNamedProfile() {
+        String name = profileNameField.getText().trim();
+        if (name.isEmpty()) return;
+
+        cfg.saveProfile(name);
+        buildCategoryContent();
+    }
+
+    private void exportConfigToClipboard() {
+        String code = cfg.exportCode();
+        MinecraftClient.getInstance().keyboard.setClipboard(code);
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(net.minecraft.text.Text.literal(
+                    "\u00A7d[Impact Visuals] \u00A7fConfig code copied to clipboard"), false);
+        }
+    }
+
+    private void importConfigFromClipboard() {
+        String code = MinecraftClient.getInstance().keyboard.getClipboard();
+        boolean ok = code != null && cfg.importCode(code);
+        if (MinecraftClient.getInstance().player != null) {
+            String msg = ok
+                    ? "\u00A7d[Impact Visuals] \u00A7fConfig imported from clipboard"
+                    : "\u00A7d[Impact Visuals] \u00A7cClipboard doesn't contain a valid config code";
+            MinecraftClient.getInstance().player.sendMessage(net.minecraft.text.Text.literal(msg), false);
+        }
+        if (ok) {
+            updateThemeColors();
+            buildCategoryContent();
+        }
+    }
+
     private void removeFriend(String name) {
         cfg.friendsList.removeIf(existing -> existing.equalsIgnoreCase(name));
         cfg.save();
         buildCategoryContent();
     }
 
+    /** Bundles an accent color with a card background tint - a "theme" is more than just the accent dot color. */
+    private static final int[] THEME_ACCENTS = {
+            0xFFB266FF, // Impact Violet (default)
+            0xFFFF4655, // Crimson
+            0xFF3DD9FF, // Ocean
+            0xFF9AA0A6, // Monochrome
+            0xFF39FF6A, // Neon Green
+    };
+    private static final int[] THEME_CARD_BG = {
+            0xFF1D1D21, 0xFF221417, 0xFF11191D, 0xFF1A1A1A, 0xFF0F1A12,
+    };
+    private static final int[] THEME_CARD_BG_HOVER = {
+            0xFF232328, 0xFF2A1A1E, 0xFF162026, 0xFF212121, 0xFF142117,
+    };
+    static final String[] THEME_NAMES = {"Impact Violet", "Crimson", "Ocean", "Monochrome", "Neon Green"};
+
     private void updateThemeColors() {
+        int themeIdx = Math.max(0, Math.min(THEME_ACCENTS.length - 1, cfg.themePresetIndex));
+        CARD_BG = THEME_CARD_BG[themeIdx];
+        CARD_BG_HOVER = THEME_CARD_BG_HOVER[themeIdx];
+
         if (cfg.rainbowThemeEnabled) {
             float hue = (System.currentTimeMillis() % 6000) / 6000f;
             accentColor = 0xFF000000 | (java.awt.Color.HSBtoRGB(hue, 0.65f, 1.0f) & 0xFFFFFF);
+        } else if (cfg.accentColorIndex >= 0 && cfg.accentColorIndex < PALETTE.length) {
+            accentColor = PALETTE[cfg.accentColorIndex];
         } else {
-            accentColor = PALETTE[Math.max(0, Math.min(PALETTE.length - 1, cfg.accentColorIndex))];
+            accentColor = THEME_ACCENTS[themeIdx];
         }
         int r = (int) ((accentColor >> 16 & 0xFF) * 0.45);
         int g = (int) ((accentColor >> 8 & 0xFF) * 0.45);
@@ -547,6 +631,11 @@ public class ConfigScreen extends Screen {
             boolean hasText = !bindCommandField.getText().isBlank();
             drawHeaderButton(context, bindSendBtnX, bindSendBtnY, bindSendBtnW, bindSendBtnH,
                     hasText ? "Add" : "", mouseX, mouseY);
+        } else if (currentCategory == 4) {
+            effContentTop = contentTop + PROFILE_HEADER_H;
+            boolean hasText = !profileNameField.getText().isBlank();
+            drawHeaderButton(context, profileSaveBtnX, profileSaveBtnY, profileSaveBtnW, profileSaveBtnH,
+                    hasText ? "Save" : "", mouseX, mouseY);
         }
 
         // content (scissored + scrollable)
@@ -557,6 +646,10 @@ public class ConfigScreen extends Screen {
         placedCycles.clear();
 
         int y = effContentTop - scrollOffset;
+
+        if (currentCategory == 7) {
+            y = renderChangelog(context, y);
+        }
 
         List<ToggleCard> visible = new ArrayList<>();
         for (ToggleCard t : toggles) {
@@ -616,6 +709,15 @@ public class ConfigScreen extends Screen {
             contentBottomY = y;
         }
 
+        placedProfiles.clear();
+        if (currentCategory == 4) {
+            for (String name : cfg.profiles.keySet().stream().sorted().toList()) {
+                placedProfiles.add(new Placed<>(new ProfileEntry(name), contentX, y, contentW, PROFILE_ROW_H));
+                y += PROFILE_ROW_H + 6;
+            }
+            contentBottomY = y;
+        }
+
         maxScroll = Math.max(0, (contentBottomY + scrollOffset - effContentTop) - (contentBottom - effContentTop));
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
@@ -645,6 +747,9 @@ public class ConfigScreen extends Screen {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
         }
         for (Placed<BindEntry> p : placedBinds) {
+            p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
+        }
+        for (Placed<ProfileEntry> p : placedProfiles) {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
         }
 
@@ -677,6 +782,45 @@ public class ConfigScreen extends Screen {
         }
 
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    /** Static version history text for the Changelog tab. Returns the y position right after the last line, for scroll-height purposes. */
+    private static final String[][] CHANGELOG_ENTRIES = {
+            {"v1.4 - Bind, Profiles & Themes", "Command Bind tab (save & send commands), config profiles (save/load/export/import), full theme presets, Changelog tab."},
+            {"v1.3 - Hats & HUD Editor", "Hat cosmetics (China Hat/Ushanka/Cap, colour picker, visible to other IV users), draggable+resizable HUD editor, Markers tab."},
+            {"v1.2 - Social features", "Jump Ring and online presence via Firebase, Better Near widget, Friends list."},
+            {"v1.1 - HUD expansion", "Target HUD, Build Helper, Focus Target Highlight, custom per-toggle keybinds."},
+            {"v1.0 - Initial release", "Combat FX, HUD info, cosmetics, skins/capes/elytra presets."},
+    };
+
+    private int renderChangelog(DrawContext context, int y) {
+        int wrapWidth = contentW - 4;
+        for (String[] entry : CHANGELOG_ENTRIES) {
+            context.drawText(this.textRenderer, Text.literal(entry[0]).formatted(Formatting.BOLD), contentX, y, accentColor, false);
+            y += 12;
+            for (String line : wrapText(entry[1], wrapWidth)) {
+                context.drawText(this.textRenderer, line, contentX, y, TEXT_DIM, false);
+                y += 10;
+            }
+            y += 10;
+        }
+        return y;
+    }
+
+    private List<String> wrapText(String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            if (this.textRenderer.getWidth(candidate) > maxWidth && !current.isEmpty()) {
+                lines.add(current.toString());
+                current = new StringBuilder(word);
+            } else {
+                current = new StringBuilder(candidate);
+            }
+        }
+        if (!current.isEmpty()) lines.add(current.toString());
+        return lines;
     }
 
     private void drawHeaderButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
@@ -769,6 +913,10 @@ public class ConfigScreen extends Screen {
             sendBindCommand();
             return true;
         }
+        if (currentCategory == 4 && inside(profileSaveBtnX, profileSaveBtnY, profileSaveBtnW, profileSaveBtnH, mouseX, mouseY)) {
+            saveNamedProfile();
+            return true;
+        }
 
         if (mouseY >= effContentTop && mouseY <= contentBottom) {
             for (Placed<ToggleCard> p : placedToggles) {
@@ -817,6 +965,26 @@ public class ConfigScreen extends Screen {
                         buildCategoryContent();
                     } else if (inside(sendX, sendY, sendW, sendH, mouseX, mouseY)) {
                         runBoundCommand(p.item.command);
+                    }
+                    return true;
+                }
+            }
+            for (Placed<ProfileEntry> p : placedProfiles) {
+                if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    int removeSize = 16;
+                    int removeX = p.x + p.w - removeSize - 6;
+                    int removeY = p.y + (p.h - removeSize) / 2;
+                    int loadW = 50, loadH = 18;
+                    int loadX = removeX - loadW - 6;
+                    int loadY = p.y + (p.h - loadH) / 2;
+
+                    if (inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY)) {
+                        cfg.deleteProfile(p.item.name);
+                        buildCategoryContent();
+                    } else if (inside(loadX, loadY, loadW, loadH, mouseX, mouseY)) {
+                        cfg.loadProfile(p.item.name);
+                        updateThemeColors();
+                        buildCategoryContent();
                     }
                     return true;
                 }
@@ -956,6 +1124,11 @@ public class ConfigScreen extends Screen {
         if (currentCategory == 6 && bindCommandField.isFocused()
                 && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
             sendBindCommand();
+            return true;
+        }
+        if (currentCategory == 4 && profileNameField.isFocused()
+                && (keyCode == 257 || keyCode == 335)) { // GLFW_KEY_ENTER / KP_ENTER
+            saveNamedProfile();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -1442,4 +1615,35 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, sendX, sendY, sendW, sendH, "Send", mouseX, mouseY);
         }
     }
-            }
+
+    private class ProfileEntry {
+        final String name;
+
+        ProfileEntry(String name) {
+            this.name = name;
+        }
+
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
+            boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
+            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+
+            int textX = x + 8;
+            context.drawText(screen.textRenderer, name, textX, y + (h - 8) / 2, TEXT_MAIN, false);
+
+            int removeSize = 16;
+            int removeX = x + w - removeSize - 6;
+            int removeY = y + (h - removeSize) / 2;
+            boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
+            context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
+            String x_ = "x";
+            int xw = screen.textRenderer.getWidth(x_);
+            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+
+            int loadW = 50, loadH = 18;
+            int loadX = removeX - loadW - 6;
+            int loadY = y + (h - loadH) / 2;
+            screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
+        }
+    }
+}
