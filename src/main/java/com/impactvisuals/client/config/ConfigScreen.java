@@ -628,14 +628,12 @@ public class ConfigScreen extends Screen {
             effContentTop = contentTop + FOCUS_TARGET_HEADER_H;
         } else if (currentCategory == 6) {
             effContentTop = contentTop + BIND_HEADER_H;
-            boolean hasText = !bindCommandField.getText().isBlank();
             drawHeaderButton(context, bindSendBtnX, bindSendBtnY, bindSendBtnW, bindSendBtnH,
-                    hasText ? "Add" : "", mouseX, mouseY);
+                    "Add", mouseX, mouseY);
         } else if (currentCategory == 4) {
             effContentTop = contentTop + PROFILE_HEADER_H;
-            boolean hasText = !profileNameField.getText().isBlank();
             drawHeaderButton(context, profileSaveBtnX, profileSaveBtnY, profileSaveBtnW, profileSaveBtnH,
-                    hasText ? "Save" : "", mouseX, mouseY);
+                    "Save", mouseX, mouseY);
         }
 
         // content (scissored + scrollable)
@@ -1399,8 +1397,11 @@ public class ConfigScreen extends Screen {
                     keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - 8) / 2, TEXT_MAIN, false);
 
             int textX = keyboxX + keyboxSize + 8;
+            int pillWForTitle = 26;
+            int maxTitleW = w - (textX - x) - 8 - pillWForTitle;
+            String titleTrimmed = screen.textRenderer.trimToWidth(Lang.t(label), Math.max(0, maxTitleW));
 
-            context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
+            context.drawText(screen.textRenderer, Text.literal(titleTrimmed).formatted(Formatting.BOLD),
                     textX, y + 6, TEXT_MAIN, false);
 
             String desc = Lang.desc(label);
@@ -1646,4 +1647,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-}
+    }
