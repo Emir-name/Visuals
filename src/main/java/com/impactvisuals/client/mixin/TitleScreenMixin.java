@@ -63,14 +63,28 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
             float t = (now / 1000f) * star[3] + star[2];
             float pulse = (float) (Math.sin(t) * 0.5 + 0.5); // 0..1 "smoldering" brightness
 
+            // Tiny drift so stars don't sit perfectly still - like heat shimmer off embers.
+            int jitterX = (int) (Math.sin(t * 1.7) * 0.6);
+            int jitterY = (int) (Math.cos(t * 1.3) * 0.6);
+
             int size = pulse > 0.75f ? 2 : 1;
             int brightness = (int) (140 + pulse * 115); // dim ember to bright orange
             int alpha = (int) (140 + pulse * 115);
             int color = (alpha << 24) | (brightness << 16) | (Math.min(140, brightness / 2) << 8);
 
-            int sx = (int) (star[0] * w);
-            int sy = (int) (star[1] * h);
+            int sx = (int) (star[0] * w) + jitterX;
+            int sy = (int) (star[1] * h) + jitterY;
             context.fill(sx, sy, sx + size, sy + size, color);
+
+            // Brightest embers get a faint cross-shaped twinkle flare.
+            if (pulse > 0.88f) {
+                int flareAlpha = (int) ((pulse - 0.88f) / 0.12f * 90);
+                int flareColor = (flareAlpha << 24) | 0xFFAA33;
+                context.fill(sx - 3, sy, sx - 1, sy + 1, flareColor);
+                context.fill(sx + size, sy, sx + size + 2, sy + 1, flareColor);
+                context.fill(sx, sy - 3, sx + 1, sy - 1, flareColor);
+                context.fill(sx, sy + size, sx + 1, sy + size + 2, flareColor);
+            }
         }
 
         // Base Screen behaviour only - draws every added widget (buttons, the
@@ -78,9 +92,32 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         // panorama-drawing override running at all.
         super.render(context, mouseX, mouseY, delta);
 
+        impactvisuals$drawTitleText(context, w);
         impactvisuals$fireOverlay(context, mouseX, mouseY, delta);
 
         ci.cancel();
+    }
+
+    /** The vanilla pixel-art MINECRAFT logo texture is drawn inside the part of
+     * render() we skip - replace it with a plain scaled-up text title instead
+     * of guessing the vanilla texture identifiers again. */
+    private void impactvisuals$drawTitleText(DrawContext context, int w) {
+        var matrices = context.getMatrices();
+        String title = "MINECRAFT";
+        float scale = 3.5f;
+        int textW = this.textRenderer.getWidth(title);
+
+        matrices.push();
+        matrices.translate(w / 2f, 38, 0);
+        matrices.scale(scale, scale, 1f);
+        matrices.translate(-textW / 2f, 0, 0);
+        context.drawText(this.textRenderer, title, 1, 1, 0x60000000, false);
+        context.drawText(this.textRenderer, title, 0, 0, 0xFFFFFFFF, false);
+        matrices.pop();
+
+        String subtitle = "IMPACT VISUALS";
+        int subW = this.textRenderer.getWidth(subtitle);
+        context.drawText(this.textRenderer, subtitle, (w - subW) / 2, 38 + (int) (10 * scale) + 6, 0xFFFF8C00, true);
     }
 
     private void impactvisuals$fireOverlay(DrawContext context, int mouseX, int mouseY, float delta) {
