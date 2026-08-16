@@ -67,16 +67,17 @@ public final class HudLayoutManager {
     }
 
     /** Registered HUD elements the editor screen knows how to show/drag, with a human label and default box size for the editor preview. */
-    public static final Map<String, int[]> EDITABLE_HUDS = Map.of(
-            "target_hud", new int[]{130, 70},
-            "marker_hud", new int[]{130, 34},
-            "active_effects", new int[]{160, 40},
-            "info_hud", new int[]{110, 30},
-            "stats_hud", new int[]{140, 32},
-            "durability_hud", new int[]{60, 12},
-            "extra_hud", new int[]{160, 24},
-            "better_near", new int[]{150, 90},
-            "cooldown_indicator", new int[]{60, 14},
-            "build_helper_hud", new int[]{90, 40}
+    public static final Map<String, int[]> EDITABLE_HUDS = Map.ofEntries(
+            Map.entry("target_hud", new int[]{130, 70}),
+            Map.entry("marker_hud", new int[]{130, 34}),
+            Map.entry("active_effects", new int[]{160, 40}),
+            Map.entry("info_hud", new int[]{110, 30}),
+            Map.entry("stats_hud", new int[]{140, 32}),
+            Map.entry("durability_hud", new int[]{60, 12}),
+            Map.entry("extra_hud", new int[]{160, 24}),
+            Map.entry("better_near", new int[]{150, 90}),
+            Map.entry("cooldown_indicator", new int[]{60, 14}),
+            Map.entry("build_helper_hud", new int[]{90, 40}),
+            Map.entry("radar_hud", new int[]{84, 84})
     );
 }
