@@ -110,13 +110,31 @@ public class HatRenderer {
         };
     }
 
-    /** Three shrinking stacked blocks approximating a cone silhouette. */
+    private static final int CONE_LAYERS = 12;
+    private static final float CONE_BASE_RADIUS = 0.26f;
+    private static final float CONE_HEIGHT = 0.30f;
+
+    /** A real cone: many thin stacked layers, radius tapering by a square-root
+     * curve (a true cone's cross-section shrinks faster near the tip than
+     * linear stacking would), so it actually reads as a cone silhouette
+     * instead of a 3-step pyramid. Still built from solid blocks - the same
+     * reliable technique as the rest of the hats, just far more layers. */
     private static void renderChinaHat(MinecraftClient client, MatrixStack matrices,
                                         VertexConsumerProvider.Immediate consumers,
                                         BlockState state, int light) {
-        drawBlock(client, matrices, consumers, state, light, -0.24f, 0.00f, -0.24f, 0.48f, 0.14f, 0.48f);
-        drawBlock(client, matrices, consumers, state, light, -0.15f, 0.12f, -0.15f, 0.30f, 0.14f, 0.30f);
-        drawBlock(client, matrices, consumers, state, light, -0.06f, 0.24f, -0.06f, 0.12f, 0.14f, 0.12f);
+        float layerH = CONE_HEIGHT / CONE_LAYERS;
+
+        for (int i = 0; i < CONE_LAYERS; i++) {
+            float bottomFrac = 1f - (i / (float) CONE_LAYERS);
+            // sqrt taper: a true cone's radius at height h is proportional to
+            // (1 - h/H), but rendering with many blocky layers looks better
+            // visually if the taper accelerates a bit toward the tip.
+            float radius = CONE_BASE_RADIUS * (float) Math.sqrt(Math.max(0.02, bottomFrac));
+
+            float y = i * layerH;
+            drawBlock(client, matrices, consumers, state, light,
+                    -radius, y, -radius, radius * 2, layerH + 0.006f, radius * 2);
+        }
     }
 
     /** Rounded fur box plus two hanging ear flaps. */
