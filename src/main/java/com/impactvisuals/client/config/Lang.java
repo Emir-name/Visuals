@@ -45,6 +45,7 @@ public class Lang {
         RU.put("Hat (visible to other IV players)", "Шапка (видна другим IV-игрокам)");
         RU.put("Ushanka", "Ушанка");
         RU.put("Cap", "Кепка");
+        RU.put("Radar (other IV players)", "Радар (другие IV-игроки)");
         RU.put("Hat Color", "Цвет шапки");
         RU.put("White", "Белый");
         RU.put("Magenta", "Пурпурный");
