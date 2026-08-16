@@ -37,8 +37,22 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         return stars;
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void impactvisuals$blackStarBackground(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "init", at = @At("TAIL"))
+    private void impactvisuals$addFriendsButton(CallbackInfo ci) {
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Друзья"), btn ->
+                        this.client.setScreen(new FriendsScreen(this)))
+                .dimensions(8, 8, 90, 20).build());
+    }
+
+    /**
+     * Replaces the vanilla main menu render entirely: no rotating panorama,
+     * just a plain black background with smoldering orange "stars", then the
+     * normal buttons/widgets (via the base Screen implementation, which
+     * knows nothing about TitleScreen's own panorama drawing), then the
+     * existing fire-glow overlay and logo.
+     */
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void impactvisuals$replaceBackground(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         int w = this.width;
         int h = this.height;
 
@@ -58,17 +72,18 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
             int sy = (int) (star[1] * h);
             context.fill(sx, sy, sx + size, sy + size, color);
         }
+
+        // Base Screen behaviour only - draws every added widget (buttons, the
+        // Friends button, etc.) and tooltips, without TitleScreen's own
+        // panorama-drawing override running at all.
+        super.render(context, mouseX, mouseY, delta);
+
+        impactvisuals$fireOverlay(context, mouseX, mouseY, delta);
+
+        ci.cancel();
     }
 
-    @Inject(method = "init", at = @At("TAIL"))
-    private void impactvisuals$addFriendsButton(CallbackInfo ci) {
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Друзья"), btn ->
-                        this.client.setScreen(new FriendsScreen(this)))
-                .dimensions(8, 8, 90, 20).build());
-    }
-
-    @Inject(method = "render", at = @At("TAIL"))
-    private void impactvisuals$fireOverlay(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void impactvisuals$fireOverlay(DrawContext context, int mouseX, int mouseY, float delta) {
         int w = this.width;
         int h = this.height;
 
