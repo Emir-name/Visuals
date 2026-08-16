@@ -98,6 +98,7 @@ public final class ClientEventHandler {
             ImpactPunch.render(drawContext);
             ActiveEffectsHud.render(drawContext);
             com.impactvisuals.client.visual.MarkerHud.renderHud(drawContext);
+            com.impactvisuals.client.visual.RadarHud.render(drawContext);
             com.impactvisuals.client.visual.BuildHelperHud.renderHud(drawContext);
             BetterNearHud.render(drawContext);
         });
