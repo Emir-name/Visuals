@@ -22,6 +22,44 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
 
     private static final Identifier LOGO_TEXTURE = Identifier.of("impactvisuals", "textures/gui/logo.png");
 
+    private static final int STAR_COUNT = 140;
+    private static final float[][] STARS = generateStars();
+
+    private static float[][] generateStars() {
+        java.util.Random random = new java.util.Random(20260816L);
+        float[][] stars = new float[STAR_COUNT][4];
+        for (int i = 0; i < STAR_COUNT; i++) {
+            stars[i][0] = random.nextFloat();               // x (0-1 of screen width)
+            stars[i][1] = random.nextFloat();               // y (0-1 of screen height)
+            stars[i][2] = random.nextFloat() * 6.283f;       // phase offset for the "smoldering" pulse
+            stars[i][3] = 0.6f + random.nextFloat() * 1.4f;  // pulse speed
+        }
+        return stars;
+    }
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void impactvisuals$blackStarBackground(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        int w = this.width;
+        int h = this.height;
+
+        context.fill(0, 0, w, h, 0xFF000000);
+
+        long now = System.currentTimeMillis();
+        for (float[] star : STARS) {
+            float t = (now / 1000f) * star[3] + star[2];
+            float pulse = (float) (Math.sin(t) * 0.5 + 0.5); // 0..1 "smoldering" brightness
+
+            int size = pulse > 0.75f ? 2 : 1;
+            int brightness = (int) (140 + pulse * 115); // dim ember to bright orange
+            int alpha = (int) (140 + pulse * 115);
+            int color = (alpha << 24) | (brightness << 16) | (Math.min(140, brightness / 2) << 8);
+
+            int sx = (int) (star[0] * w);
+            int sy = (int) (star[1] * h);
+            context.fill(sx, sy, sx + size, sy + size, color);
+        }
+    }
+
     @Inject(method = "init", at = @At("TAIL"))
     private void impactvisuals$addFriendsButton(CallbackInfo ci) {
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Друзья"), btn ->
