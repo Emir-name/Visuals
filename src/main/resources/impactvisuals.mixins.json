@@ -7,7 +7,8 @@
     "HeldItemRendererMixin",
     "SkyColorMixin",
     "CustomSkinMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "PanoramaMixin"
   ],
   "injectors": {
     "defaultRequire": 1
