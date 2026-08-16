@@ -92,7 +92,7 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         // NOT the vanilla grey texture - so we skip calling super.render()
         // entirely and instead do our own pass over the widget list.
         for (var child : this.children()) {
-            if (child instanceof ButtonWidget button && !button.getMessage().getString().isBlank()) {
+            if (child instanceof ButtonWidget button && button.getWidth() > 40) {
                 drawCustomButton(context, button, mouseX, mouseY);
             } else if (child instanceof ClickableWidget widget) {
                 widget.render(context, mouseX, mouseY, delta);
@@ -174,7 +174,7 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         context.fill(x, y, x + 1, y + h, borderColor);
         context.fill(x + w - 1, y, x + w, y + h, borderColor);
 
-        String label = button.getMessage().getString();
+        String label = this.textRenderer.trimToWidth(button.getMessage().getString(), Math.max(0, w - 6));
         int textW = this.textRenderer.getWidth(label);
         context.drawText(this.textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor, true);
     }
