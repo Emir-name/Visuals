@@ -46,10 +46,9 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
 
     /**
      * Replaces the vanilla main menu render entirely: no rotating panorama,
-     * just a plain black background with smoldering orange "stars", then the
-     * normal buttons/widgets (via the base Screen implementation, which
-     * knows nothing about TitleScreen's own panorama drawing), then the
-     * existing fire-glow overlay and logo.
+     * a plain black background with smoldering orange "stars", then every
+     * button drawn with our own fire-themed fill/border/text (not the
+     * vanilla grey button texture at all), then the title and glow overlay.
      */
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void impactvisuals$replaceBackground(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
@@ -87,22 +86,20 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
             }
         }
 
-        // Solid accent panel BEHIND each button, drawn before the vanilla
-        // button texture so it reads as a proper frame the button "sits in",
-        // not a blurry glow - keeps it clearly readable against the black background.
+        impactvisuals$drawTitleText(context, w);
+
+        // Draw every button completely ourselves (fill + border + label) -
+        // NOT the vanilla grey texture - so we skip calling super.render()
+        // entirely and instead do our own pass over the widget list.
         for (var child : this.children()) {
-            if (child instanceof ClickableWidget widget) {
-                drawButtonPanel(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
+            if (child instanceof ButtonWidget button && !button.getMessage().getString().isBlank()) {
+                drawCustomButton(context, button, mouseX, mouseY);
+            } else if (child instanceof ClickableWidget widget) {
+                widget.render(context, mouseX, mouseY, delta);
             }
         }
 
-        // Base Screen behaviour only - draws every added widget (buttons, the
-        // Friends button, etc.) and tooltips, without TitleScreen's own
-        // panorama-drawing override running at all.
-        super.render(context, mouseX, mouseY, delta);
-
-        impactvisuals$drawTitleText(context, w);
-        impactvisuals$fireOverlay(context, mouseX, mouseY, delta);
+        impactvisuals$fireOverlay(context, w, h);
 
         ci.cancel();
     }
@@ -129,20 +126,11 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         context.drawText(this.textRenderer, subtitle, (w - subW) / 2, 38 + (int) (10 * scale) + 6, 0xFFFF8C00, true);
     }
 
-    private void impactvisuals$fireOverlay(DrawContext context, int mouseX, int mouseY, float delta) {
-        int w = this.width;
-        int h = this.height;
-
+    private void impactvisuals$fireOverlay(DrawContext context, int w, int h) {
         int topColor = 0x882D0000;
         int bottomColor = 0xB3120000;
         context.fillGradient(0, 0, w, h / 3, topColor, 0x00000000);
         context.fillGradient(0, h - h / 3, w, h, 0x00000000, bottomColor);
-
-        for (var child : this.children()) {
-            if (child instanceof ClickableWidget widget) {
-                drawButtonBorder(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
-            }
-        }
 
         int logoSize = 40;
         int logoX = w - logoSize - 8;
@@ -151,28 +139,43 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
                 logoX, logoY, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
     }
 
-    /** A dark red-brown panel drawn just outside each button's bounds, before the vanilla texture draws on top - reads as a proper frame the button sits inside. */
-    private void drawButtonPanel(DrawContext context, int x, int y, int w, int h) {
-        int expand = 4;
-        int px = x - expand;
-        int py = y - expand;
-        int pw = w + expand * 2;
-        int ph = h + expand * 2;
-        context.fill(px, py, px + pw, py + ph, 0xE82A0F05);
-    }
+    /** Draws one button entirely ourselves - solid dark-red/black fill (brighter on hover), a
+     * bright orange border, and the label - instead of letting the vanilla grey button texture
+     * render, so buttons never blend into the black starfield background. */
+    private void drawCustomButton(DrawContext context, ButtonWidget button, int mouseX, int mouseY) {
+        int x = button.getX();
+        int y = button.getY();
+        int w = button.getWidth();
+        int h = button.getHeight();
+        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        boolean active = button.active;
 
-    /** Crisp bright orange outline around the panel, drawn after the vanilla button so it's never covered. */
-    private void drawButtonBorder(DrawContext context, int x, int y, int w, int h) {
-        int expand = 4;
-        int bx = x - expand;
-        int by = y - expand;
-        int bw = w + expand * 2;
-        int bh = h + expand * 2;
-        int color = 0xFFFF8C00;
+        // Warm charcoal base (close to the background tone, not a separate red
+        // block) with a thin glowing orange edge - reads as part of the same
+        // dark scene while the bright border keeps it from disappearing.
+        int fillColor = !active ? 0xFF141210 : hovered ? 0xFF2A211A : 0xFF1B1613;
+        int borderColor = !active ? 0xFF4A4A4A : hovered ? 0xFFFFC966 : 0xFFCC6A1A;
+        int textColor = !active ? 0xFF808080 : 0xFFFFFFFF;
 
-        context.fill(bx, by, bx + bw, by + 2, color);
-        context.fill(bx, by + bh - 2, bx + bw, by + bh, color);
-        context.fill(bx, by, bx + 2, by + bh, color);
-        context.fill(bx + bw - 2, by, bx + bw, by + bh, color);
+        context.fill(x, y, x + w, y + h, fillColor);
+
+        // Soft outer glow, one pixel wider than the crisp border, so the edge
+        // feels like it's lit rather than just outlined.
+        if (active) {
+            int glow = hovered ? 0x55FF8C1A : 0x33FF8C1A;
+            context.fill(x - 1, y - 1, x + w + 1, y, glow);
+            context.fill(x - 1, y + h, x + w + 1, y + h + 1, glow);
+            context.fill(x - 1, y, x, y + h, glow);
+            context.fill(x + w, y, x + w + 1, y + h, glow);
+        }
+
+        context.fill(x, y, x + w, y + 1, borderColor);
+        context.fill(x, y + h - 1, x + w, y + h, borderColor);
+        context.fill(x, y, x + 1, y + h, borderColor);
+        context.fill(x + w - 1, y, x + w, y + h, borderColor);
+
+        String label = button.getMessage().getString();
+        int textW = this.textRenderer.getWidth(label);
+        context.drawText(this.textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor, true);
     }
 }
