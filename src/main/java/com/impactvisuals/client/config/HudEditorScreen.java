@@ -103,6 +103,7 @@ public class HudEditorScreen extends Screen {
             case "better_near" -> new int[]{this.width - boxW - 6, this.height - boxH - 30};
             case "cooldown_indicator" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 + 12};
             case "build_helper_hud" -> new int[]{this.width / 2 - boxW / 2, this.height / 2 + 20};
+            case "radar_hud" -> new int[]{this.width - boxW - 12, 60};
             default -> new int[]{this.width / 2 - boxW / 2, this.height / 2 - boxH / 2};
         };
     }
@@ -161,6 +162,7 @@ public class HudEditorScreen extends Screen {
             case "better_near" -> "Better Near";
             case "cooldown_indicator" -> "Cooldown";
             case "build_helper_hud" -> "Build Helper";
+            case "radar_hud" -> "Radar";
             default -> id;
         };
     }
