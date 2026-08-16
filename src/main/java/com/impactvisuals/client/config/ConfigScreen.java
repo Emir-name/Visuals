@@ -321,6 +321,7 @@ public class ConfigScreen extends Screen {
             addToggle("Zoom (hold C)", () -> cfg.zoomEnabled, v -> cfg.zoomEnabled = v);
             addToggle("Auto Jump", () -> cfg.autoJumpEnabled, v -> cfg.autoJumpEnabled = v);
             addToggle("Real Clock", () -> cfg.realClockEnabled, v -> cfg.realClockEnabled = v);
+            addToggle("Radar (other IV players)", () -> cfg.radarEnabled, v -> cfg.radarEnabled = v);
         } else if (currentCategory == 2) {
             // UTILITIES: style + sound + theme + friends
             String[] crosshairNames = {"Off", "Dot", "Cross", "Ring"};
@@ -1229,6 +1230,7 @@ public class ConfigScreen extends Screen {
         cfg.markerEnabled = false;
         cfg.hatIndex = 0;
         cfg.hatColorIndex = 4;
+        cfg.radarEnabled = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1318,6 +1320,7 @@ public class ConfigScreen extends Screen {
         cfg.markerEnabled = false;
         cfg.hatIndex = 0;
         cfg.hatColorIndex = 4;
+        cfg.radarEnabled = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1647,4 +1650,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-    }
+}
