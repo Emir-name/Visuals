@@ -87,6 +87,15 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
             }
         }
 
+        // Solid accent panel BEHIND each button, drawn before the vanilla
+        // button texture so it reads as a proper frame the button "sits in",
+        // not a blurry glow - keeps it clearly readable against the black background.
+        for (var child : this.children()) {
+            if (child instanceof ClickableWidget widget) {
+                drawButtonPanel(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
+            }
+        }
+
         // Base Screen behaviour only - draws every added widget (buttons, the
         // Friends button, etc.) and tooltips, without TitleScreen's own
         // panorama-drawing override running at all.
@@ -131,7 +140,7 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
 
         for (var child : this.children()) {
             if (child instanceof ClickableWidget widget) {
-                drawGlow(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
+                drawButtonBorder(context, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
             }
         }
 
@@ -142,20 +151,28 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
                 logoX, logoY, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
     }
 
-    private void drawGlow(DrawContext context, int x, int y, int w, int h) {
-        int[] alphas = {170, 110, 60};
-        for (int i = 0; i < alphas.length; i++) {
-            int expand = i + 1;
-            int color = (alphas[i] << 24) | 0xFF8C00;
-            int gx = x - expand;
-            int gy = y - expand;
-            int gw = w + expand * 2;
-            int gh = h + expand * 2;
+    /** A dark red-brown panel drawn just outside each button's bounds, before the vanilla texture draws on top - reads as a proper frame the button sits inside. */
+    private void drawButtonPanel(DrawContext context, int x, int y, int w, int h) {
+        int expand = 4;
+        int px = x - expand;
+        int py = y - expand;
+        int pw = w + expand * 2;
+        int ph = h + expand * 2;
+        context.fill(px, py, px + pw, py + ph, 0xE82A0F05);
+    }
 
-            context.fill(gx, gy, gx + gw, gy + 1, color);
-            context.fill(gx, gy + gh - 1, gx + gw, gy + gh, color);
-            context.fill(gx, gy, gx + 1, gy + gh, color);
-            context.fill(gx + gw - 1, gy, gx + gw, gy + gh, color);
-        }
+    /** Crisp bright orange outline around the panel, drawn after the vanilla button so it's never covered. */
+    private void drawButtonBorder(DrawContext context, int x, int y, int w, int h) {
+        int expand = 4;
+        int bx = x - expand;
+        int by = y - expand;
+        int bw = w + expand * 2;
+        int bh = h + expand * 2;
+        int color = 0xFFFF8C00;
+
+        context.fill(bx, by, bx + bw, by + 2, color);
+        context.fill(bx, by + bh - 2, bx + bw, by + bh, color);
+        context.fill(bx, by, bx + 2, by + bh, color);
+        context.fill(bx + bw - 2, by, bx + bw, by + bh, color);
     }
 }
