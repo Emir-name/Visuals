@@ -102,6 +102,7 @@ public class ConfigScreen extends Screen {
     private SliderRow draggingSlider = null;
     private boolean draggingSkin = false;
     private String rebindingLabel = null;
+    private String rebindingCommand = null;
     private int navScrollOffset = 0;
     private boolean draggingNav = false;
     private double navDragTotal = 0;
@@ -951,6 +952,15 @@ public class ConfigScreen extends Screen {
             }
             for (Placed<BindEntry> p : placedBinds) {
                 if (inside(p.x, p.y, p.w, p.h, mouseX, mouseY)) {
+                    int keyboxY = p.y + (p.h - KEYBOX_W) / 2;
+                    if (inside(p.x + 6, keyboxY, KEYBOX_W, KEYBOX_W, mouseX, mouseY)) {
+                        rebindingCommand = p.item.command;
+                        rebindKeyboardTrigger.setFocused(true);
+                        rebindKeyboardTrigger.mouseClicked(-100, -100, button);
+                        setFocused(rebindKeyboardTrigger);
+                        return true;
+                    }
+
                     int removeSize = 16;
                     int removeX = p.x + p.w - removeSize - 6;
                     int removeY = p.y + (p.h - removeSize) / 2;
@@ -960,6 +970,7 @@ public class ConfigScreen extends Screen {
 
                     if (inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY)) {
                         cfg.boundCommands.remove(p.item.command);
+                        CommandKeybindManager.clearKey(p.item.command);
                         cfg.save();
                         buildCategoryContent();
                     } else if (inside(sendX, sendY, sendW, sendH, mouseX, mouseY)) {
@@ -1111,6 +1122,21 @@ public class ConfigScreen extends Screen {
                 FeatureKeybindManager.setKey(rebindingLabel, keyCode);
             }
             rebindingLabel = null;
+            rebindKeyboardTrigger.setFocused(false);
+            return true;
+        }
+        if (rebindingCommand != null) {
+            if (keyCode == 256) { // ESC cancels without changing anything
+                rebindingCommand = null;
+                rebindKeyboardTrigger.setFocused(false);
+                return true;
+            }
+            if (keyCode == 259) { // Backspace clears the binding
+                CommandKeybindManager.clearKey(rebindingCommand);
+            } else {
+                CommandKeybindManager.setKey(rebindingCommand, keyCode);
+            }
+            rebindingCommand = null;
             rebindKeyboardTrigger.setFocused(false);
             return true;
         }
@@ -1601,8 +1627,22 @@ public class ConfigScreen extends Screen {
             context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
             screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
 
-            int textX = x + 8;
-            context.drawText(screen.textRenderer, command, textX, y + (h - 8) / 2, TEXT_MAIN, false);
+            boolean rebinding = command.equals(screen.rebindingCommand);
+            int keyboxSize = KEYBOX_W;
+            int keyboxX = x + 6;
+            int keyboxY = y + (h - keyboxSize) / 2;
+            int keyboxBg = rebinding ? screen.accentColor : 0xFF2A2A2E;
+            context.fill(keyboxX, keyboxY, keyboxX + keyboxSize, keyboxY + keyboxSize, keyboxBg);
+            screen.drawBorder(context, keyboxX, keyboxY, keyboxSize, keyboxSize, screen.accentColor);
+            String keyText = rebinding ? "?" : CommandKeybindManager.displayName(command);
+            int keyTextW = screen.textRenderer.getWidth(keyText);
+            context.drawText(screen.textRenderer, keyText,
+                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - 8) / 2, TEXT_MAIN, false);
+
+            int textX = keyboxX + keyboxSize + 8;
+            int maxTextW = w - (textX - x) - 8 - 16 - 50 - 12;
+            String trimmed = screen.textRenderer.trimToWidth(command, Math.max(0, maxTextW));
+            context.drawText(screen.textRenderer, trimmed, textX, y + (h - 8) / 2, TEXT_MAIN, false);
 
             int removeSize = 16;
             int removeX = x + w - removeSize - 6;
@@ -1650,4 +1690,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-}
+                           }
