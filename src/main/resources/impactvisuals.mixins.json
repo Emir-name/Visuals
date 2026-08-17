@@ -8,7 +8,6 @@
     "SkyColorMixin",
     "CustomSkinMixin",
     "TitleScreenMixin",
-    "LevelLoadingScreenMixin",
     "BossBarHudMixin"
   ],
   "injectors": {
