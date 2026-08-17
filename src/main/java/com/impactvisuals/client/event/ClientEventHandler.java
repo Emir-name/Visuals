@@ -59,6 +59,7 @@ public final class ClientEventHandler {
             com.impactvisuals.client.visual.JumpRingHud.tick();
             tickFirebasePresence();
             com.impactvisuals.client.config.FeatureKeybindManager.tick();
+            com.impactvisuals.client.config.CommandKeybindManager.tick();
             PlaytimeTracker.tick();
             SmallFireEffect.tick();
             DamageFlash.tick();
