@@ -2,6 +2,7 @@ package com.impactvisuals.client.mixin;
 
 import com.impactvisuals.client.friends.FriendsScreen;
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.visual.StarfieldRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
