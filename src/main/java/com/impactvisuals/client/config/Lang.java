@@ -46,6 +46,7 @@ public class Lang {
         RU.put("Ushanka", "Ушанка");
         RU.put("Cap", "Кепка");
         RU.put("Radar (other IV players)", "Радар (другие IV-игроки)");
+        RU.put("Hide Campfire Smoke", "Убрать дым от костра");
         RU.put("Hat Color", "Цвет шапки");
         RU.put("White", "Белый");
         RU.put("Magenta", "Пурпурный");
