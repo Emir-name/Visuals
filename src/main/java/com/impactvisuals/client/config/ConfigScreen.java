@@ -288,6 +288,7 @@ public class ConfigScreen extends Screen {
             addToggle("Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
             addToggle("Kill Feed", () -> cfg.killFeedEnabled, v -> cfg.killFeedEnabled = v);
             addToggle("Small Fire", () -> cfg.smallFireEnabled, v -> cfg.smallFireEnabled = v);
+            addToggle("Hide Campfire Smoke", () -> cfg.hideCampfireSmoke, v -> cfg.hideCampfireSmoke = v);
 
             if (cfg.customHandleEnabled) {
                 sliders.add(new SliderRow("Scale %", 30, 200, cfg.customHandleScalePercent, v -> cfg.customHandleScalePercent = v));
@@ -1257,6 +1258,7 @@ public class ConfigScreen extends Screen {
         cfg.hatIndex = 0;
         cfg.hatColorIndex = 4;
         cfg.radarEnabled = false;
+        cfg.hideCampfireSmoke = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1347,6 +1349,7 @@ public class ConfigScreen extends Screen {
         cfg.hatIndex = 0;
         cfg.hatColorIndex = 4;
         cfg.radarEnabled = false;
+        cfg.hideCampfireSmoke = false;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1690,4 +1693,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-                           }
+}
