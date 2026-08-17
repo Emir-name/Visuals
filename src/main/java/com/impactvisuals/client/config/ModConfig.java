@@ -118,6 +118,7 @@ public class ModConfig {
     public java.util.List<String> boundCommands = new java.util.ArrayList<>();
     /** Maps a feature's label (e.g. "Auto Jump") to a bound key's translation key (e.g. "key.keyboard.j"). */
     public java.util.Map<String, String> featureKeybinds = new java.util.HashMap<>();
+    public java.util.Map<String, String> commandKeybinds = new java.util.HashMap<>();
 
     public float hitParticleLifetimeSeconds = 0.5f;
     public float damageNumberLifetimeSeconds = 0.8f;
@@ -210,3 +211,4 @@ public class ModConfig {
         }
     }
 }
+
