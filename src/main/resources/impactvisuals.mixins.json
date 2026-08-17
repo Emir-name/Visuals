@@ -7,7 +7,9 @@
     "HeldItemRendererMixin",
     "SkyColorMixin",
     "CustomSkinMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "LevelLoadingScreenMixin",
+    "BossBarHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
