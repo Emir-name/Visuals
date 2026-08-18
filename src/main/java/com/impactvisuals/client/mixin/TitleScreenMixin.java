@@ -2,6 +2,7 @@ package com.impactvisuals.client.mixin;
 
 import com.impactvisuals.client.friends.FriendsScreen;
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.visual.MenuButtonRenderer;
 import com.impactvisuals.client.visual.StarfieldRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -51,7 +52,7 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         // entirely and instead do our own pass over the widget list.
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button && button.getWidth() > 40) {
-                drawCustomButton(context, button, mouseX, mouseY);
+                MenuButtonRenderer.draw(context, this.textRenderer, button, mouseX, mouseY);
             } else if (child instanceof ClickableWidget widget) {
                 widget.render(context, mouseX, mouseY, delta);
             }
@@ -100,40 +101,4 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
     /** Draws one button entirely ourselves - solid dark-red/black fill (brighter on hover), a
      * bright orange border, and the label - instead of letting the vanilla grey button texture
      * render, so buttons never blend into the black starfield background. */
-    private void drawCustomButton(DrawContext context, ButtonWidget button, int mouseX, int mouseY) {
-        int x = button.getX();
-        int y = button.getY();
-        int w = button.getWidth();
-        int h = button.getHeight();
-        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-        boolean active = button.active;
-
-        // Warm charcoal base (close to the background tone, not a separate red
-        // block) with a thin glowing orange edge - reads as part of the same
-        // dark scene while the bright border keeps it from disappearing.
-        int fillColor = !active ? 0xFF141210 : hovered ? 0xFF2A211A : 0xFF1B1613;
-        int borderColor = !active ? 0xFF4A4A4A : hovered ? 0xFFFFC966 : 0xFFCC6A1A;
-        int textColor = !active ? 0xFF808080 : 0xFFFFFFFF;
-
-        context.fill(x, y, x + w, y + h, fillColor);
-
-        // Soft outer glow, one pixel wider than the crisp border, so the edge
-        // feels like it's lit rather than just outlined.
-        if (active) {
-            int glow = hovered ? 0x55FF8C1A : 0x33FF8C1A;
-            context.fill(x - 1, y - 1, x + w + 1, y, glow);
-            context.fill(x - 1, y + h, x + w + 1, y + h + 1, glow);
-            context.fill(x - 1, y, x, y + h, glow);
-            context.fill(x + w, y, x + w + 1, y + h, glow);
-        }
-
-        context.fill(x, y, x + w, y + 1, borderColor);
-        context.fill(x, y + h - 1, x + w, y + h, borderColor);
-        context.fill(x, y, x + 1, y + h, borderColor);
-        context.fill(x + w - 1, y, x + w, y + h, borderColor);
-
-        String label = this.textRenderer.trimToWidth(button.getMessage().getString(), Math.max(0, w - 6));
-        int textW = this.textRenderer.getWidth(label);
-        context.drawText(this.textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor, true);
-    }
 }
