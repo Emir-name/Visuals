@@ -43,11 +43,14 @@ public class BuildHelperHud {
         if (!(held.getItem() instanceof BlockItem blockItem)) return;
 
         BlockHitResult hit = (BlockHitResult) client.crosshairTarget;
-        BlockPos placePos = getPlacementPos(hit, client.world);
-        if (placePos == null) return;
-        if (!client.world.getBlockState(placePos).isReplaceable()) return;
 
-        BlockState previewState = resolvePlacementState(client, blockItem, held, hit, placePos);
+        ItemPlacementContext placementContext = buildPlacementContext(client, blockItem, held, hit);
+        if (placementContext == null) return;
+
+        BlockPos placePos = placementContext.getBlockPos();
+        if (placePos == null || !client.world.getBlockState(placePos).isReplaceable()) return;
+
+        BlockState previewState = resolvePlacementState(blockItem, placementContext);
         if (previewState == null) return;
 
         MatrixStack matrices = context.matrixStack();
@@ -86,16 +89,23 @@ public class BuildHelperHud {
     }
 
     /**
-     * Asks the block itself how it would orient given the current placement
-     * context (facing, half, waterlogged, etc.) - the same logic vanilla uses
-     * when you actually place it - so stairs/shulkers/slabs/etc. preview correctly.
-     * Falls back to the block's default state if that logic can't run for some reason.
+     * Builds the exact same ItemPlacementContext vanilla uses when you actually
+     * click to place - its own getBlockPos() correctly handles replaceable/partial
+     * blocks (snow layers, farmland, etc.) instead of us re-deriving position by hand.
      */
-    private static BlockState resolvePlacementState(MinecraftClient client, BlockItem blockItem, ItemStack stack,
-                                                      BlockHitResult hit, BlockPos placePos) {
+    private static ItemPlacementContext buildPlacementContext(MinecraftClient client, BlockItem blockItem,
+                                                                ItemStack stack, BlockHitResult hit) {
         try {
             ItemUsageContext useContext = new ItemUsageContext(client.world, client.player, Hand.MAIN_HAND, stack, hit);
-            ItemPlacementContext placementContext = new ItemPlacementContext(useContext);
+            return new ItemPlacementContext(useContext);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Asks the block itself how it would orient given the real placement context (facing, half, waterlogged, etc.). */
+    private static BlockState resolvePlacementState(BlockItem blockItem, ItemPlacementContext placementContext) {
+        try {
             BlockState state = blockItem.getBlock().getPlacementState(placementContext);
             return state != null ? state : blockItem.getBlock().getDefaultState();
         } catch (Exception e) {
@@ -147,9 +157,13 @@ public class BuildHelperHud {
         if (client.crosshairTarget == null || client.crosshairTarget.getType() != HitResult.Type.BLOCK) return;
 
         ItemStack held = client.player.getMainHandStack();
-        if (!(held.getItem() instanceof BlockItem)) return;
+        if (!(held.getItem() instanceof BlockItem blockItem)) return;
 
-        BlockPos placePos = getPlacementPos((BlockHitResult) client.crosshairTarget, client.world);
+        BlockHitResult hit = (BlockHitResult) client.crosshairTarget;
+        ItemPlacementContext placementContext = buildPlacementContext(client, blockItem, held, hit);
+        if (placementContext == null) return;
+
+        BlockPos placePos = placementContext.getBlockPos();
         if (placePos == null) return;
 
         double distance = client.player.getEyePos().distanceTo(Vec3d.ofCenter(placePos));
@@ -173,13 +187,5 @@ public class BuildHelperHud {
         context.drawCenteredTextWithShadow(client.textRenderer, line2, x + cardW / 2, y + 16, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(client.textRenderer, line3, x + cardW / 2, y + 27, 0xFFAAAAAA);
         com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
-    }
-
-    private static BlockPos getPlacementPos(BlockHitResult hit, net.minecraft.world.World world) {
-        BlockPos hitPos = hit.getBlockPos();
-        if (!world.getBlockState(hitPos).isReplaceable()) {
-            return hitPos.offset(hit.getSide());
-        }
-        return hitPos;
     }
 }
