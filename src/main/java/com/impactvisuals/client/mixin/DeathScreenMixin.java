@@ -39,31 +39,48 @@ public abstract class DeathScreenMixin extends net.minecraft.client.gui.screen.S
         context.fill(0, 0, w, h, 0xFF000000);
         StarfieldRenderer.draw(context, w, h);
 
+        // Find where vanilla actually placed the buttons instead of guessing a
+        // fixed offset - that guess previously landed text on top of them on
+        // some screen sizes.
+        int firstButtonY = h;
+        for (var child : this.children()) {
+            if (child instanceof ButtonWidget button && button.getWidth() > 40) {
+                firstButtonY = Math.min(firstButtonY, button.getY());
+            }
+        }
+
+        String cause = this.message != null ? this.message.getString() : "";
+        MinecraftClient client = MinecraftClient.getInstance();
+        String score = client.player != null ? "Score: " + client.player.getScore() : "";
+
+        // Stack title/cause/score bottom-up from a fixed gap above the first
+        // button, so there's never overlap regardless of vanilla's own layout.
+        int y = firstButtonY - 16;
+
+        if (!score.isBlank()) {
+            int scoreW = this.textRenderer.getWidth(score);
+            context.drawText(this.textRenderer, score, (w - scoreW) / 2, y, 0xFFFF8C00, true);
+            y -= 14;
+        }
+        if (!cause.isBlank()) {
+            int causeW = this.textRenderer.getWidth(cause);
+            context.drawText(this.textRenderer, cause, (w - causeW) / 2, y, 0xFFCCCCCC, true);
+            y -= 16;
+        }
+
         String titleText = "YOU DIED";
         var matrices = context.getMatrices();
         float scale = 2.5f;
         int titleW = this.textRenderer.getWidth(titleText);
+        int titleY = y - (int) (9 * scale) - 10;
 
         matrices.push();
-        matrices.translate(w / 2f, h / 2f - 60, 0);
+        matrices.translate(w / 2f, titleY, 0);
         matrices.scale(scale, scale, 1f);
         matrices.translate(-titleW / 2f, 0, 0);
         context.drawText(this.textRenderer, titleText, 1, 1, 0x60000000, false);
         context.drawText(this.textRenderer, titleText, 0, 0, 0xFFFF4433, false);
         matrices.pop();
-
-        String cause = this.message != null ? this.message.getString() : "";
-        if (!cause.isBlank()) {
-            int causeW = this.textRenderer.getWidth(cause);
-            context.drawText(this.textRenderer, cause, (w - causeW) / 2, h / 2 - 20, 0xFFCCCCCC, true);
-        }
-
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null) {
-            String score = "Score: " + client.player.getScore();
-            int scoreW = this.textRenderer.getWidth(score);
-            context.drawText(this.textRenderer, score, (w - scoreW) / 2, h / 2 - 6, 0xFFFF8C00, true);
-        }
 
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button && button.getWidth() > 40) {
@@ -76,3 +93,4 @@ public abstract class DeathScreenMixin extends net.minecraft.client.gui.screen.S
         ci.cancel();
     }
 }
+
