@@ -9,7 +9,9 @@
     "CustomSkinMixin",
     "TitleScreenMixin",
     "BossBarHudMixin",
-    "CampfireSmokeMixin"
+    "CampfireSmokeMixin",
+    "DeathScreenMixin",
+    "ExperienceBarMixin"
   ],
   "injectors": {
     "defaultRequire": 1
