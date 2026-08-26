@@ -581,9 +581,9 @@ public class ConfigScreen extends Screen {
             boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
 
             if (active) {
-                context.fill(6, itemY + 2, sidebarW - 6, itemY + navItemH - 2, accentDimColor);
+                fillRounded(context, 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, accentDimColor);
             } else if (hovered) {
-                context.fill(6, itemY + 2, sidebarW - 6, itemY + navItemH - 2, 0x20FFFFFF);
+                fillRounded(context, 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, 0x20FFFFFF);
             }
 
             int dotSize = 6;
@@ -827,16 +827,16 @@ public class ConfigScreen extends Screen {
     private void drawHeaderButton(DrawContext context, int x, int y, int w, int h, String label, int mouseX, int mouseY) {
         boolean hovered = inside(x, y, w, h, mouseX, mouseY);
         int bg = hovered ? accentDimColor : CARD_BG;
-        context.fill(x, y, x + w, y + h, bg);
-        drawBorder(context, x, y, w, h, hovered ? accentColor : TRACK_OFF);
+        fillRounded(context, x, y, w, h, 5, bg);
+        drawRoundedBorder(context, x, y, w, h, 5, hovered ? accentColor : TRACK_OFF);
         String translated = Lang.t(label);
         int textWidth = this.textRenderer.getWidth(translated);
         context.drawText(this.textRenderer, translated, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
     }
 
     private void renderSkinPanel(DrawContext context) {
-        context.fill(skinPanelX, skinPanelY, skinPanelX + skinPanelW, skinPanelY + skinPanelH, CARD_BG);
-        drawBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, accentColor);
+        fillRounded(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, 8, CARD_BG);
+        drawRoundedBorder(context, skinPanelX, skinPanelY, skinPanelW, skinPanelH, 8, accentColor);
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
@@ -862,6 +862,59 @@ public class ConfigScreen extends Screen {
         context.fill(x, y + h - 1, x + w, y + h, color);
         context.fill(x, y, x + 1, y + h, color);
         context.fill(x + w - 1, y, x + w, y + h, color);
+    }
+
+    /** Precomputed per-row inset (in pixels) for a quarter-circle corner of the given radius, index = row from the corner's outer edge. */
+    private static int[] cornerInsets(int radius) {
+        int[] insets = new int[radius];
+        for (int row = 0; row < radius; row++) {
+            double dy = radius - row - 0.5;
+            double dx = Math.sqrt(Math.max(0, radius * radius - dy * dy));
+            insets[row] = radius - (int) Math.round(dx);
+        }
+        return insets;
+    }
+
+    /** Fills a rect with the four corners rounded off (stepped circular approximation - no textures needed). */
+    private void fillRounded(DrawContext context, int x, int y, int w, int h, int radius, int color) {
+        radius = Math.max(0, Math.min(radius, Math.min(w, h) / 2));
+        if (radius == 0) {
+            context.fill(x, y, x + w, y + h, color);
+            return;
+        }
+        int[] insets = cornerInsets(radius);
+
+        context.fill(x, y + radius, x + w, y + h - radius, color);
+
+        for (int row = 0; row < radius; row++) {
+            int inset = insets[row];
+            context.fill(x + inset, y + row, x + w - inset, y + row + 1, color);
+            context.fill(x + inset, y + h - 1 - row, x + w - inset, y + h - row, color);
+        }
+    }
+
+    /** Same stepped-corner rounding, but drawn as a 1px outline instead of a fill. */
+    private void drawRoundedBorder(DrawContext context, int x, int y, int w, int h, int radius, int color) {
+        radius = Math.max(0, Math.min(radius, Math.min(w, h) / 2));
+        if (radius == 0) {
+            drawBorder(context, x, y, w, h, color);
+            return;
+        }
+        int[] insets = cornerInsets(radius);
+
+        context.fill(x + radius, y, x + w - radius, y + 1, color);
+        context.fill(x + radius, y + h - 1, x + w - radius, y + h, color);
+        context.fill(x, y + radius, x + 1, y + h - radius, color);
+        context.fill(x + w - 1, y + radius, x + w, y + h - radius, color);
+
+        for (int row = 0; row < radius; row++) {
+            int inset = insets[row];
+            int prevInset = row > 0 ? insets[row - 1] : radius;
+            context.fill(x + inset, y + row, x + Math.max(inset + 1, prevInset), y + row + 1, color);
+            context.fill(x + w - Math.max(inset + 1, prevInset), y + row, x + w - inset, y + row + 1, color);
+            context.fill(x + inset, y + h - 1 - row, x + Math.max(inset + 1, prevInset), y + h - row, color);
+            context.fill(x + w - Math.max(inset + 1, prevInset), y + h - 1 - row, x + w - inset, y + h - row, color);
+        }
     }
 
     @Override
@@ -1412,8 +1465,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY, float dt) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
-            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
-            screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
+            screen.fillRounded(context, x, y, w, h, 6, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawRoundedBorder(context, x, y, w, h, 6, hovered ? screen.accentColor : 0xFF2A2A2E);
 
             boolean rebinding = label.equals(screen.rebindingLabel);
             int keyboxSize = KEYBOX_W;
@@ -1548,8 +1601,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
-            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
-            screen.drawBorder(context, x, y, w, h, hovered ? screen.accentColor : 0xFF2A2A2E);
+            screen.fillRounded(context, x, y, w, h, 6, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawRoundedBorder(context, x, y, w, h, 6, hovered ? screen.accentColor : 0xFF2A2A2E);
 
             int current = Math.max(0, Math.min(options.length - 1, getter.getAsInt()));
             context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
@@ -1571,8 +1624,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
-            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
-            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+            screen.fillRounded(context, x, y, w, h, 6, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawRoundedBorder(context, x, y, w, h, 6, 0xFF2A2A2E);
 
             int iconSize = 18;
             int iconX = x + 6;
@@ -1627,8 +1680,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
-            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
-            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+            screen.fillRounded(context, x, y, w, h, 6, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawRoundedBorder(context, x, y, w, h, 6, 0xFF2A2A2E);
 
             boolean rebinding = command.equals(screen.rebindingCommand);
             int keyboxSize = KEYBOX_W;
@@ -1672,8 +1725,8 @@ public class ConfigScreen extends Screen {
 
         void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int h, int mouseX, int mouseY) {
             boolean hovered = screen.inside(x, y, w, h, mouseX, mouseY);
-            context.fill(x, y, x + w, y + h, hovered ? CARD_BG_HOVER : CARD_BG);
-            screen.drawBorder(context, x, y, w, h, 0xFF2A2A2E);
+            screen.fillRounded(context, x, y, w, h, 6, hovered ? CARD_BG_HOVER : CARD_BG);
+            screen.drawRoundedBorder(context, x, y, w, h, 6, 0xFF2A2A2E);
 
             int textX = x + 8;
             context.drawText(screen.textRenderer, name, textX, y + (h - 8) / 2, TEXT_MAIN, false);
@@ -1693,4 +1746,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-}
+                }
