@@ -42,9 +42,12 @@ public class WelcomeScreen extends Screen {
         // Phone screens are viewed from further away relative to their size and
         // hit with fingers, not a precise cursor, so HUD text/cards start
         // noticeably bigger. PC keeps the mod's original, more compact default.
+        // Info HUD is already a dense multi-line block of text, so it gets a
+        // smaller bump than the rest or it ends up oversized/overlapping.
         float scale = phone ? 1.35f : 1.0f;
+        float infoHudScale = phone ? 1.1f : 1.0f;
         for (String id : HudLayoutManager.EDITABLE_HUDS.keySet()) {
-            HudLayoutManager.setScale(id, scale);
+            HudLayoutManager.setScale(id, id.equals("info_hud") ? infoHudScale : scale);
         }
 
         ModConfig cfg = ModConfig.get();
@@ -97,4 +100,3 @@ public class WelcomeScreen extends Screen {
         return false;
     }
 }
-
