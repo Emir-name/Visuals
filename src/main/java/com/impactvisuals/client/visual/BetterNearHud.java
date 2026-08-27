@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 public class BetterNearHud {
 
-    private static final double RANGE = 50.0;
     private static final int MAX_ROWS = 5;
 
     public static void render(DrawContext context) {
@@ -23,9 +22,10 @@ public class BetterNearHud {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) return;
 
+        double range = cfg.betterNearRangeBlocks;
         List<AbstractClientPlayerEntity> nearby = client.world.getPlayers().stream()
                 .filter(p -> p != client.player)
-                .filter(p -> p.distanceTo(client.player) <= RANGE)
+                .filter(p -> p.distanceTo(client.player) <= range)
                 .sorted(Comparator.comparingDouble(p -> p.distanceTo(client.player)))
                 .limit(MAX_ROWS)
                 .collect(Collectors.toList());
