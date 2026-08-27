@@ -3,7 +3,6 @@ package com.impactvisuals.client.visual;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.particle.ParticleTypes;
 
 public class ScreenTint {
 
@@ -42,7 +41,8 @@ public class ScreenTint {
             double z = player.getZ() + offsetZ;
             double y = player.getY() + 20 + random.nextDouble() * 15;
 
-            client.world.addParticle(ParticleTypes.SNOWFLAKE, x, y, z, 0.0, -0.02, 0.0);
+            CustomParticleManager.spawn(x, y, z, 0.0, -0.02, 0.0,
+                    CustomParticleManager.LIGHT_BLUE, 100, 0.12f, false);
         }
     }
 }
