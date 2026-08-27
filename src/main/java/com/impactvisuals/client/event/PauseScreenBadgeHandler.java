@@ -31,7 +31,11 @@ public final class PauseScreenBadgeHandler {
 
             ScreenMouseEvents.allowMouseClick(screen).register((s, mouseX, mouseY, button) -> {
                 if (button == 0 && ModConfig.get().infoHudEnabled && InfoHud.isInsideBadge(mouseX, mouseY)) {
-                    MinecraftClient.getInstance().setScreen(new ConfigScreen(screen));
+                    if (ModConfig.get().setupComplete) {
+                        MinecraftClient.getInstance().setScreen(new ConfigScreen(screen));
+                    } else {
+                        MinecraftClient.getInstance().setScreen(new com.impactvisuals.client.config.WelcomeScreen(screen));
+                    }
                     return false;
                 }
                 return true;
