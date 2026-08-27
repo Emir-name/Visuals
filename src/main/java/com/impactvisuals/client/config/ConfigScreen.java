@@ -375,6 +375,7 @@ public class ConfigScreen extends Screen {
             addToggle("Emir Config (enable all)", () -> false, v -> enableAllFeatures());
             addToggle("Export Config (copy to clipboard)", () -> false, v -> exportConfigToClipboard());
             addToggle("Import Config (paste from clipboard)", () -> false, v -> importConfigFromClipboard());
+            addToggle("Re-run Device Setup (Phone/PC)", () -> false, v -> MinecraftClient.getInstance().setScreen(new WelcomeScreen(this)));
         } else if (currentCategory == 7) {
             // Changelog tab has no toggles - static text is drawn directly in render().
         } else if (currentCategory == 5) {
@@ -1767,4 +1768,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-}
+            }
