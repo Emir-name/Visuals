@@ -73,7 +73,11 @@ public final class ClientEventHandler {
             while (ModKeybinds.openSettings.wasPressed()) {
                 if (client.currentScreen == null) {
                     UiSoundPlayer.play();
-                    client.setScreen(new ConfigScreen(null));
+                    if (ModConfig.get().setupComplete) {
+                        client.setScreen(new ConfigScreen(null));
+                    } else {
+                        client.setScreen(new com.impactvisuals.client.config.WelcomeScreen(null));
+                    }
                 }
             }
         });
@@ -185,4 +189,3 @@ public final class ClientEventHandler {
         }
     }
 }
-
