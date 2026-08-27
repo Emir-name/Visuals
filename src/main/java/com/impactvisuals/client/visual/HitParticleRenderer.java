@@ -2,7 +2,6 @@ package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.particle.ParticleTypes;
 
 public class HitParticleRenderer {
 
@@ -12,15 +11,17 @@ public class HitParticleRenderer {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null) return;
 
-        var particleType = (critical && ModConfig.get().criticalFlashEnabled)
-                ? ParticleTypes.CRIT
-                : ParticleTypes.DAMAGE_INDICATOR;
+        int color = (critical && ModConfig.get().criticalFlashEnabled)
+                ? CustomParticleManager.YELLOW
+                : CustomParticleManager.RED;
 
         for (int i = 0; i < 6; i++) {
             double ox = (client.world.random.nextDouble() - 0.5) * 0.3;
             double oy = (client.world.random.nextDouble() - 0.5) * 0.3;
             double oz = (client.world.random.nextDouble() - 0.5) * 0.3;
-            client.world.addParticle(particleType, x + ox, y + oy, z + oz, 0, 0, 0);
+            double vx = (client.world.random.nextDouble() - 0.5) * 0.05;
+            double vz = (client.world.random.nextDouble() - 0.5) * 0.05;
+            CustomParticleManager.spawn(x + ox, y + oy, z + oz, vx, 0.03, vz, color, 12, 0.1f, true);
         }
     }
 }
