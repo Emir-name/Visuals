@@ -48,6 +48,7 @@ public class ConfigScreen extends Screen {
 
     // Layout
     private int sidebarW;
+    private int panelX, panelY, panelW, panelH;
     private int headerH;
     private int contentX, contentTop, contentBottom, contentW;
     private int scrollUpX, scrollUpY, scrollDownX, scrollDownY, scrollArrowSize = 22;
@@ -127,19 +128,30 @@ public class ConfigScreen extends Screen {
         previousBlurriness = client.options.getMenuBackgroundBlurriness().getValue();
         client.options.getMenuBackgroundBlurriness().setValue(0);
 
-        sidebarW = Math.max(120, Math.min(170, this.width / 5));
+        // The whole menu now lives inside a floating panel (not full screen) -
+        // everything below still uses the same math as before, just rooted at
+        // (panelX, panelY) with (panelW, panelH) standing in for the old
+        // this.width/this.height.
+        int marginX = Math.max(24, Math.min(70, this.width / 10));
+        int marginY = Math.max(20, Math.min(50, this.height / 10));
+        panelX = marginX;
+        panelY = marginY;
+        panelW = this.width - marginX * 2;
+        panelH = this.height - marginY * 2;
+
+        sidebarW = Math.max(120, Math.min(170, panelW / 5));
         headerH = 40;
 
         skinPanelW = 100;
         skinPanelH = 128;
-        skinPanelX = this.width - skinPanelW - 16;
-        skinPanelY = headerH + 12;
+        skinPanelX = panelX + panelW - skinPanelW - 16;
+        skinPanelY = panelY + headerH + 12;
         skinMouseX = skinPanelX + skinPanelW / 2f;
         skinMouseY = skinPanelY + skinPanelH / 3f;
 
-        contentX = sidebarW + 20;
-        contentTop = headerH + 10;
-        contentBottom = this.height - 10;
+        contentX = panelX + sidebarW + 20;
+        contentTop = panelY + headerH + 10;
+        contentBottom = panelY + panelH - 10;
         contentW = Math.max(200, (skinPanelX - 16) - contentX);
 
         colGap = 14;
@@ -148,11 +160,11 @@ public class ConfigScreen extends Screen {
         rowGap = 10;
 
         int headerButtonH = 18;
-        int headerY = (headerH - headerButtonH) / 2;
+        int headerY = panelY + (headerH - headerButtonH) / 2;
 
         langW = 34;
         langH = headerButtonH;
-        langX = this.width - langW - 12;
+        langX = panelX + panelW - langW - 12;
         langY = headerY;
 
         resetW = 60;
@@ -553,50 +565,50 @@ public class ConfigScreen extends Screen {
         if (dt < 0f) dt = 0f;
         lastFrameNanos = nowNanos;
 
-        context.fill(0, 0, this.width, this.height, BG);
+        fillRounded(context, panelX, panelY, panelW, panelH, 10, BG);
 
         // sidebar
-        context.fill(0, 0, sidebarW, this.height, SIDEBAR_BG);
-        context.fill(sidebarW, 0, sidebarW + 1, this.height, 0x40000000 | (accentColor & 0xFFFFFF));
+        context.fill(panelX, panelY, panelX + sidebarW, panelY + panelH, SIDEBAR_BG);
+        context.fill(panelX + sidebarW, panelY, panelX + sidebarW + 1, panelY + panelH, 0x40000000 | (accentColor & 0xFFFFFF));
 
         int logoSize = 26;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
-                12, 8, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
+                panelX + 12, panelY + 8, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
         context.drawText(this.textRenderer, Text.literal("Impact Visuals").formatted(Formatting.BOLD),
-                12 + logoSize + 8, 8 + (logoSize - 8) / 2, TEXT_MAIN, false);
+                panelX + 12 + logoSize + 8, panelY + 8 + (logoSize - 8) / 2, TEXT_MAIN, false);
 
-        int navStartY = 8 + logoSize + 14;
+        int navStartY = panelY + 8 + logoSize + 14;
         int navItemH = 24;
 
-        int navAvailableH = this.height - navStartY - 8;
+        int navAvailableH = panelY + panelH - navStartY - 8;
         int navContentH = CATEGORY_NAMES.length * navItemH;
         int navMaxScroll = Math.max(0, navContentH - navAvailableH);
         if (navScrollOffset > navMaxScroll) navScrollOffset = navMaxScroll;
         if (navScrollOffset < 0) navScrollOffset = 0;
 
-        context.enableScissor(0, navStartY, sidebarW, this.height);
+        context.enableScissor(panelX, navStartY, panelX + sidebarW, panelY + panelH);
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = navStartY + i * navItemH - navScrollOffset;
             boolean active = i == currentCategory;
-            boolean hovered = inside(0, itemY, sidebarW, navItemH, mouseX, mouseY);
+            boolean hovered = inside(panelX, itemY, sidebarW, navItemH, mouseX, mouseY);
 
             if (active) {
-                fillRounded(context, 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, accentDimColor);
+                fillRounded(context, panelX + 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, accentDimColor);
             } else if (hovered) {
-                fillRounded(context, 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, 0x20FFFFFF);
+                fillRounded(context, panelX + 6, itemY + 2, sidebarW - 12, navItemH - 4, 5, 0x20FFFFFF);
             }
 
             int dotSize = 6;
             int dotY = itemY + (navItemH - dotSize) / 2;
-            context.fill(14, dotY, 14 + dotSize, dotY + dotSize, active ? accentColor : TEXT_DIM);
+            context.fill(panelX + 14, dotY, panelX + 14 + dotSize, dotY + dotSize, active ? accentColor : TEXT_DIM);
 
             int color = active ? TEXT_MAIN : TEXT_DIM;
-            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
+            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), panelX + 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
         }
         context.disableScissor();
 
         if (navMaxScroll > 0) {
-            int trackX = sidebarW - 4;
+            int trackX = panelX + sidebarW - 4;
             int trackH = navAvailableH;
             int thumbH = Math.max(16, trackH * navAvailableH / navContentH);
             int thumbY = navStartY + (int) ((trackH - thumbH) * (navScrollOffset / (float) navMaxScroll));
@@ -607,7 +619,7 @@ public class ConfigScreen extends Screen {
         // header
         String title = Lang.t(CATEGORY_NAMES[currentCategory]);
         context.getMatrices().push();
-        context.getMatrices().translate(contentX, 12, 0);
+        context.getMatrices().translate(contentX, panelY + 12, 0);
         context.getMatrices().scale(1.4f, 1.4f, 1f);
         context.drawText(this.textRenderer, Text.literal(title).formatted(Formatting.BOLD), 0, 0, TEXT_MAIN, false);
         context.getMatrices().pop();
@@ -772,7 +784,7 @@ public class ConfigScreen extends Screen {
 
         renderSkinPanel(context);
 
-        scrollDownX = this.width - scrollArrowSize - 10;
+        scrollDownX = panelX + panelW - scrollArrowSize - 10;
         scrollDownY = contentBottom - scrollArrowSize;
         scrollUpX = scrollDownX;
         scrollUpY = scrollDownY - scrollArrowSize - 6;
@@ -921,11 +933,11 @@ public class ConfigScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
 
-        int navStartY = 8 + 26 + 14;
+        int navStartY = panelY + 8 + 26 + 14;
         int navItemH = 24;
         for (int i = 0; i < CATEGORY_NAMES.length; i++) {
             int itemY = navStartY + i * navItemH - navScrollOffset;
-            if (inside(0, itemY, sidebarW, navItemH, mouseX, mouseY)) {
+            if (inside(panelX, itemY, sidebarW, navItemH, mouseX, mouseY)) {
                 draggingNav = true;
                 navDragTotal = 0;
                 pendingNavClickIndex = i;
@@ -1084,10 +1096,10 @@ public class ConfigScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (mouseX < sidebarW) {
-            int navStartY = 8 + 26 + 14;
+        if (mouseX >= panelX && mouseX < panelX + sidebarW) {
+            int navStartY = panelY + 8 + 26 + 14;
             int navItemH = 24;
-            int navAvailableH = this.height - navStartY - 8;
+            int navAvailableH = panelY + panelH - navStartY - 8;
             int navContentH = CATEGORY_NAMES.length * navItemH;
             int navMaxScroll = Math.max(0, navContentH - navAvailableH);
 
@@ -1108,9 +1120,9 @@ public class ConfigScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (draggingNav) {
-            int navStartY = 8 + 26 + 14;
+            int navStartY = panelY + 8 + 26 + 14;
             int navItemH = 24;
-            int navAvailableH = this.height - navStartY - 8;
+            int navAvailableH = panelY + panelH - navStartY - 8;
             int navContentH = CATEGORY_NAMES.length * navItemH;
             int navMaxScroll = Math.max(0, navContentH - navAvailableH);
 
