@@ -5,8 +5,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -71,8 +69,8 @@ public class KillDeathTracker {
                         double ox = (client.world.random.nextDouble() - 0.5) * 0.6;
                         double oy = (client.world.random.nextDouble() - 0.5) * 0.6;
                         double oz = (client.world.random.nextDouble() - 0.5) * 0.6;
-                        client.world.addParticle(ParticleTypes.CRIT, record.x + ox, record.y + oy, record.z + oz,
-                                ox * 0.5, oy * 0.5, oz * 0.5);
+                        CustomParticleManager.spawn(record.x + ox, record.y + oy, record.z + oz,
+                                ox * 0.5, oy * 0.5, oz * 0.5, CustomParticleManager.YELLOW, 14, 0.14f, true);
                     }
                 }
 
@@ -109,11 +107,6 @@ public class KillDeathTracker {
         double height = 24.0;
         int steps = (int) (height / 0.12);
 
-        int pinkColor = (255 << 16) | (64 << 8) | 230; // bright pink halo
-        int whiteColor = (255 << 16) | (255 << 8) | 255; // white core
-        DustParticleEffect pinkGlow = new DustParticleEffect(pinkColor, 3.0f);
-        DustParticleEffect whiteCore = new DustParticleEffect(whiteColor, 1.4f);
-
         net.minecraft.util.math.random.Random rnd = client.world.random;
         for (int i = 0; i <= steps; i++) {
             double t = (double) i / steps;
@@ -121,10 +114,12 @@ public class KillDeathTracker {
 
             double jitterX = (rnd.nextDouble() - 0.5) * 0.5;
             double jitterZ = (rnd.nextDouble() - 0.5) * 0.5;
-            client.world.addParticle(pinkGlow, x + jitterX, py, z + jitterZ, 0, 0, 0);
+            CustomParticleManager.spawn(x + jitterX, py, z + jitterZ, 0, 0, 0,
+                    CustomParticleManager.PINK, 10, 0.16f, false);
 
             if (i % 2 == 0) {
-                client.world.addParticle(whiteCore, x, py, z, 0, 0, 0);
+                CustomParticleManager.spawn(x, py, z, 0, 0, 0,
+                        CustomParticleManager.WHITE, 10, 0.09f, false);
             }
         }
     }
