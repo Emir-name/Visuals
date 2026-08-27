@@ -44,8 +44,8 @@ public class WelcomeScreen extends Screen {
         // noticeably bigger. PC keeps the mod's original, more compact default.
         // Info HUD is already a dense multi-line block of text, so it gets a
         // smaller bump than the rest or it ends up oversized/overlapping.
-        float scale = phone ? 1.35f : 1.0f;
-        float infoHudScale = phone ? 1.1f : 1.0f;
+        float scale = phone ? 1.15f : 1.0f;
+        float infoHudScale = phone ? 1.0f : 1.0f;
         for (String id : HudLayoutManager.EDITABLE_HUDS.keySet()) {
             HudLayoutManager.setScale(id, id.equals("info_hud") ? infoHudScale : scale);
         }
