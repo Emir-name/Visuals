@@ -876,15 +876,12 @@ public class ConfigScreen extends Screen {
     private static final Identifier CUSTOM_FONT = Identifier.of("impactvisuals", "impact_font");
 
     private static net.minecraft.text.MutableText styled(String s) {
-        // The bundled TTF's Cyrillic coverage isn't reliable in-game (showed up
-        // as blank tofu boxes), and a fallback provider chain risks the same
-        // failure mode again. Simplest guaranteed-correct fix: only use the
-        // custom font for Latin/English text; Russian keeps Minecraft's own
-        // font, which is known to render Cyrillic correctly.
-        if (ModConfig.get().russianLanguage) {
-            return Text.literal(s);
-        }
-        return Text.literal(s).setStyle(Style.EMPTY.withFont(CUSTOM_FONT));
+        // The bundled TTF wasn't rendering correctly for either English or
+        // Russian (showed up as blank tofu boxes) after two fix attempts.
+        // Reverting to Minecraft's own font everywhere until the font
+        // pipeline itself can be debugged properly, rather than leaving
+        // broken text in the menu.
+        return Text.literal(s);
     }
 
     private void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
