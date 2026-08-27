@@ -3,7 +3,6 @@ package com.impactvisuals.client.visual;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.particle.ParticleTypes;
 
 public class SmallFireEffect {
 
@@ -27,6 +26,6 @@ public class SmallFireEffect {
         double y = player.getY() + 0.05;
         double z = player.getZ() + (player.getRandom().nextDouble() - 0.5) * 0.4;
 
-        client.world.addParticle(ParticleTypes.SMALL_FLAME, x, y, z, 0.0, 0.02, 0.0);
+        CustomParticleManager.spawn(x, y, z, 0.0, 0.02, 0.0, CustomParticleManager.ORANGE, 12, 0.11f, false);
     }
 }
