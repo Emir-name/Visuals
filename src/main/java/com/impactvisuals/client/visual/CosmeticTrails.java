@@ -4,14 +4,15 @@ import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvents;
 
 public class CosmeticTrails {
 
-    private static final int[] PALETTE = {
-            0xFFFF8C00, 0xFFB266FF, 0xFF3399FF, 0xFF55DD55, 0xFFFF5555, 0xFF33DDDD
+    // Kept in sync with the hex palette shown in the color-swatch picker; mapped
+    // to the nearest custom-particle block color instead of a vanilla dust hue.
+    private static final int[] PALETTE_COLOR = {
+            CustomParticleManager.ORANGE, CustomParticleManager.PURPLE, CustomParticleManager.LIGHT_BLUE,
+            CustomParticleManager.LIME, CustomParticleManager.RED, CustomParticleManager.CYAN
     };
 
     private static int sprintCounter = 0;
@@ -31,13 +32,10 @@ public class CosmeticTrails {
                 double y = player.getY() + 0.1;
                 double z = player.getZ() + (player.getRandom().nextDouble() - 0.5) * 0.3;
 
-                if (cfg.coloredTrailsEnabled && cfg.hitParticleColorIndex > 0 && cfg.hitParticleColorIndex <= PALETTE.length) {
-                    int color = PALETTE[cfg.hitParticleColorIndex - 1] & 0xFFFFFF;
-                    DustParticleEffect effect = new DustParticleEffect(color, 1.0f);
-                    client.world.addParticle(effect, x, y, z, 0.0, 0.01, 0.0);
-                } else {
-                    client.world.addParticle(ParticleTypes.CLOUD, x, y, z, 0.0, 0.01, 0.0);
-                }
+                int color = (cfg.coloredTrailsEnabled && cfg.hitParticleColorIndex > 0 && cfg.hitParticleColorIndex <= PALETTE_COLOR.length)
+                        ? PALETTE_COLOR[cfg.hitParticleColorIndex - 1]
+                        : CustomParticleManager.WHITE;
+                CustomParticleManager.spawn(x, y, z, 0.0, 0.01, 0.0, color, 10, 0.1f, false);
             }
         }
 
@@ -54,7 +52,7 @@ public class CosmeticTrails {
                 double z = player.getZ() + (player.getRandom().nextDouble() - 0.5) * 0.3;
 
                 if (cfg.footstepDustEnabled) {
-                    client.world.addParticle(ParticleTypes.POOF, x, y, z, 0.0, 0.0, 0.0);
+                    CustomParticleManager.spawn(x, y, z, 0.0, 0.0, 0.0, CustomParticleManager.LIGHT_GRAY, 8, 0.09f, false);
                 }
                 if (cfg.footstepSoundEnabled) {
                     client.getSoundManager().play(
