@@ -115,6 +115,7 @@ public class ModConfig {
     public boolean activeEffectsHudEnabled = true;
     public boolean russianLanguage = false;
     public boolean betterNearEnabled = true;
+    public int betterNearRangeBlocks = 100;
     public String firebaseUrl = "";
     public java.util.List<String> friendsList = new java.util.ArrayList<>();
     public java.util.List<String> boundCommands = new java.util.ArrayList<>();
