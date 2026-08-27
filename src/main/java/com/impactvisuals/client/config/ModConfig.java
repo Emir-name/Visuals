@@ -25,6 +25,7 @@ public class ModConfig {
     public int hatColorIndex = 4;
     public boolean radarEnabled = false;
     public boolean hideCampfireSmoke = false;
+    public boolean setupComplete = false;
     public int themePresetIndex = 0;
     public java.util.Map<String, Integer> hudOffsetX = new java.util.HashMap<>();
     public java.util.Map<String, Integer> hudOffsetY = new java.util.HashMap<>();
