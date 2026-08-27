@@ -6,10 +6,6 @@
       "size": 11,
       "oversample": 2,
       "shift": [0, 0]
-    },
-    {
-      "type": "reference",
-      "id": "minecraft:default"
     }
   ]
 }
