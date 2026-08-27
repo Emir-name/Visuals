@@ -52,6 +52,8 @@ public class Lang {
         RU.put("Optimize the interface for:", "Оптимизировать интерфейс под:");
         RU.put("You can change this anytime in the HUD editor", "Это можно изменить позже в редакторе HUD");
         RU.put("Re-run Device Setup (Phone/PC)", "Заново выбрать устройство (Телефон/ПК)");
+        RU.put("Better Near", "Ближайшие игроки");
+        RU.put("Better Near Range", "Радиус ближайших игроков");
         RU.put("Hat Color", "Цвет шапки");
         RU.put("White", "Белый");
         RU.put("Magenta", "Пурпурный");
@@ -252,4 +254,4 @@ public class Lang {
         if (!ModConfig.get().russianLanguage) return key;
         return RU.getOrDefault(key, key);
     }
-}
+            }
