@@ -322,6 +322,10 @@ public class ConfigScreen extends Screen {
             addToggle("Compass", () -> cfg.compassHudEnabled, v -> cfg.compassHudEnabled = v);
             addToggle("Session Timer", () -> cfg.sessionTimerEnabled, v -> cfg.sessionTimerEnabled = v);
             addToggle("K/D Counter", () -> cfg.killDeathCounterEnabled, v -> cfg.killDeathCounterEnabled = v);
+            addToggle("Better Near", () -> cfg.betterNearEnabled, v -> cfg.betterNearEnabled = v);
+            if (cfg.betterNearEnabled) {
+                sliders.add(new SliderRow("Better Near Range", 1, 256, cfg.betterNearRangeBlocks, v -> cfg.betterNearRangeBlocks = v));
+            }
             sliders.add(new SliderRow("Target HUD Range", 1, 15, cfg.targetHudRangeBlocks, v -> cfg.targetHudRangeBlocks = v));
             addToggle("Sprint Indicator", () -> cfg.sprintIndicatorEnabled, v -> cfg.sprintIndicatorEnabled = v);
             addToggle("Health %", () -> cfg.healthPercentEnabled, v -> cfg.healthPercentEnabled = v);
@@ -741,7 +745,7 @@ public class ConfigScreen extends Screen {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY, dt);
         }
         for (Placed<SliderRow> p : placedSliders) {
-            p.item.render(context, this, p.x, p.y, p.w, mouseX, mouseY);
+            p.item.render(context, this, p.x, p.y, p.w, mouseX, mouseY, dt);
         }
         for (Placed<CycleRow> p : placedCycles) {
             p.item.render(context, this, p.x, p.y, p.w, p.h, mouseX, mouseY);
@@ -1011,6 +1015,9 @@ public class ConfigScreen extends Screen {
                         return true;
                     }
                     p.item.toggle();
+                    if (p.item.label.equals("Better Near")) {
+                        buildCategoryContent();
+                    }
                     return true;
                 }
             }
@@ -1339,6 +1346,7 @@ public class ConfigScreen extends Screen {
         cfg.hatColorIndex = 4;
         cfg.radarEnabled = false;
         cfg.hideCampfireSmoke = false;
+        cfg.betterNearRangeBlocks = 100;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1430,6 +1438,7 @@ public class ConfigScreen extends Screen {
         cfg.hatColorIndex = 4;
         cfg.radarEnabled = false;
         cfg.hideCampfireSmoke = false;
+        cfg.betterNearRangeBlocks = 100;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1557,6 +1566,7 @@ public class ConfigScreen extends Screen {
         final int max;
         int value;
         final Consumer<Integer> setter;
+        float animT = 0f;
 
         SliderRow(String label, int min, int max, int initial, Consumer<Integer> setter) {
             this.label = label;
@@ -1573,23 +1583,32 @@ public class ConfigScreen extends Screen {
             setter.accept(value);
         }
 
-        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int mouseX, int mouseY) {
-            String text = Lang.t(label) + ": " + value;
-            context.drawText(screen.textRenderer, text, x, y, TEXT_MAIN, false);
+        void render(DrawContext context, ConfigScreen screen, int x, int y, int w, int mouseX, int mouseY, float dt) {
+            animT += (1f - animT) * Math.min(1f, dt * 10f);
+            if (animT > 0.996f) animT = 1f;
 
-            int trackY = y + 20;
+            // Fades and slides gently down into place instead of just popping in -
+            // same ease-toward-target approach the toggle switches already use.
+            int yOffset = Math.round((1f - animT) * 6);
+            int alpha = Math.round(animT * 255);
+            int alphaShift = alpha << 24;
+
+            String text = Lang.t(label) + ": " + value;
+            context.drawText(screen.textRenderer, text, x, y + yOffset, (TEXT_MAIN & 0xFFFFFF) | alphaShift, false);
+
+            int trackY = y + 20 + yOffset;
             int trackH = 8;
 
-            context.fill(x, trackY, x + w, trackY + trackH, TRACK_OFF);
+            context.fill(x, trackY, x + w, trackY + trackH, (TRACK_OFF & 0xFFFFFF) | alphaShift);
             double pct = (value - min) / (double) (max - min);
             int filledW = (int) (w * pct);
-            context.fill(x, trackY, x + filledW, trackY + trackH, screen.accentColor);
-            screen.drawBorder(context, x, trackY, w, trackH, screen.accentColor);
+            context.fill(x, trackY, x + filledW, trackY + trackH, (screen.accentColor & 0xFFFFFF) | alphaShift);
+            screen.drawBorder(context, x, trackY, w, trackH, (screen.accentColor & 0xFFFFFF) | alphaShift);
 
             int knobSize = 12;
             int knobX = x + filledW - knobSize / 2;
             int knobY = trackY + trackH / 2 - knobSize / 2;
-            context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFFFF);
+            context.fill(knobX, knobY, knobX + knobSize, knobY + knobSize, 0xFFFFFF | alphaShift);
         }
     }
 
@@ -1773,4 +1792,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-            }
+                                    }
