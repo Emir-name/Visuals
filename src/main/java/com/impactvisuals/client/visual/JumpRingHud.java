@@ -4,7 +4,6 @@ import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.network.FirebaseJumpSync;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.particle.ParticleTypes;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -88,7 +87,7 @@ public class JumpRingHud {
     private static void spawnRing(MinecraftClient client, double cx, double cy, double cz) {
         if (client.world == null) return;
 
-        var particle = ModConfig.get().jumpRingWhite ? ParticleTypes.WHITE_ASH : ParticleTypes.END_ROD;
+        int color = ModConfig.get().jumpRingWhite ? CustomParticleManager.WHITE : CustomParticleManager.YELLOW;
 
         double radius = 0.6;
         int points = 24;
@@ -97,7 +96,7 @@ public class JumpRingHud {
             double angle = (2 * Math.PI * i) / points;
             double x = cx + radius * Math.cos(angle);
             double z = cz + radius * Math.sin(angle);
-            client.world.addParticle(particle, x, cy, z, 0.0, 0.0, 0.0);
+            CustomParticleManager.spawn(x, cy, z, 0.0, 0.0, 0.0, color, 10, 0.1f, false);
         }
     }
 }
