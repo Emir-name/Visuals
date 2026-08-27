@@ -57,6 +57,7 @@ public final class ClientEventHandler {
             ZoomHandler.tick();
             AutoJump.tick();
             com.impactvisuals.client.visual.JumpRingHud.tick();
+            com.impactvisuals.client.visual.CustomParticleManager.tick();
             tickFirebasePresence();
             com.impactvisuals.client.config.FeatureKeybindManager.tick();
             com.impactvisuals.client.config.CommandKeybindManager.tick();
@@ -83,6 +84,7 @@ public final class ClientEventHandler {
             com.impactvisuals.client.visual.FocusTargetHighlight.render(context);
             com.impactvisuals.client.visual.MarkerHud.renderWorld(context);
             com.impactvisuals.client.visual.HatRenderer.render(context);
+            com.impactvisuals.client.visual.CustomParticleManager.render(context);
         });
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
@@ -122,7 +124,13 @@ public final class ClientEventHandler {
         ImpactPunch.trigger();
 
         if (cfg.sweepTrailEnabled) {
-            world.addParticle(ParticleTypes.SWEEP_ATTACK, origin.x, origin.y, origin.z, 0.0, 0.0, 0.0);
+            for (int i = 0; i < 6; i++) {
+                double angle = i * (Math.PI * 2 / 6);
+                double vx = Math.cos(angle) * 0.08;
+                double vz = Math.sin(angle) * 0.08;
+                com.impactvisuals.client.visual.CustomParticleManager.spawn(origin.x, origin.y, origin.z,
+                        vx, 0.02, vz, com.impactvisuals.client.visual.CustomParticleManager.LIGHT_GRAY, 8, 0.12f, false);
+            }
         }
 
         if (critical) {
@@ -177,3 +185,4 @@ public final class ClientEventHandler {
         }
     }
 }
+
