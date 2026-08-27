@@ -4,7 +4,6 @@ import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -65,7 +64,7 @@ public class TrajectoryRenderer {
             }
 
             if (i >= skipSteps) {
-                client.world.addParticle(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 0, 0, 0);
+                CustomParticleManager.spawn(pos.x, pos.y, pos.z, 0, 0, 0, CustomParticleManager.CYAN, 6, 0.08f, false);
             }
         }
     }
