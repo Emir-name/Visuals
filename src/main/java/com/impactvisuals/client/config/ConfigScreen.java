@@ -6,6 +6,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.text.Style;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
@@ -574,7 +576,7 @@ public class ConfigScreen extends Screen {
         int logoSize = 26;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
                 panelX + 12, panelY + 8, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
-        context.drawText(this.textRenderer, Text.literal("Impact Visuals").formatted(Formatting.BOLD),
+        context.drawText(this.textRenderer, styled("Impact Visuals").formatted(Formatting.BOLD),
                 panelX + 12 + logoSize + 8, panelY + 8 + (logoSize - 8) / 2, TEXT_MAIN, false);
 
         int navStartY = panelY + 8 + logoSize + 14;
@@ -603,7 +605,7 @@ public class ConfigScreen extends Screen {
             context.fill(panelX + 14, dotY, panelX + 14 + dotSize, dotY + dotSize, active ? accentColor : TEXT_DIM);
 
             int color = active ? TEXT_MAIN : TEXT_DIM;
-            context.drawText(this.textRenderer, Lang.t(CATEGORY_NAMES[i]), panelX + 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
+            context.drawText(this.textRenderer, styled(Lang.t(CATEGORY_NAMES[i])), panelX + 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
         }
         context.disableScissor();
 
@@ -621,7 +623,7 @@ public class ConfigScreen extends Screen {
         context.getMatrices().push();
         context.getMatrices().translate(contentX, panelY + 12, 0);
         context.getMatrices().scale(1.4f, 1.4f, 1f);
-        context.drawText(this.textRenderer, Text.literal(title).formatted(Formatting.BOLD), 0, 0, TEXT_MAIN, false);
+        context.drawText(this.textRenderer, styled(title).formatted(Formatting.BOLD), 0, 0, TEXT_MAIN, false);
         context.getMatrices().pop();
 
         drawHeaderButton(context, closeX, closeY, closeW, closeH, "x", mouseX, mouseY);
@@ -867,6 +869,13 @@ public class ConfigScreen extends Screen {
         int nameWidth = this.textRenderer.getWidth(name);
         int nameX = skinPanelX + (skinPanelW - nameWidth) / 2;
         context.drawText(this.textRenderer, name, nameX, skinPanelY + skinPanelH + 6, TEXT_MAIN, false);
+    }
+
+    /** Our own bundled font (JetBrains Mono, OFL license) instead of Minecraft's pixel font - registered via assets/impactvisuals/font/impact_font.json. */
+    private static final Identifier CUSTOM_FONT = Identifier.of("impactvisuals", "impact_font");
+
+    private static net.minecraft.text.MutableText styled(String s) {
+        return Text.literal(s).setStyle(Style.EMPTY.withFont(CUSTOM_FONT));
     }
 
     private void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
@@ -1498,14 +1507,14 @@ public class ConfigScreen extends Screen {
             int maxTitleW = w - (textX - x) - 8 - pillWForTitle;
             String titleTrimmed = screen.textRenderer.trimToWidth(Lang.t(label), Math.max(0, maxTitleW));
 
-            context.drawText(screen.textRenderer, Text.literal(titleTrimmed).formatted(Formatting.BOLD),
+            context.drawText(screen.textRenderer, screen.styled(titleTrimmed).formatted(Formatting.BOLD),
                     textX, y + 6, TEXT_MAIN, false);
 
             String desc = Lang.desc(label);
             if (!desc.isEmpty()) {
                 int pillW = 30;
                 int maxDescW = w - (textX - x) - 8 - pillW;
-                Text trimmed = Text.literal(screen.textRenderer.trimToWidth(desc, Math.max(0, maxDescW)));
+                Text trimmed = screen.styled(screen.textRenderer.trimToWidth(desc, Math.max(0, maxDescW)));
                 context.drawText(screen.textRenderer, trimmed, textX, y + 6 + 11, TEXT_DIM, false);
             }
 
@@ -1758,4 +1767,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-                }
+}
