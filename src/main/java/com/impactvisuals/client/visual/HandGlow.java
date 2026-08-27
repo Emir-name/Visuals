@@ -3,7 +3,6 @@ package com.impactvisuals.client.visual;
 import com.impactvisuals.client.config.ModConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
 
 public class HandGlow {
@@ -29,6 +28,7 @@ public class HandGlow {
         double oy = (player.getRandom().nextDouble() - 0.5) * 0.15;
         double oz = (player.getRandom().nextDouble() - 0.5) * 0.15;
 
-        client.world.addParticle(ParticleTypes.END_ROD, base.x + ox, base.y + oy, base.z + oz, 0.0, 0.01, 0.0);
+        CustomParticleManager.spawn(base.x + ox, base.y + oy, base.z + oz, 0.0, 0.01, 0.0,
+                CustomParticleManager.YELLOW, 20, 0.1f, false);
     }
 }
