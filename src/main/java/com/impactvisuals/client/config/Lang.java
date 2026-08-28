@@ -54,6 +54,10 @@ public class Lang {
         RU.put("Re-run Device Setup (Phone/PC)", "Заново выбрать устройство (Телефон/ПК)");
         RU.put("Better Near", "Ближайшие игроки");
         RU.put("Better Near Range", "Радиус ближайших игроков");
+        RU.put("Local Time", "Локальное время");
+        RU.put("Auto", "Авто");
+        RU.put("Day", "День");
+        RU.put("Night", "Ночь");
         RU.put("Hat Color", "Цвет шапки");
         RU.put("White", "Белый");
         RU.put("Magenta", "Пурпурный");
@@ -254,4 +258,4 @@ public class Lang {
         if (!ModConfig.get().russianLanguage) return key;
         return RU.getOrDefault(key, key);
     }
-            }
+}
