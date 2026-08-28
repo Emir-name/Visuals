@@ -297,6 +297,7 @@ public class ConfigScreen extends Screen {
             addToggle("Colored Trails", () -> cfg.coloredTrailsEnabled, v -> cfg.coloredTrailsEnabled = v);
             addToggle("Hand Glow", () -> cfg.handGlowEnabled, v -> cfg.handGlowEnabled = v);
             addToggle("Purple Sky", () -> cfg.purpleSkyEnabled, v -> cfg.purpleSkyEnabled = v);
+            cycles.add(new CycleRow("Local Time", new String[]{"Auto", "Day", "Night"}, () -> cfg.fakeTimeMode, v -> cfg.fakeTimeMode = v));
             addToggle("Low HP Vignette", () -> cfg.lowHealthVignetteEnabled, v -> cfg.lowHealthVignetteEnabled = v);
             addToggle("Durability %", () -> cfg.durabilityHudEnabled, v -> cfg.durabilityHudEnabled = v);
             addToggle("Cooldown Bar", () -> cfg.cooldownIndicatorEnabled, v -> cfg.cooldownIndicatorEnabled = v);
@@ -1347,6 +1348,7 @@ public class ConfigScreen extends Screen {
         cfg.radarEnabled = false;
         cfg.hideCampfireSmoke = false;
         cfg.betterNearRangeBlocks = 100;
+        cfg.fakeTimeMode = 0;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1439,6 +1441,7 @@ public class ConfigScreen extends Screen {
         cfg.radarEnabled = false;
         cfg.hideCampfireSmoke = false;
         cfg.betterNearRangeBlocks = 100;
+        cfg.fakeTimeMode = 0;
         cfg.markerX = 0;
         cfg.markerY = 64;
         cfg.markerZ = 0;
@@ -1792,4 +1795,4 @@ public class ConfigScreen extends Screen {
             screen.drawHeaderButton(context, loadX, loadY, loadW, loadH, "Load", mouseX, mouseY);
         }
     }
-                                    }
+}
