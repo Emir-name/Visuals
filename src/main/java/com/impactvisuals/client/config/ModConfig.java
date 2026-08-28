@@ -116,6 +116,7 @@ public class ModConfig {
     public boolean russianLanguage = false;
     public boolean betterNearEnabled = true;
     public int betterNearRangeBlocks = 100;
+    public int fakeTimeMode = 0; // 0 = Auto (real time), 1 = Day, 2 = Night
     public String firebaseUrl = "";
     public java.util.List<String> friendsList = new java.util.ArrayList<>();
     public java.util.List<String> boundCommands = new java.util.ArrayList<>();
