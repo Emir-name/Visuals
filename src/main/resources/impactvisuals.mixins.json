@@ -11,7 +11,8 @@
     "BossBarHudMixin",
     "CampfireSmokeMixin",
     "DeathScreenMixin",
-    "ExperienceBarMixin"
+    "ExperienceBarMixin",
+    "FakeTimeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
