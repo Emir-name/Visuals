@@ -1,5 +1,7 @@
 plugins {
-    id 'fabric-loom' version '1.9-SNAPSHOT'
+    // Pinned stable Loom line for 1.21.4 (the 1.9-SNAPSHOT channel had
+    // stopped applying access wideners at compile time).
+    id 'fabric-loom' version '1.11-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -24,6 +26,9 @@ repositories {
 
 loom {
     // Client-only mod, but we keep the standard split source set off for simplicity.
+    // Must match the "accessWidener" entry in fabric.mod.json; recent Loom
+    // builds no longer auto-detect the file from the mod metadata.
+    accessWidenerPath = file("src/main/resources/impactvisuals.accesswidener")
 }
 
 dependencies {
