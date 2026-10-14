@@ -1,6 +1,5 @@
 package com.impactvisuals.client.util;
 
-import com.impactvisuals.client.mixin.FontManagerAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.FontManager;
 import net.minecraft.client.font.FontStorage;
@@ -16,13 +15,16 @@ import java.util.Map;
  * readout renders with a real typeface instead of Minecraft's pixel font.
  *
  * In 1.21.4 a font can only be drawn through a {@link TextRenderer} bound to a
- * {@link FontStorage}, and {@code FontManager#getStorage} is private - hence the
- * tiny {@link FontManagerAccessor} mixin (shadow + accessor).
+ * {@link FontStorage}. {@code MinecraftClient#fontManager},
+ * {@code FontManager#getStorage} and {@code FontManager#MISSING_STORAGE_ID}
+ * are private/package-private, so the mod ships an access widener
+ * (impactvisuals.accesswidener) that exposes exactly those three members.
  *
- * Everything here degrades gracefully: if the custom font fails to load for any
- * reason (corrupted jar entry, unsupported FreeType build, ...), we fall back to
- * the vanilla pixel font instead of showing tofu boxes. That is exactly the bug
- * the old JetBrains Mono bundle suffered from, so the fallback is non-negotiable.
+ * Everything here degrades gracefully: if the custom font fails to load for
+ * any reason (corrupted jar entry, unsupported FreeType build, ...), we fall
+ * back to the vanilla pixel font instead of showing tofu boxes. That is
+ * exactly the bug the old JetBrains Mono bundle suffered from, so the
+ * fallback is non-negotiable.
  */
 public final class ImpactFonts {
 
@@ -66,14 +68,14 @@ public final class ImpactFonts {
 
     private static TextRenderer create(MinecraftClient client, FontManager manager, Identifier id) {
         try {
-            FontStorage storage = ((FontManagerAccessor) manager).impactvisuals$getStorage(id);
-            Identifier missing = FontManagerAccessor.IV_MISSING_STORAGE_ID;
+            FontStorage storage = manager.getStorage(id);
+            Identifier missing = FontManager.MISSING_STORAGE_ID;
             if (storage == null || storage.getId() == null || missing != null && storage.getId().equals(missing)) {
                 return client.textRenderer;
             }
             // The accessor resolves the storage lazily on every draw, so the
             // renderer stays correct across resource reloads without rebuilding.
-            return new TextRenderer(ignored -> ((FontManagerAccessor) manager).impactvisuals$getStorage(id), false);
+            return new TextRenderer(ignored -> manager.getStorage(id), false);
         } catch (Throwable t) {
             return client.textRenderer;
         }
