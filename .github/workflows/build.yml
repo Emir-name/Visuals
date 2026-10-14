@@ -70,17 +70,54 @@ jobs:
           name: ImpactVisuals-jar
           path: build/libs/*.jar
 
+      # Test whether the Actions run token can write to the repo (create +
+      # delete a ping branch). Result is surfaced as an annotation.
+      - name: Test run token write permission
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          if gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref=refs/heads/ci-ping -f sha="$sha" >/dev/null 2>ping_err.txt; then
+            echo "::notice title=token::write OK (created refs/heads/ci-ping)"
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/ci-ping" >/dev/null 2>&1 || true
+          else
+            echo "::error title=token::write DENIED: $(head -1 ping_err.txt)"
+          fi
+
       # Publish the fresh jar to a dedicated ci-jar branch (never triggers
       # this workflow) so it can be fetched without artifact-download access.
       - name: Publish jar to ci-jar branch
         if: success() && github.ref == 'refs/heads/main'
         run: |
-          jarfile=$(ls build/libs/impactvisuals-*.jar | head -1)
+          jarfile=$(ls build/libs/impactvisuals-*.jar | grep -v sources | head -1)
           cp "$jarfile" impactvisuals-jar-ci.jar
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add impactvisuals-jar-ci.jar
           if ! git diff --cached --quiet; then
             git commit -m "CI: prebuilt jar from run ${{ github.run_id }}"
-            git push origin HEAD:refs/heads/ci-jar --force
+            if git push origin HEAD:refs/heads/ci-jar --force 2>&1 | tee push_log.txt; then
+              echo "::notice title=publish::ci-jar pushed OK"
+            else
+              echo "::error title=publish::push failed: $(head -6 push_log.txt | tr '\n' ' | ')"
+            fi
           fi
+
+      # Diagnostics: step conclusions + log tail, surfaced as annotations so
+      # they are readable even when the raw log host is unreachable.
+      - name: Diagnostics (steps + log tail)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "::notice title=diag::=== step conclusions ==="
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+            --jq '.jobs[].steps[] | "\(.name): \(.conclusion)"' 2>/dev/null | while IFS= read -r line; do
+              echo "::notice title=diag::$line"
+            done
+          echo "::notice title=diag::=== log tail (last 20KB) ==="
+          tail -c 20000 gradle_output.log 2>/dev/null | head -c 19000 | while IFS= read -r line; do
+            echo "::notice title=log::$line"
+          done
+          echo "::notice title=diag::=== end ==="
