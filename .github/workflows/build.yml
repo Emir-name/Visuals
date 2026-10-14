@@ -70,32 +70,29 @@ jobs:
           name: ImpactVisuals-jar
           path: build/libs/*.jar
 
-      # The Actions run token is read-only (repo Actions permissions), so CI
-      # cannot push a branch or write API resources. The runner service
-      # DOES accept check-run annotations though - so on every successful
-      # build the jar is published as indexed base64 chunks, which can be
-      # reassembled from the check-run annotations API.
-      - name: Publish jar as check-run annotations
-        if: success()
+      # Publish the fresh jar to a dedicated ci-jar branch so it can be
+      # fetched without artifact-download access. NOTE: this only works when
+      # the repo's Actions workflow permissions are "Read and write" (the
+      # default token is read-only here, in which case this step reports a
+      # warning and the run still succeeds - the artifact upload above is
+      # the fallback delivery channel).
+      - name: Publish jar to ci-jar branch
+        if: success() && github.ref == 'refs/heads/main'
+        continue-on-error: true
         run: |
           jarfile=$(ls build/libs/impactvisuals-*.jar | grep -v sources | head -1)
-          if [ -z "$jarfile" ]; then
-            echo "::error title=jar::no jar found in build/libs"
-            exit 1
+          cp "$jarfile" impactvisuals-jar-ci.jar
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add impactvisuals-jar-ci.jar
+          if ! git diff --cached --quiet; then
+            git commit -m "CI: prebuilt jar from run ${{ github.run_id }}"
+            if git push origin HEAD:refs/heads/ci-jar --force 2>&1 | tee push_log.txt; then
+              echo "::notice title=publish::ci-jar pushed OK"
+            else
+              echo "::warning title=publish::push failed (token read-only?): $(head -3 push_log.txt | tr '\n' ' | ')"
+            fi
           fi
-          size=$(stat -c %s "$jarfile")
-          sha=$(sha256sum "$jarfile" | cut -d' ' -f1)
-          echo "::notice title=jar::JAR name=$(basename "$jarfile") size=$size sha256=$sha"
-          b64=$(base64 -w0 "$jarfile")
-          total=$(( ( ${#b64} + 59999 ) / 60000 ))
-          i=0
-          while [ ${#b64} -gt 0 ]; do
-            chunk=${b64:0:60000}
-            printf '::notice title=jarchunk::CHUNK %04d %s\n' "$i" "$chunk"
-            b64=${b64:60000}
-            i=$((i+1))
-          done
-          echo "::notice title=jar::END name=$(basename "$jarfile") total_chunks=$i size=$size sha256=$sha"
 
       # Diagnostics: step conclusions + log tail, surfaced as annotations so
       # they are readable even when the raw log host is unreachable.
