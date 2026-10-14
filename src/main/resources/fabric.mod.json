@@ -12,6 +12,7 @@
   "mixins": [
     "impactvisuals.mixins.json"
   ],
+  "accessWidener": "impactvisuals.accesswidener",
   "entrypoints": {
     "client": [
       "com.impactvisuals.ImpactVisualsClient"
