@@ -1,6 +1,7 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -35,7 +36,7 @@ public class DamageNumberRenderer {
         if (!ModConfig.get().damageNumbersEnabled || NUMBERS.isEmpty()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
-        TextRenderer textRenderer = client.textRenderer;
+        TextRenderer textRenderer = ImpactFonts.hudBold(client);
         MatrixStack matrices = context.matrixStack();
         VertexConsumerProvider.Immediate consumers = (VertexConsumerProvider.Immediate) context.consumers();
         if (matrices == null || consumers == null) return;

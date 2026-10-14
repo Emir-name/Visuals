@@ -2,10 +2,9 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "impactvisuals:font/impact_font.ttf",
+      "file": "impactvisuals:font/nunito-regular.ttf",
       "size": 11,
-      "oversample": 2,
-      "shift": [0, 0]
+      "oversample": 2
     }
   ]
 }

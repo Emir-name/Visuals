@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.effect.StatusEffectInstance;
 
@@ -17,19 +19,22 @@ public class ActiveEffectsHud {
         var effects = client.player.getStatusEffects();
         if (effects.isEmpty()) return;
 
-        int lineH = 12;
+        int lineH = 16;
         int cardW = 160;
-        int cardH = 20 + effects.size() * lineH;
+        int cardH = 21 + effects.size() * lineH + 4;
         int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("active_effects");
         int y = 60 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("active_effects");
         com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "active_effects", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
 
+        TextRenderer tr = ImpactFonts.hud(client);
+        TextRenderer trBold = ImpactFonts.hudBold(client);
+
         int textX = x + 8;
-        int textY = y + 6;
-        context.drawText(client.textRenderer, "Potions", textX, textY, 0xFFFF8C00, false);
-        textY += 14;
+        int textY = y + 4;
+        context.drawText(trBold, "Potions", textX, textY, 0xFFFF8C00, false);
+        textY += 17;
 
         var spriteManager = client.getStatusEffectSpriteManager();
 
@@ -45,7 +50,7 @@ public class ActiveEffectsHud {
 
             String time = formatDuration(effect.getDuration());
             String line = name + "  " + time;
-            context.drawText(client.textRenderer, line, textX + 16, textY, 0xFFFFFFFF, false);
+            context.drawText(tr, line, textX + 16, textY, 0xFFFFFFFF, false);
 
             textY += lineH;
         }

@@ -1,5 +1,6 @@
 package com.impactvisuals.client.mixin;
 
+import com.impactvisuals.client.util.ImpactFonts;
 import com.impactvisuals.client.friends.FriendsScreen;
 import com.impactvisuals.client.config.ModConfig;
 import com.impactvisuals.client.visual.MenuButtonRenderer;
@@ -50,9 +51,11 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
         // Draw every button completely ourselves (fill + border + label) -
         // NOT the vanilla grey texture - so we skip calling super.render()
         // entirely and instead do our own pass over the widget list.
+        net.minecraft.client.font.TextRenderer tr = ImpactFonts.hud(this.client);
+
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button && button.getWidth() > 40) {
-                MenuButtonRenderer.draw(context, this.textRenderer, button, mouseX, mouseY);
+                MenuButtonRenderer.draw(context, tr, button, mouseX, mouseY);
             } else if (child instanceof ClickableWidget widget) {
                 widget.render(context, mouseX, mouseY, delta);
             }
@@ -67,22 +70,24 @@ public abstract class TitleScreenMixin extends net.minecraft.client.gui.screen.S
      * render() we skip - replace it with a plain scaled-up text title instead
      * of guessing the vanilla texture identifiers again. */
     private void impactvisuals$drawTitleText(DrawContext context, int w) {
+        net.minecraft.client.font.TextRenderer tr = ImpactFonts.hudBold(this.client);
         var matrices = context.getMatrices();
         String title = "MINECRAFT";
         float scale = 3.5f;
-        int textW = this.textRenderer.getWidth(title);
+        int textW = tr.getWidth(title);
 
         matrices.push();
         matrices.translate(w / 2f, 38, 0);
         matrices.scale(scale, scale, 1f);
         matrices.translate(-textW / 2f, 0, 0);
-        context.drawText(this.textRenderer, title, 1, 1, 0x60000000, false);
-        context.drawText(this.textRenderer, title, 0, 0, 0xFFFFFFFF, false);
+        context.drawText(tr, title, 1, 1, 0x60000000, false);
+        context.drawText(tr, title, 0, 0, 0xFFFFFFFF, false);
         matrices.pop();
 
         String subtitle = "IMPACT VISUALS";
-        int subW = this.textRenderer.getWidth(subtitle);
-        context.drawText(this.textRenderer, subtitle, (w - subW) / 2, 38 + (int) (10 * scale) + 6, 0xFFFF8C00, true);
+        net.minecraft.client.font.TextRenderer trSub = ImpactFonts.hudSemiBold(this.client);
+        int subW = trSub.getWidth(subtitle);
+        context.drawText(trSub, subtitle, (w - subW) / 2, 38 + (int) (10 * scale) + 6, 0xFFFF8C00, true);
     }
 
     private void impactvisuals$fireOverlay(DrawContext context, int w, int h) {

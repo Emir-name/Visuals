@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -138,6 +140,6 @@ public class KillDeathTracker {
 
         MinecraftClient client = MinecraftClient.getInstance();
         String text = "K: " + kills + "  D: " + deaths;
-        context.drawText(client.textRenderer, text, 6, 40, 0xFFFFFFFF, true);
+        context.drawText(ImpactFonts.hud(client), text, 6, 40, 0xFFFFFFFF, true);
     }
 }

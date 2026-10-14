@@ -1,13 +1,14 @@
 package com.impactvisuals.client.config;
 
 import com.impactvisuals.client.friends.FriendsNetwork;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.text.Style;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
@@ -96,7 +97,7 @@ public class ConfigScreen extends Screen {
     private int addFriendBtnX, addFriendBtnY, addFriendBtnW = 46, addFriendBtnH = 18;
     private static final int FRIENDS_HEADER_H = 32;
     private static final int FOCUS_TARGET_HEADER_H = 30;
-    private static final int FRIEND_ROW_H = 30;
+    private static final int FRIEND_ROW_H = 34;
     private static final int BIND_ROW_H = 30;
     private static final int PROFILE_ROW_H = 30;
     private long lastFriendsRefreshNanos = 0;
@@ -180,7 +181,7 @@ public class ConfigScreen extends Screen {
         closeY = headerY;
 
         int searchW = Math.max(90, closeX - contentX - 16);
-        searchField = new TextFieldWidget(this.textRenderer, contentX, headerY, searchW, headerButtonH, Text.literal(""));
+        searchField = new TextFieldWidget(this.impactFont(), contentX, headerY, searchW, headerButtonH, Text.literal(""));
         searchField.setMaxLength(40);
         searchField.setPlaceholder(Text.literal(Lang.t("Search")));
         searchField.setChangedListener(s -> {
@@ -194,7 +195,7 @@ public class ConfigScreen extends Screen {
         addFriendBtnX = contentX + contentW - addFriendBtnW;
         addFriendBtnY = addFieldY;
         int addFieldW = Math.max(80, contentW - addFriendBtnW - 8);
-        addFriendField = new TextFieldWidget(this.textRenderer, contentX, addFieldY, addFieldW, addFriendBtnH, Text.literal(""));
+        addFriendField = new TextFieldWidget(this.impactFont(), contentX, addFieldY, addFieldW, addFriendBtnH, Text.literal(""));
         addFriendField.setMaxLength(16);
         addFriendField.setPlaceholder(Text.literal(Lang.t("Nickname")));
         addDrawableChild(addFriendField);
@@ -204,7 +205,7 @@ public class ConfigScreen extends Screen {
         bindSendBtnX = contentX + contentW - bindSendBtnW;
         bindSendBtnY = bindFieldY;
         int bindFieldW = Math.max(80, contentW - bindSendBtnW - 8);
-        bindCommandField = new TextFieldWidget(this.textRenderer, contentX, bindFieldY, bindFieldW, bindSendBtnH, Text.literal(""));
+        bindCommandField = new TextFieldWidget(this.impactFont(), contentX, bindFieldY, bindFieldW, bindSendBtnH, Text.literal(""));
         bindCommandField.setMaxLength(256);
         bindCommandField.setPlaceholder(Text.literal(Lang.t("/home")));
         addDrawableChild(bindCommandField);
@@ -214,14 +215,14 @@ public class ConfigScreen extends Screen {
         profileSaveBtnX = contentX + contentW - profileSaveBtnW;
         profileSaveBtnY = profileFieldY;
         int profileFieldW = Math.max(80, contentW - profileSaveBtnW - 8);
-        profileNameField = new TextFieldWidget(this.textRenderer, contentX, profileFieldY, profileFieldW, profileSaveBtnH, Text.literal(""));
+        profileNameField = new TextFieldWidget(this.impactFont(), contentX, profileFieldY, profileFieldW, profileSaveBtnH, Text.literal(""));
         profileNameField.setMaxLength(24);
         profileNameField.setPlaceholder(Text.literal(Lang.t("Profile name")));
         addDrawableChild(profileNameField);
         profileNameField.setVisible(currentCategory == 4);
 
         int focusFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
-        focusTargetField = new TextFieldWidget(this.textRenderer, contentX, focusFieldY, contentW, 18, Text.literal(""));
+        focusTargetField = new TextFieldWidget(this.impactFont(), contentX, focusFieldY, contentW, 18, Text.literal(""));
         focusTargetField.setMaxLength(16);
         focusTargetField.setPlaceholder(Text.literal(Lang.t("Focus Target Name")));
         focusTargetField.setText(cfg.focusTargetName);
@@ -233,7 +234,7 @@ public class ConfigScreen extends Screen {
         focusTargetField.setVisible(currentCategory == 1);
 
         int markerFieldY = contentTop + (FOCUS_TARGET_HEADER_H - 18) / 2;
-        markerCoordsField = new TextFieldWidget(this.textRenderer, contentX, markerFieldY, contentW, 18, Text.literal(""));
+        markerCoordsField = new TextFieldWidget(this.impactFont(), contentX, markerFieldY, contentW, 18, Text.literal(""));
         markerCoordsField.setMaxLength(40);
         markerCoordsField.setPlaceholder(Text.literal(Lang.t("X Y Z")));
         markerCoordsField.setText(cfg.markerX + " " + cfg.markerY + " " + cfg.markerZ);
@@ -252,7 +253,7 @@ public class ConfigScreen extends Screen {
         // Invisible 0-size field used only to summon the on-screen/mobile keyboard when
         // rebinding a feature's keybind - focusing any text field is what triggers the IME
         // on mobile Minecraft clients, and there's no other reliable way to request it.
-        rebindKeyboardTrigger = new TextFieldWidget(this.textRenderer, -100, -100, 1, 1, Text.literal(""));
+        rebindKeyboardTrigger = new TextFieldWidget(this.impactFont(), -100, -100, 1, 1, Text.literal(""));
         rebindKeyboardTrigger.setMaxLength(1);
         rebindKeyboardTrigger.setVisible(false);
         addDrawableChild(rebindKeyboardTrigger);
@@ -582,8 +583,8 @@ public class ConfigScreen extends Screen {
         int logoSize = 26;
         context.drawTexture(net.minecraft.client.render.RenderLayer::getGuiTextured, LOGO_TEXTURE,
                 panelX + 12, panelY + 8, 0, 0, logoSize, logoSize, 256, 256, 256, 256);
-        context.drawText(this.textRenderer, styled("Impact Visuals").formatted(Formatting.BOLD),
-                panelX + 12 + logoSize + 8, panelY + 8 + (logoSize - 8) / 2, TEXT_MAIN, false);
+        context.drawText(this.impactBold(), styled("Impact Visuals"),
+                panelX + 12 + logoSize + 8, panelY + 8 + (logoSize - this.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
         int navStartY = panelY + 8 + logoSize + 14;
         int navItemH = 24;
@@ -611,7 +612,7 @@ public class ConfigScreen extends Screen {
             context.fill(panelX + 14, dotY, panelX + 14 + dotSize, dotY + dotSize, active ? accentColor : TEXT_DIM);
 
             int color = active ? TEXT_MAIN : TEXT_DIM;
-            context.drawText(this.textRenderer, styled(Lang.t(CATEGORY_NAMES[i])), panelX + 14 + dotSize + 8, itemY + (navItemH - 8) / 2, color, false);
+            context.drawText(this.impactFont(), Text.literal(Lang.t(CATEGORY_NAMES[i])), panelX + 14 + dotSize + 8, itemY + (navItemH - this.impactFont().fontHeight) / 2, color, false);
         }
         context.disableScissor();
 
@@ -629,7 +630,7 @@ public class ConfigScreen extends Screen {
         context.getMatrices().push();
         context.getMatrices().translate(contentX, panelY + 12, 0);
         context.getMatrices().scale(1.4f, 1.4f, 1f);
-        context.drawText(this.textRenderer, styled(title).formatted(Formatting.BOLD), 0, 0, TEXT_MAIN, false);
+        context.drawText(this.impactBold(), styled(title), 0, 0, TEXT_MAIN, false);
         context.getMatrices().pop();
 
         drawHeaderButton(context, closeX, closeY, closeW, closeH, "x", mouseX, mouseY);
@@ -786,8 +787,8 @@ public class ConfigScreen extends Screen {
 
         if (visible.isEmpty() && toggles.size() > 0) {
             String msg = Lang.t("No results");
-            int w = this.textRenderer.getWidth(msg);
-            context.drawText(this.textRenderer, msg, contentX + (contentW - w) / 2, contentTop + 20, TEXT_DIM, false);
+            int w = this.impactFont().getWidth(msg);
+            context.drawText(this.impactFont(), msg, contentX + (contentW - w) / 2, contentTop + 20, TEXT_DIM, false);
         }
 
         renderSkinPanel(context);
@@ -817,13 +818,13 @@ public class ConfigScreen extends Screen {
     private int renderChangelog(DrawContext context, int y) {
         int wrapWidth = contentW - 4;
         for (String[] entry : CHANGELOG_ENTRIES) {
-            context.drawText(this.textRenderer, Text.literal(entry[0]).formatted(Formatting.BOLD), contentX, y, accentColor, false);
-            y += 12;
+            context.drawText(this.impactBold(), Text.literal(entry[0]), contentX, y, accentColor, false);
+            y += 17;
             for (String line : wrapText(entry[1], wrapWidth)) {
-                context.drawText(this.textRenderer, line, contentX, y, TEXT_DIM, false);
-                y += 10;
+                context.drawText(this.impactFont(), line, contentX, y, TEXT_DIM, false);
+                y += 14;
             }
-            y += 10;
+            y += 8;
         }
         return y;
     }
@@ -833,7 +834,7 @@ public class ConfigScreen extends Screen {
         StringBuilder current = new StringBuilder();
         for (String word : text.split(" ")) {
             String candidate = current.isEmpty() ? word : current + " " + word;
-            if (this.textRenderer.getWidth(candidate) > maxWidth && !current.isEmpty()) {
+            if (this.impactFont().getWidth(candidate) > maxWidth && !current.isEmpty()) {
                 lines.add(current.toString());
                 current = new StringBuilder(word);
             } else {
@@ -850,8 +851,8 @@ public class ConfigScreen extends Screen {
         fillRounded(context, x, y, w, h, 5, bg);
         drawRoundedBorder(context, x, y, w, h, 5, hovered ? accentColor : TRACK_OFF);
         String translated = Lang.t(label);
-        int textWidth = this.textRenderer.getWidth(translated);
-        context.drawText(this.textRenderer, translated, x + (w - textWidth) / 2, y + (h - 8) / 2, TEXT_MAIN, false);
+        int textWidth = this.impactFont().getWidth(translated);
+        context.drawText(this.impactFont(), translated, x + (w - textWidth) / 2, y + (h - this.impactFont().fontHeight) / 2, TEXT_MAIN, false);
     }
 
     private void renderSkinPanel(DrawContext context) {
@@ -872,21 +873,26 @@ public class ConfigScreen extends Screen {
         );
 
         String name = client.getSession().getUsername();
-        int nameWidth = this.textRenderer.getWidth(name);
+        int nameWidth = this.impactBold().getWidth(name);
         int nameX = skinPanelX + (skinPanelW - nameWidth) / 2;
-        context.drawText(this.textRenderer, name, nameX, skinPanelY + skinPanelH + 6, TEXT_MAIN, false);
+        context.drawText(this.impactBold(), name, nameX, skinPanelY + skinPanelH + 6, TEXT_MAIN, false);
     }
 
-    /** Our own bundled font (JetBrains Mono, OFL license) instead of Minecraft's pixel font - registered via assets/impactvisuals/font/impact_font.json. */
-    private static final Identifier CUSTOM_FONT = Identifier.of("impactvisuals", "impact_font");
+    /** The mod's own rounded UI font (Nunito, SIL OFL) instead of Minecraft's pixel font - see {@link ImpactFonts}. */
+    private TextRenderer impactFont() {
+        return ImpactFonts.hud(this.client);
+    }
+
+    private TextRenderer impactBold() {
+        return ImpactFonts.hudBold(this.client);
+    }
 
     private static net.minecraft.text.MutableText styled(String s) {
-        // The bundled TTF wasn't rendering correctly for either English or
-        // Russian (showed up as blank tofu boxes) after two fix attempts.
-        // Reverting to Minecraft's own font everywhere until the font
-        // pipeline itself can be debugged properly, rather than leaving
-        // broken text in the menu.
-        return Text.literal(s);
+        // Bold Nunito - the previous "revert to vanilla" workaround is gone:
+        // the old JetBrains Mono bundle was corrupted (internal table offsets
+        // were garbage), which is what caused the tofu boxes, and the font
+        // pipeline now validates + falls back safely.
+        return Text.literal(s).formatted(Formatting.BOLD);
     }
 
     private void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
@@ -1516,24 +1522,24 @@ public class ConfigScreen extends Screen {
             context.fill(keyboxX, keyboxY, keyboxX + keyboxSize, keyboxY + keyboxSize, keyboxBg);
             screen.drawBorder(context, keyboxX, keyboxY, keyboxSize, keyboxSize, screen.accentColor);
             String keyText = rebinding ? "?" : FeatureKeybindManager.displayName(label);
-            int keyTextW = screen.textRenderer.getWidth(keyText);
-            context.drawText(screen.textRenderer, keyText,
-                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - 8) / 2, TEXT_MAIN, false);
+            int keyTextW = screen.impactFont().getWidth(keyText);
+            context.drawText(screen.impactFont(), keyText,
+                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int textX = keyboxX + keyboxSize + 8;
             int pillWForTitle = 26;
             int maxTitleW = w - (textX - x) - 8 - pillWForTitle;
-            String titleTrimmed = screen.textRenderer.trimToWidth(Lang.t(label), Math.max(0, maxTitleW));
+            String titleTrimmed = screen.impactBold().trimToWidth(Lang.t(label), Math.max(0, maxTitleW));
 
-            context.drawText(screen.textRenderer, screen.styled(titleTrimmed).formatted(Formatting.BOLD),
-                    textX, y + 6, TEXT_MAIN, false);
+            context.drawText(screen.impactBold(), screen.styled(titleTrimmed),
+                    textX, y + 5, TEXT_MAIN, false);
 
             String desc = Lang.desc(label);
             if (!desc.isEmpty()) {
                 int pillW = 30;
                 int maxDescW = w - (textX - x) - 8 - pillW;
-                Text trimmed = screen.styled(screen.textRenderer.trimToWidth(desc, Math.max(0, maxDescW)));
-                context.drawText(screen.textRenderer, trimmed, textX, y + 6 + 11, TEXT_DIM, false);
+                Text trimmed = Text.literal(screen.impactFont().trimToWidth(desc, Math.max(0, maxDescW)));
+                context.drawText(screen.impactFont(), trimmed, textX, y + 19, TEXT_DIM, false);
             }
 
             float target = getter.getAsBoolean() ? 1f : 0f;
@@ -1597,7 +1603,7 @@ public class ConfigScreen extends Screen {
             int alphaShift = alpha << 24;
 
             String text = Lang.t(label) + ": " + value;
-            context.drawText(screen.textRenderer, text, x, y + yOffset, (TEXT_MAIN & 0xFFFFFF) | alphaShift, false);
+            context.drawText(screen.impactFont(), text, x, y + yOffset, (TEXT_MAIN & 0xFFFFFF) | alphaShift, false);
 
             int trackY = y + 20 + yOffset;
             int trackH = 8;
@@ -1654,12 +1660,12 @@ public class ConfigScreen extends Screen {
             screen.drawRoundedBorder(context, x, y, w, h, 6, hovered ? screen.accentColor : 0xFF2A2A2E);
 
             int current = Math.max(0, Math.min(options.length - 1, getter.getAsInt()));
-            context.drawText(screen.textRenderer, Text.literal(Lang.t(label)).formatted(Formatting.BOLD),
-                    x + 8, y + (h - 8) / 2, TEXT_MAIN, false);
+            context.drawText(screen.impactBold(), Text.literal(Lang.t(label)),
+                    x + 8, y + (h - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             String valueText = Lang.t(options[current]) + "  >";
-            int valueW = screen.textRenderer.getWidth(valueText);
-            context.drawText(screen.textRenderer, valueText, x + w - valueW - 10, y + (h - 8) / 2, screen.accentColor, false);
+            int valueW = screen.impactFont().getWidth(valueText);
+            context.drawText(screen.impactFont(), valueText, x + w - valueW - 10, y + (h - screen.impactFont().fontHeight) / 2, screen.accentColor, false);
         }
     }
 
@@ -1696,11 +1702,11 @@ public class ConfigScreen extends Screen {
             context.fill(dotX, dotY, dotX + dotSize, dotY + dotSize, online ? 0xFF55DD55 : 0xFF666666);
 
             int textX = iconX + iconSize + 8;
-            context.drawText(screen.textRenderer, Text.literal(username).formatted(Formatting.BOLD),
-                    textX, y + 5, TEXT_MAIN, false);
+            context.drawText(screen.impactBold(), Text.literal(username),
+                    textX, y + 3, TEXT_MAIN, false);
 
             String statusText = online ? niceServerName(status.server) : Lang.t("Offline");
-            context.drawText(screen.textRenderer, statusText, textX, y + 16, online ? screen.accentColor : TEXT_DIM, false);
+            context.drawText(screen.impactFont(), statusText, textX, y + 17, online ? screen.accentColor : TEXT_DIM, false);
 
             int removeSize = 16;
             int removeX = x + w - removeSize - 6;
@@ -1708,8 +1714,8 @@ public class ConfigScreen extends Screen {
             boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
             context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
             String x_ = "x";
-            int xw = screen.textRenderer.getWidth(x_);
-            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+            int xw = screen.impactFont().getWidth(x_);
+            context.drawText(screen.impactFont(), x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
         }
 
         private String niceServerName(String server) {
@@ -1740,14 +1746,14 @@ public class ConfigScreen extends Screen {
             context.fill(keyboxX, keyboxY, keyboxX + keyboxSize, keyboxY + keyboxSize, keyboxBg);
             screen.drawBorder(context, keyboxX, keyboxY, keyboxSize, keyboxSize, screen.accentColor);
             String keyText = rebinding ? "?" : CommandKeybindManager.displayName(command);
-            int keyTextW = screen.textRenderer.getWidth(keyText);
-            context.drawText(screen.textRenderer, keyText,
-                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - 8) / 2, TEXT_MAIN, false);
+            int keyTextW = screen.impactFont().getWidth(keyText);
+            context.drawText(screen.impactFont(), keyText,
+                    keyboxX + (keyboxSize - keyTextW) / 2, keyboxY + (keyboxSize - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int textX = keyboxX + keyboxSize + 8;
             int maxTextW = w - (textX - x) - 8 - 16 - 50 - 12;
-            String trimmed = screen.textRenderer.trimToWidth(command, Math.max(0, maxTextW));
-            context.drawText(screen.textRenderer, trimmed, textX, y + (h - 8) / 2, TEXT_MAIN, false);
+            String trimmed = screen.impactFont().trimToWidth(command, Math.max(0, maxTextW));
+            context.drawText(screen.impactFont(), trimmed, textX, y + (h - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int removeSize = 16;
             int removeX = x + w - removeSize - 6;
@@ -1755,8 +1761,8 @@ public class ConfigScreen extends Screen {
             boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
             context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
             String x_ = "x";
-            int xw = screen.textRenderer.getWidth(x_);
-            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+            int xw = screen.impactFont().getWidth(x_);
+            context.drawText(screen.impactFont(), x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int sendW = 50, sendH = 18;
             int sendX = removeX - sendW - 6;
@@ -1778,7 +1784,7 @@ public class ConfigScreen extends Screen {
             screen.drawRoundedBorder(context, x, y, w, h, 6, 0xFF2A2A2E);
 
             int textX = x + 8;
-            context.drawText(screen.textRenderer, name, textX, y + (h - 8) / 2, TEXT_MAIN, false);
+            context.drawText(screen.impactBold(), name, textX, y + (h - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int removeSize = 16;
             int removeX = x + w - removeSize - 6;
@@ -1786,8 +1792,8 @@ public class ConfigScreen extends Screen {
             boolean removeHovered = screen.inside(removeX, removeY, removeSize, removeSize, mouseX, mouseY);
             context.fill(removeX, removeY, removeX + removeSize, removeY + removeSize, removeHovered ? 0xFFAA3333 : 0xFF2A2A2E);
             String x_ = "x";
-            int xw = screen.textRenderer.getWidth(x_);
-            context.drawText(screen.textRenderer, x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - 8) / 2, TEXT_MAIN, false);
+            int xw = screen.impactFont().getWidth(x_);
+            context.drawText(screen.impactFont(), x_, removeX + (removeSize - xw) / 2, removeY + (removeSize - screen.impactFont().fontHeight) / 2, TEXT_MAIN, false);
 
             int loadW = 50, loadH = 18;
             int loadX = removeX - loadW - 6;

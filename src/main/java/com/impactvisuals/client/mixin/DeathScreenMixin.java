@@ -1,5 +1,6 @@
 package com.impactvisuals.client.mixin;
 
+import com.impactvisuals.client.util.ImpactFonts;
 import com.impactvisuals.client.visual.MenuButtonRenderer;
 import com.impactvisuals.client.visual.StarfieldRenderer;
 import net.minecraft.client.MinecraftClient;
@@ -51,6 +52,8 @@ public abstract class DeathScreenMixin extends net.minecraft.client.gui.screen.S
 
         String cause = this.message != null ? this.message.getString() : "";
         MinecraftClient client = MinecraftClient.getInstance();
+        net.minecraft.client.font.TextRenderer tr = ImpactFonts.hud(client);
+        net.minecraft.client.font.TextRenderer trBold = ImpactFonts.hudBold(client);
         String score = client.player != null ? "Score: " + client.player.getScore() : "";
 
         // Stack title/cause/score bottom-up from a fixed gap above the first
@@ -58,33 +61,33 @@ public abstract class DeathScreenMixin extends net.minecraft.client.gui.screen.S
         int y = firstButtonY - 16;
 
         if (!score.isBlank()) {
-            int scoreW = this.textRenderer.getWidth(score);
-            context.drawText(this.textRenderer, score, (w - scoreW) / 2, y, 0xFFFF8C00, true);
+            int scoreW = tr.getWidth(score);
+            context.drawText(tr, score, (w - scoreW) / 2, y, 0xFFFF8C00, true);
             y -= 14;
         }
         if (!cause.isBlank()) {
-            int causeW = this.textRenderer.getWidth(cause);
-            context.drawText(this.textRenderer, cause, (w - causeW) / 2, y, 0xFFCCCCCC, true);
+            int causeW = tr.getWidth(cause);
+            context.drawText(tr, cause, (w - causeW) / 2, y, 0xFFCCCCCC, true);
             y -= 16;
         }
 
         String titleText = "YOU DIED";
         var matrices = context.getMatrices();
         float scale = 2.5f;
-        int titleW = this.textRenderer.getWidth(titleText);
+        int titleW = trBold.getWidth(titleText);
         int titleY = y - (int) (9 * scale) - 10;
 
         matrices.push();
         matrices.translate(w / 2f, titleY, 0);
         matrices.scale(scale, scale, 1f);
         matrices.translate(-titleW / 2f, 0, 0);
-        context.drawText(this.textRenderer, titleText, 1, 1, 0x60000000, false);
-        context.drawText(this.textRenderer, titleText, 0, 0, 0xFFFF4433, false);
+        context.drawText(trBold, titleText, 1, 1, 0x60000000, false);
+        context.drawText(trBold, titleText, 0, 0, 0xFFFF4433, false);
         matrices.pop();
 
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button && button.getWidth() > 40) {
-                MenuButtonRenderer.draw(context, this.textRenderer, button, mouseX, mouseY);
+                MenuButtonRenderer.draw(context, tr, button, mouseX, mouseY);
             } else if (child instanceof ClickableWidget widget) {
                 widget.render(context, mouseX, mouseY, delta);
             }

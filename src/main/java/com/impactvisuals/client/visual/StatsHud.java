@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 
@@ -24,7 +26,8 @@ public class StatsHud {
 
         int x = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("stats_hud");
         int y = 6 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("stats_hud");
-        int lineHeight = 10;
+        int lineHeight = 15;
+        TextRenderer tr = ImpactFonts.hud(client);
 
         boolean anyStatsShown = cfg.coordinatesHudEnabled || cfg.compassHudEnabled || cfg.sessionTimerEnabled;
         if (anyStatsShown) {
@@ -34,7 +37,7 @@ public class StatsHud {
         if (cfg.coordinatesHudEnabled) {
             var pos = client.player.getPos();
             String text = String.format("XYZ: %.1f / %.1f / %.1f", pos.x, pos.y, pos.z);
-            context.drawText(client.textRenderer, text, x, y, 0xFFFFFFFF, true);
+            context.drawText(tr, text, x, y, 0xFFFFFFFF, true);
             y += lineHeight;
         }
 
@@ -43,7 +46,7 @@ public class StatsHud {
             if (yaw < 0) yaw += 360f;
             String direction = cardinalDirection(yaw);
             String text = String.format("Facing: %s (%.0f°)", direction, yaw);
-            context.drawText(client.textRenderer, text, x, y, 0xFFFFFFFF, true);
+            context.drawText(tr, text, x, y, 0xFFFFFFFF, true);
             y += lineHeight;
         }
 
@@ -52,7 +55,7 @@ public class StatsHud {
             long minutes = elapsedSeconds / 60;
             long seconds = elapsedSeconds % 60;
             String text = String.format("Session: %02d:%02d", minutes, seconds);
-            context.drawText(client.textRenderer, text, x, y, 0xFFFFFFFF, true);
+            context.drawText(tr, text, x, y, 0xFFFFFFFF, true);
         }
 
         if (anyStatsShown) {
@@ -78,13 +81,14 @@ public class StatsHud {
 
         int screenWidth = context.getScaledWindowWidth();
         int screenHeight = context.getScaledWindowHeight();
-        int textWidth = client.textRenderer.getWidth(text);
+        TextRenderer tr = ImpactFonts.hud(client);
+        int textWidth = tr.getWidth(text);
 
         int dx = (screenWidth - textWidth) / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("durability_hud");
         int dy = screenHeight - 58 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("durability_hud");
 
         com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "durability_hud", dx, dy);
-        context.drawText(client.textRenderer, text, dx, dy, color, true);
+        context.drawText(tr, text, dx, dy, color, true);
         com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 

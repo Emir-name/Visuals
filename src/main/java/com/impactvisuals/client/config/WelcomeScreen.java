@@ -1,5 +1,6 @@
 package com.impactvisuals.client.config;
 
+import com.impactvisuals.client.util.ImpactFonts;
 import com.impactvisuals.client.visual.MenuButtonRenderer;
 import com.impactvisuals.client.visual.StarfieldRenderer;
 import net.minecraft.client.MinecraftClient;
@@ -62,32 +63,35 @@ public class WelcomeScreen extends Screen {
         context.fill(0, 0, this.width, this.height, 0xFF000000);
         StarfieldRenderer.draw(context, this.width, this.height);
 
+        net.minecraft.client.font.TextRenderer tr = ImpactFonts.hud(this.client);
+        net.minecraft.client.font.TextRenderer trBold = ImpactFonts.hudBold(this.client);
+
         String titleText = "IMPACT VISUALS";
         var matrices = context.getMatrices();
         float scale = 2.2f;
-        int titleW = this.textRenderer.getWidth(titleText);
+        int titleW = trBold.getWidth(titleText);
         matrices.push();
         matrices.translate(this.width / 2f, this.height / 2f - 80, 0);
         matrices.scale(scale, scale, 1f);
         matrices.translate(-titleW / 2f, 0, 0);
-        context.drawText(this.textRenderer, titleText, 1, 1, 0x60000000, false);
-        context.drawText(this.textRenderer, titleText, 0, 0, 0xFFFF8C1A, false);
+        context.drawText(trBold, titleText, 1, 1, 0x60000000, false);
+        context.drawText(trBold, titleText, 0, 0, 0xFFFF8C1A, false);
         matrices.pop();
 
         String subtitle = Lang.t("Optimize the interface for:");
-        int subW = this.textRenderer.getWidth(subtitle);
-        context.drawText(this.textRenderer, Text.literal(subtitle).formatted(Formatting.GRAY),
+        int subW = tr.getWidth(subtitle);
+        context.drawText(tr, Text.literal(subtitle).formatted(Formatting.GRAY),
                 this.width / 2 - subW / 2, this.height / 2 - 30, 0xFFAAAAAA, false);
 
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button) {
-                MenuButtonRenderer.draw(context, this.textRenderer, button, mouseX, mouseY);
+                MenuButtonRenderer.draw(context, tr, button, mouseX, mouseY);
             }
         }
 
         String hint = Lang.t("You can change this anytime in the HUD editor");
-        int hintW = this.textRenderer.getWidth(hint);
-        context.drawText(this.textRenderer, hint, this.width / 2 - hintW / 2, this.height / 2 + 70, 0xFF777777, false);
+        int hintW = tr.getWidth(hint);
+        context.drawText(tr, hint, this.width / 2 - hintW / 2, this.height / 2 + 70, 0xFF777777, false);
     }
 
     @Override

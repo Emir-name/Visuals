@@ -1,5 +1,6 @@
 package com.impactvisuals.client.mixin;
 
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.BossBarHud;
 import net.minecraft.client.gui.hud.ClientBossBar;
@@ -50,8 +51,9 @@ public abstract class BossBarHudMixin {
 
             Text name = bossBar.getName();
             var client = net.minecraft.client.MinecraftClient.getInstance();
-            int nameW = client.textRenderer.getWidth(name);
-            context.drawText(client.textRenderer, name, screenW / 2 - nameW / 2, y - 10, 0xFFFFFFFF, true);
+            net.minecraft.client.font.TextRenderer tr = ImpactFonts.hudSemiBold(client);
+            int nameW = tr.getWidth(name.getString());
+            context.drawText(tr, name.getString(), screenW / 2 - nameW / 2, y - 11, 0xFFFFFFFF, true);
 
             y += barH + 18;
         }
