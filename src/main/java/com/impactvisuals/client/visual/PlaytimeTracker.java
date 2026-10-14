@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 
 public class PlaytimeTracker {
@@ -34,6 +36,6 @@ public class PlaytimeTracker {
 
         MinecraftClient client = MinecraftClient.getInstance();
         String text = String.format("Total Playtime: %dh %dm", hours, minutes);
-        context.drawText(client.textRenderer, text, 6, 30, 0xFFFFFFFF, true);
+        context.drawText(ImpactFonts.hud(client), text, 6, 30, 0xFFFFFFFF, true);
     }
 }

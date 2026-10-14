@@ -1,6 +1,8 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -33,6 +35,8 @@ public class TargetHud {
 
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) return;
+        TextRenderer tr = ImpactFonts.hud(client);
+        TextRenderer trBold = ImpactFonts.hudBold(client);
 
         LivingEntity target = findLookedAtLivingEntity(client, cfg.targetHudRangeBlocks);
         if (target == null) return;
@@ -41,7 +45,7 @@ public class TargetHud {
         int screenHeight = context.getScaledWindowHeight();
 
         int cardW = 130;
-        int cardH = 70;
+        int cardH = 84;
         int cardX = screenWidth / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("target_hud");
         int cardY = screenHeight / 2 - 70 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("target_hud");
         com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "target_hud", cardX, cardY);
@@ -49,24 +53,24 @@ public class TargetHud {
         HudCard.draw(context, cardX, cardY, cardW, cardH);
 
         int iconSize = 28;
-        int iconX = cardX + 6;
-        int iconY = cardY + 6;
+        int iconX = cardX + 7;
+        int iconY = cardY + 7;
 
         if (target instanceof AbstractClientPlayerEntity player) {
             net.minecraft.client.gui.PlayerSkinDrawer.draw(context, player.getSkinTextures(), iconX, iconY, iconSize);
         } else {
-            context.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0xFF3A3A3A);
+            context.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0xFF2A2A33);
         }
 
         int textX = iconX + iconSize + 8;
 
         Text name = target.getDisplayName() != null ? target.getDisplayName() : Text.literal(target.getName().getString());
         String nameStr = name.getString();
-        context.drawText(client.textRenderer, nameStr, textX, cardY + 8, 0xFFFFFFFF, false);
+        context.drawText(trBold, nameStr, textX, cardY + 6, 0xFFFFFFFF, false);
 
         if (com.impactvisuals.client.network.FirebasePresence.isOnline(target.getName().getString())) {
-            int nameW = client.textRenderer.getWidth(nameStr);
-            context.drawText(client.textRenderer, "IV", textX + nameW + 4, cardY + 8, 0xFFB266FF, false);
+            int nameW = trBold.getWidth(nameStr);
+            context.drawText(trBold, "IV", textX + nameW + 4, cardY + 6, 0xFFB266FF, false);
         }
 
         // Vanilla numbers as the baseline.
@@ -97,22 +101,25 @@ public class TargetHud {
         }
 
         String hpText = "HP \u2022 " + formatNumber(health) + "/" + formatNumber(maxHealth);
-        context.drawText(client.textRenderer, hpText, textX, cardY + 19, 0xFFAAAAAA, false);
+        context.drawText(ImpactFonts.hudSemiBold(client), hpText, textX, cardY + 25, 0xFFCFC7DD, false);
 
         if (cfg.targetHudDebugEnabled) {
             dumpNearbyEntities(client, target);
         }
 
-        renderArmorRow(context, client, target, cardX, cardY + 38, cardW);
+        renderArmorRow(context, client, target, cardX, cardY + 42, cardW);
 
-        int barX = cardX + 6;
-        int barY = cardY + cardH - 8;
-        int barWidth = cardW - 12;
+        int barX = cardX + 7;
+        int barY = cardY + cardH - 9;
+        int barWidth = cardW - 14;
         int barHeight = 4;
         float pct = maxHealth > 0 ? Math.max(0f, Math.min(1f, health / maxHealth)) : 0f;
+        int barColor = pct > 0.35f ? 0xFFB266FF : 0xFFFF4655;
 
-        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x66000000);
-        context.fill(barX, barY, barX + Math.round(barWidth * pct), barY + barHeight, 0xFFB266FF);
+        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0x4D000000);
+        int filled = Math.round(barWidth * pct);
+        if (pct > 0f && filled < 3) filled = 3; // a visible stub instead of a stray pixel
+        context.fill(barX, barY, barX + filled, barY + barHeight, barColor);
         com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 

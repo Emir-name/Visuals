@@ -1,5 +1,6 @@
 package com.impactvisuals.client.mixin;
 
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -42,15 +43,16 @@ public abstract class ExperienceBarMixin {
 
             if (client.player.experienceLevel > 0) {
                 String level = String.valueOf(client.player.experienceLevel);
-                int levelW = client.textRenderer.getWidth(level);
+                net.minecraft.client.font.TextRenderer tr = ImpactFonts.hudBold(client);
+                int levelW = tr.getWidth(level);
                 int lx = screenW / 2 - levelW / 2;
-                int ly = barY - 9;
+                int ly = barY - 10;
 
-                context.drawText(client.textRenderer, level, lx + 1, ly, 0xFF000000, false);
-                context.drawText(client.textRenderer, level, lx - 1, ly, 0xFF000000, false);
-                context.drawText(client.textRenderer, level, lx, ly + 1, 0xFF000000, false);
-                context.drawText(client.textRenderer, level, lx, ly - 1, 0xFF000000, false);
-                context.drawText(client.textRenderer, level, lx, ly, 0xFF7CFC46, false);
+                context.drawText(tr, level, lx + 1, ly, 0xFF000000, false);
+                context.drawText(tr, level, lx - 1, ly, 0xFF000000, false);
+                context.drawText(tr, level, lx, ly + 1, 0xFF000000, false);
+                context.drawText(tr, level, lx, ly - 1, 0xFF000000, false);
+                context.drawText(tr, level, lx, ly, 0xFF7CFC46, false);
             }
         } catch (Throwable t) {
             // Surface the real cause instead of failing silently every frame -

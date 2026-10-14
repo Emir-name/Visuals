@@ -1,5 +1,7 @@
 package com.impactvisuals.client.config;
 
+import com.impactvisuals.client.util.ImpactFonts;
+import com.impactvisuals.client.visual.MenuButtonRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -112,7 +114,10 @@ public class HudEditorScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         context.fill(0, 0, this.width, this.height, 0x70000000);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, "Тащи карточки, крути колёсико чтобы изменить размер", this.width / 2, 14, 0xFFFFFFFF);
+        net.minecraft.client.font.TextRenderer tr = ImpactFonts.hud(this.client);
+        net.minecraft.client.font.TextRenderer trBold = ImpactFonts.hudBold(this.client);
+
+        context.drawCenteredTextWithShadow(trBold, "Тащи карточки, крути колёсико чтобы изменить размер", this.width / 2, 14, 0xFFFFFFFF);
 
         for (Map.Entry<String, int[]> entry : HudLayoutManager.EDITABLE_HUDS.entrySet()) {
             String id = entry.getKey();
@@ -143,11 +148,17 @@ public class HudEditorScreen extends Screen {
 
             String label = Lang.t(labelFor(id));
             String sizeText = Math.round(scale * 100) + "%";
-            context.drawCenteredTextWithShadow(this.textRenderer, label, x + scaledW / 2, y + scaledH / 2 - 9, 0xFFFFFFFF);
-            context.drawCenteredTextWithShadow(this.textRenderer, sizeText, x + scaledW / 2, y + scaledH / 2 + 2, 0xFFB266FF);
+            context.drawCenteredTextWithShadow(trBold, label, x + scaledW / 2, y + scaledH / 2 - 9, 0xFFFFFFFF);
+            context.drawCenteredTextWithShadow(tr, sizeText, x + scaledW / 2, y + scaledH / 2 + 2, 0xFFB266FF);
         }
 
-        super.render(context, mouseX, mouseY, delta);
+        for (var child : this.children()) {
+            if (child instanceof ButtonWidget button) {
+                MenuButtonRenderer.draw(context, tr, button, mouseX, mouseY);
+            } else {
+                child.render(context, mouseX, mouseY, delta);
+            }
+        }
     }
 
     private String labelFor(String id) {

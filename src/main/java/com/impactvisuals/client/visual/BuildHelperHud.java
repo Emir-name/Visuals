@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
@@ -176,16 +177,17 @@ public class BuildHelperHud {
         int screenH = context.getScaledWindowHeight();
 
         int cardW = 90;
-        int cardH = 40;
+        int cardH = 52;
         int x = screenW / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("build_helper_hud");
         int y = screenH / 2 + 20 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("build_helper_hud");
         com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "build_helper_hud", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
 
-        context.drawCenteredTextWithShadow(client.textRenderer, line1, x + cardW / 2, y + 5, 0xFFB266FF);
-        context.drawCenteredTextWithShadow(client.textRenderer, line2, x + cardW / 2, y + 16, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(client.textRenderer, line3, x + cardW / 2, y + 27, 0xFFAAAAAA);
+        TextRenderer tr = ImpactFonts.hud(client);
+        context.drawCenteredTextWithShadow(tr, line1, x + cardW / 2, y + 4, 0xFFB266FF);
+        context.drawCenteredTextWithShadow(tr, line2, x + cardW / 2, y + 19, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(tr, line3, x + cardW / 2, y + 34, 0xFFAAAAAA);
         com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 }

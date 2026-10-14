@@ -1,0 +1,10 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "impactvisuals:font/nunito-semibold.ttf",
+      "size": 11,
+      "oversample": 2
+    }
+  ]
+}

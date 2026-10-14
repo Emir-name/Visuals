@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 
 /**
@@ -38,7 +40,7 @@ public class InfoHud {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null) return;
 
-        var textRenderer = client.textRenderer;
+        TextRenderer textRenderer = ImpactFonts.hud(client);
 
         int fps = client.getCurrentFps();
         float frameMs = fps > 0 ? 1000f / fps : 0f;
@@ -46,8 +48,9 @@ public class InfoHud {
         String fpsText = fps + " FPS";
         String msText = String.format("%.0f ms", frameMs);
 
+        TextRenderer nameRenderer = ImpactFonts.hudSemiBold(client);
         int checkW = textRenderer.getWidth(CHECK);
-        int nameW = textRenderer.getWidth(MOD_NAME);
+        int nameW = nameRenderer.getWidth(MOD_NAME);
         int sepW = textRenderer.getWidth(SEPARATOR);
         int fpsW = textRenderer.getWidth(fpsText);
         int msW = textRenderer.getWidth(msText);
@@ -79,7 +82,7 @@ public class InfoHud {
         context.drawText(textRenderer, CHECK, cursorX, textY, CHECK_COLOR, true);
         cursorX += checkW + iconGap;
 
-        context.drawText(textRenderer, MOD_NAME, cursorX, textY, NAME_COLOR, true);
+        context.drawText(nameRenderer, MOD_NAME, cursorX, textY, NAME_COLOR, true);
         cursorX += nameW;
 
         context.drawText(textRenderer, SEPARATOR, cursorX, textY, SEP_COLOR, false);

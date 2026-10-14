@@ -43,6 +43,6 @@ public final class MenuButtonRenderer {
 
         String label = textRenderer.trimToWidth(button.getMessage().getString(), Math.max(0, w - 6));
         int textW = textRenderer.getWidth(label);
-        context.drawText(textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor, true);
+        context.drawText(textRenderer, label, x + (w - textW) / 2, y + (h - textRenderer.fontHeight) / 2, textColor, true);
     }
 }

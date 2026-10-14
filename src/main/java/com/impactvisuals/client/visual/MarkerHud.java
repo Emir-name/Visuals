@@ -1,8 +1,10 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -63,14 +65,16 @@ public class MarkerHud {
         int screenW = context.getScaledWindowWidth();
 
         int cardW = 130;
-        int cardH = 34;
+        int cardH = 44;
         int x = screenW / 2 - cardW / 2 + com.impactvisuals.client.config.HudLayoutManager.getOffsetX("marker_hud");
         int y = 10 + com.impactvisuals.client.config.HudLayoutManager.getOffsetY("marker_hud");
         com.impactvisuals.client.config.HudLayoutManager.pushTransform(context, "marker_hud", x, y);
 
         HudCard.draw(context, x, y, cardW, cardH);
-        context.drawCenteredTextWithShadow(client.textRenderer, line1, x + cardW / 2, y + 6, 0xFFFFD633);
-        context.drawCenteredTextWithShadow(client.textRenderer, line2, x + cardW / 2, y + 18, 0xFFAAAAAA);
+        TextRenderer tr = ImpactFonts.hud(client);
+        TextRenderer trBold = ImpactFonts.hudBold(client);
+        context.drawCenteredTextWithShadow(trBold, line1, x + cardW / 2, y + 5, 0xFFFFD633);
+        context.drawCenteredTextWithShadow(tr, line2, x + cardW / 2, y + 21, 0xFFAAAAAA);
         com.impactvisuals.client.config.HudLayoutManager.popTransform(context);
     }
 

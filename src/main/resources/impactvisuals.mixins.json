@@ -12,7 +12,8 @@
     "CampfireSmokeMixin",
     "DeathScreenMixin",
     "ExperienceBarMixin",
-    "FakeTimeMixin"
+    "FakeTimeMixin",
+    "FontManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

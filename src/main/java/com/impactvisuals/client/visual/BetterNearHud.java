@@ -1,7 +1,9 @@
 package com.impactvisuals.client.visual;
 
 import com.impactvisuals.client.config.ModConfig;
+import com.impactvisuals.client.util.ImpactFonts;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -32,7 +34,7 @@ public class BetterNearHud {
 
         if (nearby.isEmpty()) return;
 
-        int lineH = 16;
+        int lineH = 17;
         int cardW = 150;
         int cardH = 20 + nearby.size() * lineH;
 
@@ -44,9 +46,12 @@ public class BetterNearHud {
 
         HudCard.draw(context, x, y, cardW, cardH);
 
+        TextRenderer tr = ImpactFonts.hud(client);
+        TextRenderer trBold = ImpactFonts.hudBold(client);
+
         int textX = x + 8;
         int textY = y + 6;
-        context.drawText(client.textRenderer, "Better Near", textX, textY, 0xFFB266FF, false);
+        context.drawText(trBold, "Better Near", textX, textY, 0xFFB266FF, false);
         textY += 14;
 
         for (AbstractClientPlayerEntity p : nearby) {
@@ -55,21 +60,21 @@ public class BetterNearHud {
             net.minecraft.client.gui.PlayerSkinDrawer.draw(context, p.getSkinTextures(), textX, rowY, 12);
 
             String name = p.getGameProfile().getName();
-            context.drawText(client.textRenderer, name, textX + 16, rowY + 2, 0xFFFFFFFF, false);
+            context.drawText(trBold, name, textX + 16, rowY + 2, 0xFFFFFFFF, false);
 
-            int nameWidth = client.textRenderer.getWidth(name);
+            int nameWidth = trBold.getWidth(name);
             int nextX = textX + 16 + nameWidth + 4;
             if (com.impactvisuals.client.network.FirebasePresence.isOnline(name)) {
-                context.drawText(client.textRenderer, "IV", nextX, rowY + 2, 0xFFB266FF, false);
+                context.drawText(tr, "IV", nextX, rowY + 2, 0xFFB266FF, false);
             }
 
             int distance = (int) p.distanceTo(client.player);
             String distText = distance + "m";
-            int distWidth = client.textRenderer.getWidth(distText);
-            context.drawText(client.textRenderer, distText, x + cardW - 24 - distWidth, rowY + 2, 0xFFAAAAAA, false);
+            int distWidth = tr.getWidth(distText);
+            context.drawText(tr, distText, x + cardW - 24 - distWidth, rowY + 2, 0xFFAAAAAA, false);
 
             String arrow = getRelativeArrow(client.player, p);
-            context.drawText(client.textRenderer, arrow, x + cardW - 16, rowY + 2, 0xFFB266FF, false);
+            context.drawText(tr, arrow, x + cardW - 16, rowY + 2, 0xFFB266FF, false);
 
             textY += lineH;
         }
