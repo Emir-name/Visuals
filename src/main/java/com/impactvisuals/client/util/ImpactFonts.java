@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * In 1.21.4 a font can only be drawn through a {@link TextRenderer} bound to a
  * {@link FontStorage}, and {@code FontManager#getStorage} is private - hence the
- * tiny {@link FontManagerAccessor} mixin.
+ * tiny {@link FontManagerAccessor} mixin (shadow + accessor).
  *
  * Everything here degrades gracefully: if the custom font fails to load for any
  * reason (corrupted jar entry, unsupported FreeType build, ...), we fall back to
@@ -66,14 +66,14 @@ public final class ImpactFonts {
 
     private static TextRenderer create(MinecraftClient client, FontManager manager, Identifier id) {
         try {
-            FontStorage storage = ((FontManagerAccessor) manager).impactvisuals$invokeGetStorage(id);
-            Identifier missing = FontManagerAccessor.impactvisuals$missingStorageId();
+            FontStorage storage = ((FontManagerAccessor) manager).impactvisuals$getStorage(id);
+            Identifier missing = FontManagerAccessor.IV_MISSING_STORAGE_ID;
             if (storage == null || storage.getId() == null || missing != null && storage.getId().equals(missing)) {
                 return client.textRenderer;
             }
             // The accessor resolves the storage lazily on every draw, so the
             // renderer stays correct across resource reloads without rebuilding.
-            return new TextRenderer(ignored -> ((FontManagerAccessor) manager).impactvisuals$invokeGetStorage(id), false);
+            return new TextRenderer(ignored -> ((FontManagerAccessor) manager).impactvisuals$getStorage(id), false);
         } catch (Throwable t) {
             return client.textRenderer;
         }
