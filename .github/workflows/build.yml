@@ -30,6 +30,16 @@ jobs:
           gradle build --no-daemon --stacktrace 2>&1 | tee gradle_output.log
           exit "${PIPESTATUS[0]}"
 
+      # Report what Loom says about the access widener (as annotations, since
+      # the raw log host is unreachable from some clients).
+      - name: Report access widener status
+        if: always()
+        run: |
+          grep -iE "access.?widener" gradle_output.log | head -10 | while IFS= read -r line; do
+            echo "::notice title=AW::$line"
+          done
+          echo "::notice title=AW::access-widener report done"
+
       # Surface compile errors as check-run annotations so they are readable
       # via the API even when the raw log host is unreachable.
       - name: Surface compile errors as annotations
