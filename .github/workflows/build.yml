@@ -2,7 +2,7 @@ name: Build mod
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "arena/01a0a4b0-visuals" ]
   workflow_dispatch: {}
 
 jobs:
@@ -26,10 +26,51 @@ jobs:
           gradle-version: '8.11.1'
 
       - name: Build mod jar
-        run: gradle build --no-daemon --stacktrace
+        run: |
+          gradle build --no-daemon --stacktrace 2>&1 | tee gradle_output.log
+          exit "${PIPESTATUS[0]}"
+
+      # Surface compile errors as check-run annotations so they are readable
+      # via the API even when the raw log host is unreachable.
+      - name: Surface compile errors as annotations
+        if: failure()
+        run: |
+          grep -E "\.java:[0-9]+: error|error:|FAILED|Could not" gradle_output.log | head -60 | while IFS= read -r line; do
+            echo "::error title=build error::$line"
+          done
+
+      # Post the tail of the full log to the most recent merged PR on failure.
+      - name: Comment failure log on latest PR
+        if: failure()
+        run: |
+          pr_number=$(gh pr list --state merged --limit 1 --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$pr_number" ]; then
+            {
+              echo "## CI failure log (last ~55KB) - run ${{ github.run_id }}"
+              echo '```'
+              tail -c 55000 gradle_output.log
+              echo '```'
+            } > failure_comment.md
+            gh pr comment "$pr_number" --body-file failure_comment.md
+          fi
 
       - name: Upload built jar
         uses: actions/upload-artifact@v4
         with:
           name: ImpactVisuals-jar
           path: build/libs/*.jar
+
+      # Publish the fresh jar to a dedicated ci-jar branch (never triggers
+      # this workflow) so it can be fetched without artifact-download access.
+      - name: Publish jar to ci-jar branch
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          jarfile=$(ls build/libs/impactvisuals-*.jar | head -1)
+          cp "$jarfile" impactvisuals-jar-ci.jar
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add impactvisuals-jar-ci.jar
+          if ! git diff --cached --quiet; then
+            git commit -m "CI: prebuilt jar from run ${{ github.run_id }}"
+            git push origin HEAD:refs/heads/ci-jar --force
+          fi
