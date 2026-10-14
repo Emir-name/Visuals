@@ -155,8 +155,8 @@ public class HudEditorScreen extends Screen {
         for (var child : this.children()) {
             if (child instanceof ButtonWidget button) {
                 MenuButtonRenderer.draw(context, tr, button, mouseX, mouseY);
-            } else {
-                child.render(context, mouseX, mouseY, delta);
+            } else if (child instanceof net.minecraft.client.gui.widget.ClickableWidget widget) {
+                widget.render(context, mouseX, mouseY, delta);
             }
         }
     }
